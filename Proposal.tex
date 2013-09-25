@@ -57,6 +57,28 @@ And so this is the goal of the \Lang{} programing language project; to
 make a new language with a feature set similar to what \OLang{} provides
 but with a readable syntax that is programmer friendly.
 
+\section*{\OLang{} \& \Lang{} Differences}
+If we are making \Lang{} as a replacement for \OLang{} then we need to talk
+about the changes this replacement represents. \OLang{} is written without
+much syntactic sugar; the Pattern syntax is used pervasively despite the
+fact that there are multiple repeated uses of the syntax. This is where a
+LISPer would say ``Stop, Macro Time!'' We have repeated syntactic patterns
+but a serious line clutter in their use.
+
+This leads us to actually have two goals with respect to updating the syntax
+and usability of \OLang{}: first we will create a more readable version of
+the \OLang{} Pattern mechanism. As in \OLang, this will be \Lang{}'s primary
+way to define program entities, and so will still act as a unifying force
+and will be available to the programmer as the ``under the hood'' language
+for when it is needed.
+
+The second goal will be to provide syntactic sugar for common Pattern syntax
+patterns (please blame \OLang{} developers for choosing Pattern as the name
+of their unifying concept, and making these sentences harder to read). We will
+provide syntax for classes, methods, and probably several other common patterns
+as we develop the language specification.
+
+
 \section*{\Compiler{}: The \Lang{} Compiler}
 
 
