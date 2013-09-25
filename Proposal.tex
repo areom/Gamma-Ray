@@ -1,7 +1,11 @@
 \documentclass[10pt]{article}
 \usepackage{fullpage}
 
-\title{GAMMA: A BETA++ Programming Language}
+\newcommand{\Lang}{GAMMA}
+\newcommand{\Compiler}{J\'arngl\'ofar}
+\newcommand{\OLang}{BETA}
+
+\title{\Lang{}: A \OLang{}++ Programming Language}
 \author{
 	Ben Caimano - blc2129@columbia.edu \\
 	Weiyuan Li - wl2453@columbia.edu \\
@@ -21,18 +25,19 @@ A Project for Programming Languages and Translators,
 \end{center}
 
 
-\section*{Why GAMMA -- or Why Update BETA?}
-BETA is a programming language of the ``Scandanvian School'' of Object
+\section*{Why \Lang{} -- or Why Update \OLang{}?}
+\OLang{} is a programming language of the ``Scandanvian School'' of Object
 orientation. The language provided two primary beneficial features:
 
 \begin{enumerate}
-\item The BETA Pattern is used as a unifying concept for every element
+\item The \OLang{} Pattern is used as a unifying concept for every element
 of the program -- Classes, Procedures, anonymous Objects, etc.
-\item Refinement vs Overriding is used in BETA to ensure that superclass
-behavior is respected in subclass definition. A simple way analogy to
-understand this is to think how you would program in Java if all your
-methods had to be declared \emph{abstract} or \emph{final}. BETA just
-provides this structuring and a little help to make it easier to use.
+\item Refinement and specialization is used instead of overriding to
+ensure that super-pattern behavior is respected by sub-patterns. A
+simple way analogy to understand this is to think how you would program
+in Java if all your methods had to be declared \emph{abstract} or
+\emph{final}. \OLang{} just provides this structuring and a little help to
+make it easier to use.
 \end{enumerate}
 
 A consequence of the fact that patterns are refined and everything is a
@@ -40,16 +45,19 @@ pattern is that classes can have nested classes and \emph{those} nested
 classes can themselves be refined; classes can be \emph{virtual} in the
 sense of virtual functions, etc in other languages.
 
-The primary negative about BETA however is that the syntax is horrible
+The primary negative about \OLang{} however is that the syntax is horrible
 -- absolutely atrocious. While the language provides a nice theoretical
 setting for object oriented development given it's pro's, the fact that
 the syntax is such a significant con clearly more than negates any of
 the benefits. In a world where LISP, the most beautiful language, is
-derided for its parentheses, a language like BETA simply cannot succeed
+derided for its parentheses, a language like \OLang{} simply cannot succeed
 where Python, Ruby, and other easy to read languages exist.
 
-And so this is the goal of the GAMMA programing language project; to
-make a new language with a feature set similar to what BETA provides but
-with a readable syntax that is user friendly.
+And so this is the goal of the \Lang{} programing language project; to
+make a new language with a feature set similar to what \OLang{} provides
+but with a readable syntax that is programmer friendly.
+
+\section*{\Compiler{}: The \Lang{} Compiler}
+
 
 \end{document}
