@@ -50,7 +50,7 @@ The primary negative about \OLang{} however is that the syntax is horrible
 setting for object oriented development given it's pro's, the fact that
 the syntax is such a significant con clearly more than negates any of
 the benefits. In a world where LISP, the most beautiful language, is
-derided for its parentheses, a language like \OLang{} simply cannot succeed
+derided for its parentheses, a language like \OLang{} cannot succeed
 where Python, Ruby, and other easy to read languages exist.
 
 And so this is the goal of the \Lang{} programing language project; to
@@ -78,8 +78,24 @@ of their unifying concept, and making these sentences harder to read). We will
 provide syntax for classes, methods, and probably several other common patterns
 as we develop the language specification.
 
+\section*{\Lang{} Feature Set}
+
+\Lang{} will provide the following features:
+
+\begin{itemize}
+\item Unifying Pattern Concept
+\item Refinement / Specialization
+\item Anonymous Pattern Instantiation
+\end{itemize}
 
 \section*{\Compiler{}: The \Lang{} Compiler}
 
+The compiler will proceed in two steps. First, the compiler will transform
+the source containing the syntactic sugar described above into a file
+consisting only of actual patterns. After this the compiler will transform
+general patterns into (hopefully portable) C code, and compile this to
+machine code with whatever compiler the user specifies.
+
+\section*{Code Examples}
 
 \end{document}
