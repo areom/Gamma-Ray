@@ -1,5 +1,7 @@
 \documentclass[10pt]{article}
-\usepackage{fullpage}
+\usepackage{fullpage,listings}
+\usepackage{color,xcolor}
+\usepackage{caption}
 
 \newcommand{\Lang}{GAMMA}
 %\newcommand{\Compiler}{J\'arngl\'ofar}
@@ -14,6 +16,8 @@
 	Arthy Padma Anandhi Sundaram - as4304@columbia.edu
 }
 \date{}
+
+\captionsetup[lstlisting]{format=listing}
 
 \begin{document}
 
@@ -98,5 +102,8 @@ general patterns into (hopefully portable) C code, and compile this to
 machine code with whatever compiler the user specifies.
 
 \section*{Code Examples}
+\begin{lstlisting}[label=some-code,caption=Some Code]
+Something!
+\end{lstlisting}
 
 \end{document}
