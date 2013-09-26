@@ -4,14 +4,12 @@
 \usepackage{caption}
 
 \newcommand{\Lang}{GAMMA}
-\newcommand{\ThorsGauntlets}{J\'arngl\'ofar}
 \newcommand{\Compiler}{ray}
-\newcommand{\OLang}{BETA}
 
 \renewcommand{\lstlistingname}{Example}
 \renewcommand{\lstlistlistingname}{Examples}
 
-\title{\Lang{}: A \OLang{}++ Programming Language}
+\title{\Lang{}: A Strict yet Fair Programming Language}
 \author{
 	Ben Caimano - blc2129@columbia.edu \\
 	Weiyuan Li - wl2453@columbia.edu \\
@@ -31,18 +29,18 @@ A Project for Programming Languages and Translators,
 \end{center}
 
 
-\section*{Why \Lang{} -- or Why Update \OLang{}?}
-\OLang{} is a programming language of the ``Scandanvian School'' of Object
+\section*{Why \Lang{} -- or Why Orient the Object this way?}
+ is a programming language of the ``Scandanvian School'' of Object
 orientation. The language provided two primary beneficial features:
 
 \begin{enumerate}
-\item The \OLang{} Pattern is used as a unifying concept for every element
+\item The  Pattern is used as a unifying concept for every element
 of the program -- Classes, Procedures, anonymous Objects, etc.
 \item Refinement and specialization is used instead of overriding to
 ensure that super-pattern behavior is respected by sub-patterns. A
 simple way analogy to understand this is to think how you would program
 in Java if all your methods had to be declared \emph{abstract} or
-\emph{final}. \OLang{} just provides this structuring and a little help to
+\emph{final}. just provides this structuring and a little help to
 make it easier to use.
 \end{enumerate}
 
@@ -51,55 +49,111 @@ pattern is that classes can have nested classes and \emph{those} nested
 classes can themselves be refined; classes can be \emph{virtual} in the
 sense of virtual functions, etc in other languages.
 
-The primary negative about \OLang{} however is that the syntax is horrible
+The primary negative about however is that the syntax is horrible
 -- absolutely atrocious. While the language provides a nice theoretical
 setting for object oriented development given it's pro's, the fact that
 the syntax is such a significant con clearly more than negates any of
 the benefits. In a world where LISP, the most beautiful language, is
-derided for its parentheses, a language like \OLang{} cannot succeed
+derided for its parentheses, a language like  cannot succeed
 where Python, Ruby, and other easy to read languages exist.
 
 And so this is the goal of the \Lang{} programing language project; to
-make a new language with a feature set similar to what \OLang{} provides
+make a new language with a feature set similar to what  provides
 but with a readable syntax that is programmer friendly.
 
-\section*{\OLang{} \& \Lang{} Similarities \& Differences}
-If we are making \Lang{} as a replacement for \OLang{} then we need to talk
-about the changes this replacement represents. \OLang{} is written without
+\section*{ \& \Lang{} Differences}
+If we are making \Lang{} as a replacement for  then we need to talk
+about the changes this replacement represents.  is written without
 much syntactic sugar; the Pattern syntax is used pervasively despite the
 fact that there are multiple repeated uses of the syntax. This is where a
 LISPer would say ``Stop, Macro Time!'' We have repeated syntactic patterns
 but a serious line clutter in their use.
 
-This leads us to the goal of \Lang{}: \Lang{} will have syntax for the common
-syntactic elements that \OLang{} absorbed into the Pattern mechanism. Since
-Patterns in \OLang represented the idea of a computation with a sense of state
--- some sort of mixture between a closure (a behavior with state) and an object
-(a piece of state with behavior) -- so will elements of \Lang{}. Just as in
-Java there is the "(Almost) Everything Is An Object" mentality, or how in Ruby
-"Everything Actually Is An Object," in \Lang{} we will have the mentality that
-"Everything Is A Stateful Computation." Thus these various easy to use and
-easy to read program elements will behave similarly to Patterns in \OLang{}.
+This leads us to actually have two goals with respect to updating the syntax
+and usability of : first we will create a more readable version of
+the  Pattern mechanism. As in , this will be \Lang{}'s primary
+way to define program entities, and so will still act as a unifying force
+and will be available to the programmer as the ``under the hood'' language
+for when it is needed.
+
+The second goal will be to provide syntactic sugar for common Pattern syntax
+patterns (please blame  developers for choosing Pattern as the name
+of their unifying concept, and making these sentences harder to read). We will
+provide syntax for classes, methods, and probably several other common patterns
+as we develop the language specification.
 
 \section*{\Lang{} Feature Set}
 
 \Lang{} will provide the following features:
 
 \begin{itemize}
-\item Refinement / Specialization as in \OLang{}
-\item Virtual Classes / Members as in \OLang{}
-\item Anonymous Instantiation as in \OLang{}
+\item Universal objecthood
+\item Optional "refinement" functions to extend superclass functionality
+\item Anonymous class instantiation
+\item Static typing with generic parameter typing
 \item Access specifiers respect object boundaries, not class boundaries
-\item Everything is a stateful computation (closure / object mixture)
-\item References (no Pointers)
 \end{itemize}
 
 \section*{\Compiler{}: The \Lang{} Compiler}
 
+The compiler will proceed in two steps. First, the compiler will interpret
+the source containing possible syntactic shorthand into a file
+consisting only of the most concise and structurally sound GAMMA core. After this the compiler will transform
+general patterns into (hopefully portable) C code, and compile this to
+machine code with whatever compiler the user specifies.
+
 \section*{Code Examples}
 
 \begin{lstlisting}[numbers=left,label=The All-mighty Pattern,caption=The All-mighty Pattern]
-Examples go here!
+Class Person:
+  ## constructors take arguments, initialize state
+  _init(String first_name, String last_name):
+    this.first_name = first_name
+    this.last_name = last_name
+
+  ## the run method is a fundamental method that makes an object callable
+  _run:
+    println(this.first_name + " " + this.last_name + " is being stringified!")
+    result = refine
+    println(this.first_name + " " + this.last_name + " is strinfigied into " + result + "!")
+    return result
+
+  ## Simple member objects as variables
+  Protected:
+    String first_name
+    String last_name
+
+  Public:
+    ## This is a common pattern that is equivalent
+    ## to declaring a method virtual / abstract
+    ## we need to think about this more (necessary
+    ## to implement via compiler check; maybe returns
+    ## NULL object if not implemented, etc, etc...
+    String citizenID:
+      return refine
+
+
+class Student extends Person:
+  ## Subclasses have to invoke their superclass,
+  ## just like in common OOP languages (java/etc)
+  _init(string first, string last, string grade):
+    ## We can interpret _init because it should only be called through the Person() construction.
+    ## Since it is called inside, it must refer to the super
+    self._init(first, last)
+    this.level = grade
+
+  ## Now we can refine!
+  _run:
+    return this.last_name + ", " + this.first_name + " is a " + this.level
+    
+  ## subclasses have their own data
+  Private:
+    String level # Freshman, etc...
+
+  Public:
+    String citizenID:
+      
+  
 \end{lstlisting}
 
 \end{document}
