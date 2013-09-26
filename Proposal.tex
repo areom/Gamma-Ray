@@ -63,7 +63,7 @@ And so this is the goal of the \Lang{} programing language project; to
 make a new language with a feature set similar to what \OLang{} provides
 but with a readable syntax that is programmer friendly.
 
-\section*{\OLang{} \& \Lang{} Differences}
+\section*{\OLang{} \& \Lang{} Similarities \& Differences}
 If we are making \Lang{} as a replacement for \OLang{} then we need to talk
 about the changes this replacement represents. \OLang{} is written without
 much syntactic sugar; the Pattern syntax is used pervasively despite the
@@ -71,37 +71,30 @@ fact that there are multiple repeated uses of the syntax. This is where a
 LISPer would say ``Stop, Macro Time!'' We have repeated syntactic patterns
 but a serious line clutter in their use.
 
-This leads us to actually have two goals with respect to updating the syntax
-and usability of \OLang{}: first we will create a more readable version of
-the \OLang{} Pattern mechanism. As in \OLang, this will be \Lang{}'s primary
-way to define program entities, and so will still act as a unifying force
-and will be available to the programmer as the ``under the hood'' language
-for when it is needed.
-
-The second goal will be to provide syntactic sugar for common Pattern syntax
-patterns (please blame \OLang{} developers for choosing Pattern as the name
-of their unifying concept, and making these sentences harder to read). We will
-provide syntax for classes, methods, and probably several other common patterns
-as we develop the language specification.
+This leads us to the goal of \Lang{}: \Lang{} will have syntax for the common
+syntactic elements that \OLang{} absorbed into the Pattern mechanism. Since
+Patterns in \OLang represented the idea of a computation with a sense of state
+-- some sort of mixture between a closure (a behavior with state) and an object
+(a piece of state with behavior) -- so will elements of \Lang{}. Just as in
+Java there is the "(Almost) Everything Is An Object" mentality, or how in Ruby
+"Everything Actually Is An Object," in \Lang{} we will have the mentality that
+"Everything Is A Stateful Computation." Thus these various easy to use and
+easy to read program elements will behave similarly to Patterns in \OLang{}.
 
 \section*{\Lang{} Feature Set}
 
 \Lang{} will provide the following features:
 
 \begin{itemize}
-\item Unifying Pattern Concept
-\item Refinement / Specialization
-\item Anonymous Pattern Instantiation
+\item Refinement / Specialization as in \OLang{}
+\item Virtual Classes / Members as in \OLang{}
+\item Anonymous Instantiation as in \OLang{}
 \item Access specifiers respect object boundaries, not class boundaries
+\item Everything is a stateful computation (closure / object mixture)
+\item References (no Pointers)
 \end{itemize}
 
 \section*{\Compiler{}: The \Lang{} Compiler}
-
-The compiler will proceed in two steps. First, the compiler will transform
-the source containing the syntactic sugar described above into a file
-consisting only of actual patterns. After this the compiler will transform
-general patterns into (hopefully portable) C code, and compile this to
-machine code with whatever compiler the user specifies.
 
 \section*{Code Examples}
 
