@@ -43,25 +43,41 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
     \Lang{} brings to the table a purely object oriented programming language where every type is
     modeled as an object--including the standard primitives. Integers, Strings, Arrays, and other types may be expressed in the standard fashion but are objects behind the scenes and can be treated as such.}
 
-\item{Controlable
+\item{Controllable
 
-   \Lang{} provides innate security by chosing object level access
+   \Lang{} provides innate security by choosing object level access
    control as opposed to class level access specifiers. Private members of one object
-   are inaccessible to other objects of the same type. Overloading is not allowed. No subclass can turn your functionality on its head.}
+   are inaccessible to other objects of the same type. Overloading is not allowed.
+   No subclass can turn your functionality on its head.}
 
 \item{Versatile
 
-    \Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Anonymous instantiation allows for extension of your classes in a quick easy fashion. Generic typing on method parameters allows for the same method to cover a variety of input types.}
+    \Lang{} allows programmers to place "refinement methods" inside their code.
+    Alone these methods do nothing, but may be defined by subclasses so as to extend
+    functionality at certain important positions. Anonymous instantiation allows for
+    extension of your classes in a quick easy fashion. Generic typing on method
+    parameters allows for the same method to cover a variety of input types.}
 \end{enumerate}
 
 \section*{ The Motivation Behind \Lang{}}
-\Lang{} is a reaction to the object-oriented languages before it. Obtuse syntax, flaws in security, and awkward implementations plague the average object-oriented language. \Lang{} is intended as a step toward ease and comfort as an object-oriented programmer.
+\Lang{} is a reaction to the object-oriented languages before it.
+Obtuse syntax, flaws in security, and awkward implementations plague
+the average object-oriented language. \Lang{} is intended as a step
+toward ease and comfort as an object-oriented programmer.
 
 
-The first goal is to make an object-oriented language that is comfortable in its own skin. It should naturally lend itself to constructing API-layers and abstracting general models. It should serve the programmer towards their goal instead of exerting unnecessary effort through verbosity and awkwardness of structure.
+The first goal is to make an object-oriented language that is comfortable
+in its own skin. It should naturally lend itself to constructing API-layers
+and abstracting general models. It should serve the programmer towards their
+goal instead of exerting unnecessary effort through verbosity and awkwardness
+of structure.
 
 
-The second goal is to make a language that is stable and controllable. The programmer in the lowest abstraction layer has control over how those higher may procede. Unexpected runtime behavior should be reduced through firmness of semmantic structure and debugging should be a straight-forward process due to pure object and method nature of \Lang{}.
+The second goal is to make a language that is stable and controllable.
+The programmer in the lowest abstraction layer has control over how those
+higher may procede. Unexpected runtime behavior should be reduced through
+firmness of semantic structure and debugging should be a straight-forward
+process due to pure object and method nature of \Lang{}.
 
 \section*{\Lang{} Feature Set}
 
@@ -105,7 +121,8 @@ Class Person:
       
       ## Only use this line if we have a defined
       ## refining method
-      result = result + " into a " + refine extra()
+      if refinable(extra):
+        result = result + " into a " + refine extra()
       
       result = result + "!"
       
