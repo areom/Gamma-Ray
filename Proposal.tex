@@ -9,6 +9,8 @@
 \renewcommand{\lstlistingname}{Example}
 \renewcommand{\lstlistlistingname}{Examples}
 
+\setlength{\parskip}{4pt}
+
 \title{\Lang{}: A Strict yet Fair Programming Language}
 \author{
 	Ben Caimano - blc2129@columbia.edu \\
@@ -29,58 +31,37 @@ A Project for Programming Languages and Translators,
 \end{center}
 
 
-\section*{Why \Lang{} -- or Why Orient the Object this way?}
- is a programming language of the ``Scandanvian School'' of Object
-orientation. The language provided two primary beneficial features:
+\section*{Why \Lang{}? -- The Core Concept}
+We propose to implement an elegant yet secure general purpose object-oriented programming language. Interesting features have been selected from the history of object-oriented programming and will be combined with the familiar ideas and style of modern languages.
+
+\Lang{} combines three disparate but equally important tenants:
+
 
 \begin{enumerate}
-\item The  Pattern is used as a unifying concept for every element
-of the program -- Classes, Procedures, anonymous Objects, etc.
-\item Refinement and specialization is used instead of overriding to
-ensure that super-pattern behavior is respected by sub-patterns. A
-simple way analogy to understand this is to think how you would program
-in Java if all your methods had to be declared \emph{abstract} or
-\emph{final}. just provides this structuring and a little help to
-make it easier to use.
+\item{Purely object-oriented 
+    
+    \Lang{} brings to the table a purely object oriented programming language where every type is
+    modeled as an object--including the standard primitives. Integers, Strings, Arrays, and other types may be expressed in the standard fashion but are objects behind the scenes and can be treated as such.}
+
+\item{Controlable
+
+   \Lang{} provides inanate security by chosing object level access
+   control as opposed to class level access specifiers. Private members of one object
+   are inaccessible to other objects of the same type. Overloading is not allowed. No subclass can turn your functionality on its head.}
+
+\item{Versitile
+
+    \Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Anonymous instantiation allows for extension of your classes in a quick easy fashion.}
 \end{enumerate}
 
-A consequence of the fact that patterns are refined and everything is a
-pattern is that classes can have nested classes and \emph{those} nested
-classes can themselves be refined; classes can be \emph{virtual} in the
-sense of virtual functions, etc in other languages.
+\section*{ The Motivation Behind \Lang{}}
+\Lang{} is a reaction to the object-oriented languages before it. Obtuse syntax, flaws in security, and awkward implementations plague the average object-oriented language. \Lang{} is intended as a step toward ease and comfort as an object-oriented programmer.
 
-The primary negative about however is that the syntax is horrible
--- absolutely atrocious. While the language provides a nice theoretical
-setting for object oriented development given it's pro's, the fact that
-the syntax is such a significant con clearly more than negates any of
-the benefits. In a world where LISP, the most beautiful language, is
-derided for its parentheses, a language like  cannot succeed
-where Python, Ruby, and other easy to read languages exist.
 
-And so this is the goal of the \Lang{} programing language project; to
-make a new language with a feature set similar to what  provides
-but with a readable syntax that is programmer friendly.
+The first goal is to make an object-oriented language that is comfortable in its own skin. It should naturally lend itself to constructing API-layers and abstracting general models. It should serve the programmer towards their goal instead of exerting unnecessary effort through verbosity and awkwardness of structure.
 
-\section*{ \& \Lang{} Differences}
-If we are making \Lang{} as a replacement for  then we need to talk
-about the changes this replacement represents.  is written without
-much syntactic sugar; the Pattern syntax is used pervasively despite the
-fact that there are multiple repeated uses of the syntax. This is where a
-LISPer would say ``Stop, Macro Time!'' We have repeated syntactic patterns
-but a serious line clutter in their use.
 
-This leads us to actually have two goals with respect to updating the syntax
-and usability of : first we will create a more readable version of
-the  Pattern mechanism. As in , this will be \Lang{}'s primary
-way to define program entities, and so will still act as a unifying force
-and will be available to the programmer as the ``under the hood'' language
-for when it is needed.
-
-The second goal will be to provide syntactic sugar for common Pattern syntax
-patterns (please blame  developers for choosing Pattern as the name
-of their unifying concept, and making these sentences harder to read). We will
-provide syntax for classes, methods, and probably several other common patterns
-as we develop the language specification.
+The second goal is to make a language that is stable and controllable. The programmer in the lowest abstraction layer has control over how those higher may procede. Unnexpected runtime behavior should be reduced through firmness of semmantic structure and debugging should be a straight-forward process due to pure object and method nature of \Lang{}.
 
 \section*{\Lang{} Feature Set}
 
@@ -90,8 +71,8 @@ as we develop the language specification.
 \item Universal objecthood
 \item Optional "refinement" functions to extend superclass functionality
 \item Anonymous class instantiation
-\item Static typing with generic parameter typing
-\item Access specifiers respect object boundaries, not class boundaries
+\item Static typing with generic method parameter
+\item Access specifiers that respect object boundaries, not class boundaries
 \end{itemize}
 
 \section*{\Compiler{}: The \Lang{} Compiler}
@@ -102,7 +83,7 @@ consisting only of the most concise and structurally sound GAMMA core. After thi
 general patterns into (hopefully portable) C code, and compile this to
 machine code with whatever compiler the user specifies.
 
-\section*{Code Examples}
+\section*{Code Example}
 
 \begin{lstlisting}[numbers=left,label=The All-mighty Pattern,caption=The All-mighty Pattern]
 Class Person:
