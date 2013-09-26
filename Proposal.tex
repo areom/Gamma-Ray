@@ -45,13 +45,13 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
 
 \item{Controlable
 
-   \Lang{} provides inanate security by chosing object level access
+   \Lang{} provides innate security by chosing object level access
    control as opposed to class level access specifiers. Private members of one object
    are inaccessible to other objects of the same type. Overloading is not allowed. No subclass can turn your functionality on its head.}
 
-\item{Versitile
+\item{Versatile
 
-    \Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Anonymous instantiation allows for extension of your classes in a quick easy fashion.}
+    \Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Anonymous instantiation allows for extension of your classes in a quick easy fashion. Generic typing on method parameters allows for the same method to cover a variety of input types.}
 \end{enumerate}
 
 \section*{ The Motivation Behind \Lang{}}
@@ -61,7 +61,7 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
 The first goal is to make an object-oriented language that is comfortable in its own skin. It should naturally lend itself to constructing API-layers and abstracting general models. It should serve the programmer towards their goal instead of exerting unnecessary effort through verbosity and awkwardness of structure.
 
 
-The second goal is to make a language that is stable and controllable. The programmer in the lowest abstraction layer has control over how those higher may procede. Unnexpected runtime behavior should be reduced through firmness of semmantic structure and debugging should be a straight-forward process due to pure object and method nature of \Lang{}.
+The second goal is to make a language that is stable and controllable. The programmer in the lowest abstraction layer has control over how those higher may procede. Unexpected runtime behavior should be reduced through firmness of semmantic structure and debugging should be a straight-forward process due to pure object and method nature of \Lang{}.
 
 \section*{\Lang{} Feature Set}
 
@@ -69,9 +69,9 @@ The second goal is to make a language that is stable and controllable. The progr
 
 \begin{itemize}
 \item Universal objecthood
-\item Optional "refinement" functions to extend superclass functionality
+\item Optional ``refinement'' functions to extend superclass functionality
 \item Anonymous class instantiation
-\item Static typing with generic method parameter
+\item Static typing with generic method parameters
 \item Access specifiers that respect object boundaries, not class boundaries
 \end{itemize}
 
@@ -85,56 +85,68 @@ machine code with whatever compiler the user specifies.
 
 \section*{Code Example}
 
-\begin{lstlisting}[numbers=left,label=The All-mighty Pattern,caption=The All-mighty Pattern]
+\begin{lstlisting}[numbers=left,label=Personhood,caption=Personhood]
 Class Person:
-  ## constructors take arguments, initialize state
-  _init(String first_name, String last_name):
-    this.first_name = first_name
-    this.last_name = last_name
-
-  ## the run method is a fundamental method that makes an object callable
-  _run:
-    println(this.first_name + " " + this.last_name + " is being stringified!")
-    result = refine
-    println(this.first_name + " " + this.last_name + " is strinfigied into " + result + "!")
-    return result
-
-  ## Simple member objects as variables
   Protected:
+    ## instance variables have a type an access class
     String first_name
     String last_name
 
+    ## constructors take arguments, initialize state
+    init(String first_name, String last_name):
+      this.first_name = first_name
+      this.last_name = last_name
+
   Public:
-    ## This is a common pattern that is equivalent
-    ## to declaring a method virtual / abstract
-    ## we need to think about this more (necessary
-    ## to implement via compiler check; maybe returns
-    ## NULL object if not implemented, etc, etc...
-    String citizenID:
-      return refine
+    ## methods can return values and can be specialized
+    ## via refinement
+    String toString:
+      String result = this.first_name + " " + this.last_name + " is being stringified"
+      
+      ## Only use this line if we have a defined
+      ## refining method
+      result = result + " into a " + refine extra()
+      
+      result = result + "!"
+      
+      return result
 
-
-class Student extends Person:
-  ## Subclasses have to invoke their superclass,
-  ## just like in common OOP languages (java/etc)
-  _init(string first, string last, string grade):
-    ## We can interpret _init because it should only be called through the Person() construction.
-    ## Since it is called inside, it must refer to the super
-    self._init(first, last)
-    this.level = grade
-
-  ## Now we can refine!
-  _run:
-    return this.last_name + ", " + this.first_name + " is a " + this.level
-    
+Class Student extends Person:
   ## subclasses have their own data
   Private:
     String level # Freshman, etc...
 
+  Protected:
+    ## Subclasses have to invoke their superclass,
+    ## just like in common OOP languages (java/etc)
+    init(string first, string last, string grade):
+      super(first, last)
+      this.level = grade
+
   Public:
-    String citizenID:
-      
+    ## Now we can refine!
+    String toString.extra:
+      String level_result = this.last_name + ", " + this.first_name + " is a " + this.level
+      println(level_result)
+      return level_result
+
+## Call our class
+Person average = new Person("John", "Smith")
+println(average.toString)
+
+println("")
+
+Student very_smart = new Student("Roger", "Penrose", "Graduate Student")
+println(very_smart.toString)
   
 \end{lstlisting}
+
+\begin{verbatim}
+The above program should print:
+    John Smith is being stringified!
+
+    Penrose, Roger is a Graduate Student
+    Roger Penrose is being stringified into Penrose, Roger is a Graduate Student!
+\end{verbatim}
 
 \end{document}
