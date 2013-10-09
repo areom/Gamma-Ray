@@ -1,0 +1,27 @@
+* contents
+  - Introduction
+    Brief description of the language idea  
+    * feature set description (short)
+      - refine / specialization
+      - purely object oriented
+      - access respects object boundaries
+      - anonymous object instantiation (i.e. really anonymous specialization -- we can get definition when we get to interfaces in 2.0 in the future [I plan on doing more stuff with this guys])
+      - templating
+
+  - lexical conventions
+
+  - syntax
+
+  * semantics
+    - scoping
+    - other things, add more as we get more stuff written down
+
+  - built in functions
+
+  - grammar
+
+
+
+we can get introduction, grammar by Friday
+we can get the semantics, lexer, scanner hopefully done by the end of the weekend.
+
