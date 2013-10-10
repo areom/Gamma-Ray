@@ -114,11 +114,18 @@ _INSTANCE_CONSTRUCTOR_ =
     _BODY_
 
 ###
-# Return types are either nothing or something
+# Types are either something or arrays of something
+###
+_TYPE_ =
+| _CLASS_ID_
+| _TYPE_ []
+
+###
+# Return types are something or nothing
 ###
 _RETURN_TYPE_ =
   unit
-| _CLASS_ID_
+| _TYPE_
 
 ###
 # An paramlist can be the empty string, this
@@ -154,7 +161,7 @@ _MAIN_HEAD_ =
 # Declaring a variable: type & name
 ###
 _VAR_DECL_ =
-  _CLASS_ID_ _VAR_ID_
+  _TYPE_ _VAR_ID_
 
 ###
 # Classes start with a capital
@@ -185,6 +192,10 @@ _LOWER_ =
 _UPPER_ =
   [ABCDEFGHIJKLMNOPQRSTUVWXYZ]
 
+_DIGITS_ =
+  _DIGIT_
+| _DIGITS_ _DIGIT_
+
 _DIGIT_ =
   [0123456789]
 
@@ -209,12 +220,12 @@ _STATEMENT_ =
 | _EXPRESSION_
 
 _LOCAL_ =
-  _CLASS_ID_ _VAR_ID_
-| _CLASS_ID_ _VAR_ID_ := _EXPRESSION_
+  _TYPE_ _VAR_ID_
+| _TYPE_ _VAR_ID_ := _EXPRESSION_
 
 _REFINEMENT_STMT_ =
   refine _SPECIALIZE_
-| refine _SPECIALIZE_ to _CLASS_ID_  # If you want it there for documentation...
+| refine _SPECIALIZE_ to _RETURN_TYPE_  # If you want it there for documentation...
 
 _ASSIGNMENT_ =
   _VAR_ID_ := _EXPRESSION_           # Local Assignment
@@ -244,7 +255,13 @@ _EXPRESSION_ =
 | _ARITHMETIC_         # Do some math
 | _STRINGOP_           # Be fancy with strings
 | _TEST_               # Tests
+| _ARRAY_EXPRESSION_   # Arrays
 | ( _EXPRESSION_ )     # Grouping
+| null                 # Like in Java
+
+_EXPRESSION_SEQ_ =
+  _EXPRESSION_
+| _EXPRESSION_SEQ_, _EXPRESSION_
 
 _INVOCATION_ =
   this._METHOD_INVOKE_       # Instance Invocation
@@ -252,14 +269,7 @@ _INVOCATION_ =
 
 _METHOD_INVOKE_ =
   _VAR_ID_ ()
-| _VAR_ID_ ( _ARGS_ )
-
-_ARGS_ =
-  _ARGS_
-| _ARGS_, _ARG_
-
-_ARG_ =
-  _EXPRESSION_
+| _VAR_ID_ ( _EXPRESSION_SEQ_ )
 
 _ARITHMETIC_ =
   _EXPRESSION_ _BINAR_ _EXPRESSION_
@@ -277,6 +287,9 @@ _UNIAR_ =
 
 _STRINGOP_ =
   _EXPRESSION_ + _EXPRESSION_
+
+_ARRAY_EXPRESSION_ =
+  [ _EXPRESSION_SEQ_ ]  # I hope this isn't ambiguous with instantiation
 
 _TEST_ =
   _EXPRESSION_ _BINTEST_ _EXPRESSION_
@@ -298,15 +311,46 @@ _UNITEST_ =
   ~     # not
 
 _INSTANTIATION_ =
+  _OBJECT_INSTANTIATION_
+| _ARRAY_INSTANTIATION_
+
+_OBJECT_INSTANTIATION_ =
   new _CLASS_ID_
-| new _CLASS_ID_ ( _ARGS_ )
+| new _CLASS_ID_ ( _EXPRESSION_SEQ_ )
+
+_ARRAY_INSTANTIATION_ =
+  new _TYPE_ [ _DIGITS_ ]
 
 _REFINEMENT_EXPR_ =
   refine _SPECIALIZE_ to _CLASS_ID_
 
 _SPECIALIZE_ =
   _VAR_ID_ ()
-| _VAR_ID_ ( _ARGS_ )
+| _VAR_ID_ ( _EXPRESSION_SEQ_ )
 
 _LITERAL_ =
- ...
+  _INT_LITERAL_
+| _BOOLEAN_LITERAL_
+| _FLOAT_LITERAL_
+| _STRING_LITERAL_
+
+_INT_LITERAL_ =
+  _DIGITS_
+
+_FLOAT_LITERAL_ =
+  _REAL_
+| _REAL_ . e _EXPONENT_
+
+_REAL_ =
+  _DIGITS_._DIGITS_
+
+_EXPONENT_ =
+  -_INT_LITERAL_
+| _INT_LITERAL_
+
+_BOOLEAN_LITERAL_ =
+  true
+| false
+
+_STRING_LITERAL_ =
+  "... fill this in ..."
