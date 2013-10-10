@@ -1,18 +1,45 @@
 # General grammar
 
+###
+# class SomeType:
+#    ....
+# - OR -
+# class SomeType extends SomeOtherType:
+#    ....
+###
 _CLASS_ =
   _CLASS_DECLARATION_:
     _CLASS_DECLS_
 
+###
+# This is the part of the above that
+# decides between the two forms
+###
 _CLASS_DECLARATION_ =
   class _CLASS_ID_:
 | class _CLASS_ID_ extends _CLASS_ID_:
 
+###
+# Anything that goes on inside a class
+# Instance variables, methods, constructors, refinements
+# Also a main
+###
 _CLASS_DECLS_ =
   _CLASS_DECL_
 | _CLASS_DECLS_
   _CLASS_DECL_
 
+###
+# Options for a declaration section:
+#  1) main:
+#       ....
+#  2) main(String[] ____):
+#       ....
+#  3) [private|protected|public]:
+#       ....
+#  4) refinements:
+#       ....
+###
 _CLASS_DECL_ =
   _MAIN_
 | _ACCESS_TYPE_:
@@ -20,11 +47,24 @@ _CLASS_DECL_ =
 | refinements:
   _REFINE_DEFNS_
 
+###
+# Object boundary access
+###
 _ACCESS_TYPE_ =
   private
 | protected
 | public
 
+###
+# Refinements get their own section because
+# we want them to be a focus of `subclassing'
+# and so it is where the user especially puts
+# specializations -- notice that multiple
+# refinement sections can be given...
+# A refinement is just like a normal method
+# except it can only be private and it has
+# a name like methodName.extension
+###
 _REFINE_DEFNS_ =
   _REFINE_DEFN_
 | _REFINE_DEFNS_
@@ -34,6 +74,13 @@ _REFINE_DEFN_ =
   _RETURN_TYPE_ _VAR_ID_._VAR_ID_ _ARGLIST_:
     _STATEMENTS_
 
+###
+# The normal object stuff we can put inside a
+# class, which includes:
+#  - Instance Variables
+#  - Instance Methods
+#  - Instance Constructors
+###
 _CLASS_DEFNS_ =
   _CLASS_DEFN_
 | _CLASS_DEFNS_ 
@@ -44,21 +91,40 @@ _CLASS_DEFN_ =
 | _INSTANCE_METHOD_
 | _INSTANCE_CONSTRUCTOR_
 
+###
+# A var is just a type and a name
+###
 _INSTANCE_VAR_ =
-  _CLASS_ID_ _VAR_ID_
+  _VAR_DECL_
 
+###
+# Methods return something and take data
+# They hopefully do some magic computation
+###
 _INSTANCE_METHOD_ =
   _RETURN_TYPE_ _VAR_ID_ _ARGLIST_:
     _STATEMENTS_
 
+###
+# Initializers don't return anything, they
+# just possibly take data and set up state
+###
 _INSTANCE_CONSTRUCTOR_ =
   init _ARGLIST_:
     _STATEMENTS_
 
+###
+# Return types are either nothing or something
+###
 _RETURN_TYPE_ =
   void
 | CLASS_ID
 
+###
+# An arglist can be the empty string, this
+# way we can have methods like:
+#   toString:
+###
 _ARGLIST_ =
   epsilon
 | ( )
@@ -69,8 +135,13 @@ _ARGS_ =
 | _ARGS_, _ARG_
 
 _ARG_ =
-  _CLASS_ID_ _VAR_ID_
+  _VAR_DECL_
 
+###
+# The main is explicitly written as main
+# and different objects can have different
+# mains, of course.
+###
 _MAIN_ =
   _MAIN_HEAD_:
     _STATEMENTS_
@@ -79,10 +150,22 @@ _MAIN_HEAD_ =
   main():
 | main(String[] _VAR_ID_):
 
+###
+# Declaring a variable: type & name
+###
+_VAR_DECL_ =
+  _CLASS_ID_ _VAR_ID_
+
+###
+# Classes start with a capital
+###
 _CLASS_ID_ =
   _UPPER_
 | _UPPER_ _ALPHANUMS_
 
+###
+# Variables do not
+###
 _VAR_ID_ =
   _LOWER_
 | _LOWER_ _ALPHANUMS_
