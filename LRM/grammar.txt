@@ -202,6 +202,7 @@ _STATEMENTS_ =
 
 _STATEMENT_ =
   _LOCAL_
+| _REFINEMENT_STMT_
 | _ASSIGNMENT_
 | _CONDITIONAL_
 | _LOOP_
@@ -210,6 +211,10 @@ _STATEMENT_ =
 _LOCAL_ =
   _CLASS_ID_ _VAR_ID_
 | _CLASS_ID_ _VAR_ID_ := _EXPRESSION_
+
+_REFINEMENT_STMT_ =
+  refine _SPECIALIZE_
+| refine _SPECIALIZE_ to _CLASS_ID_  # If you want it there for documentation...
 
 _ASSIGNMENT_ =
   _VAR_ID_ := _EXPRESSION_           # Local Assignment
@@ -231,19 +236,23 @@ _LOOP_ =
     _STATEMENTS_
 
 _EXPRESSION_ =
-  _INVOCATION_      # Make something happen
-| _VAR_ID_          # Just the value of a variable
-| _ARITHMETIC_      # Do some math
-| _STRINGOP_        # Be fancy with strings
-| _TEST_            # Tests
+  _INVOCATION_         # Make something happen
+| _REFINEMENT_EXPR_    # Specialize
+| _INSTANTIATION_      # Make something new
+| _LITERAL_            # Literally literals
+| _VAR_ID_             # Just the value of a variable
+| _ARITHMETIC_         # Do some math
+| _STRINGOP_           # Be fancy with strings
+| _TEST_               # Tests
+| ( _EXPRESSION_ )     # Grouping
 
 _INVOCATION_ =
   this._METHOD_INVOKE_       # Instance Invocation
 | _VAR_ID_._METHOD_INVOKE_   # Far Invocation
 
 _METHOD_INVOKE_ =
-  _VAR_ID_()
-| _VAR_ID_( _ARGS_ )
+  _VAR_ID_ ()
+| _VAR_ID_ ( _ARGS_ )
 
 _ARGS_ =
   _ARGS_
@@ -252,3 +261,52 @@ _ARGS_ =
 _ARG_ =
   _EXPRESSION_
 
+_ARITHMETIC_ =
+  _EXPRESSION_ _BINAR_ _EXPRESSION_
+| _UNIAR_ _EXPRESSION_
+
+_BINAR_ =
+  +   # Addition
+| -   # Subtraction
+| *   # Multiplication
+| /   # Division
+| %   # Modulus
+
+_UNIAR_ =
+  -   # Negation
+
+_STRINGOP_ =
+  _EXPRESSION_ + _EXPRESSION_
+
+_TEST_ =
+  _EXPRESSION_ _BINTEST_ _EXPRESSION_
+| _UNITEST_ _EXPRESSION_
+| refinable(_VAR_ID_)
+
+_BINTEST_ =
+  and
+| or
+| xor
+| <     # less than
+| <=    # less than equal to
+| =     # equal to
+| ~=    # not equal to
+| >=    # greater than equal to
+| >     # 
+
+_UNITEST_ =
+  ~     # not
+
+_INSTANTIATION_ =
+  new _CLASS_ID_
+| new _CLASS_ID_ ( _ARGS_ )
+
+_REFINEMENT_EXPR_ =
+  refine _SPECIALIZE_ to _CLASS_ID_
+
+_SPECIALIZE_ =
+  _VAR_ID_ ()
+| _VAR_ID_ ( _ARGS_ )
+
+_LITERAL_ =
+ ...
