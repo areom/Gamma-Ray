@@ -31,7 +31,7 @@ _REFINE_DEFNS_ =
   _REFINE_DEFN_
 
 _REFINE_DEFN_ =
-  _RETURN_TYPE_ _VAR_ID_._VAR_ID_ ( _ARGLIST_ ):
+  _RETURN_TYPE_ _VAR_ID_._VAR_ID_ _ARGLIST_:
     _STATEMENTS_
 
 _CLASS_DEFNS_ =
@@ -48,13 +48,34 @@ _INSTANCE_VAR_ =
   _CLASS_ID_ _VAR_ID_
 
 _INSTANCE_METHOD_ =
-  _RETURN_TYPE_ 
+  _RETURN_TYPE_ _VAR_ID_ _ARGLIST_:
+    _STATEMENTS_
+
+_INSTANCE_CONSTRUCTOR_ =
+  init _ARGLIST_:
+    _STATEMENTS_
+
+_RETURN_TYPE_ =
+  void
+| CLASS_ID
+
+_ARGLIST_ =
+  epsilon
+| ( )
+| ( _ARGS_ )
+
+_ARGS_ =
+  _ARG_
+| _ARGS_, _ARG_
+
+_ARG_ =
+  _CLASS_ID_ _VAR_ID_
 
 _MAIN_ =
   _MAIN_HEAD_:
     _STATEMENTS_
 
-_MAIN_HEAD_:
+_MAIN_HEAD_ =
   main():
 | main(String[] _VAR_ID_):
 
@@ -62,6 +83,24 @@ _CLASS_ID_ =
   _UPPER_
 | _UPPER_ _ALPHANUMS_
 
-_VAR_ID_
+_VAR_ID_ =
   _LOWER_
 | _LOWER_ _ALPHANUMS_
+
+_ALPHANUMS_ =
+  _ALPHANUM_
+| _ALPHANUMS_ _ALPHANUM_
+
+_ALPHANUM_ =
+  LOWER
+| UPPER
+| DIGIT
+
+_LOWER_ =
+  [abcdefghijklmnopqrstuvwxyz]
+
+_UPPER_ =
+  [ABCDEFGHIJKLMNOPQRSTUVWXYZ]
+
+_DIGIT_ =
+  [0123456789]
