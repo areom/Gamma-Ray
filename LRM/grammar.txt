@@ -3,7 +3,7 @@
 ###
 # class SomeType:
 #    ....
-# - OR -
+# - or -
 # class SomeType extends SomeOtherType:
 #    ....
 ###
@@ -71,8 +71,8 @@ _REFINE_DEFNS_ =
   _REFINE_DEFN_
 
 _REFINE_DEFN_ =
-  _RETURN_TYPE_ _VAR_ID_._VAR_ID_ _ARGLIST_:
-    _STATEMENTS_
+  _RETURN_TYPE_ _VAR_ID_._VAR_ID_ _PARAMLIST_:
+    _BODY_
 
 ###
 # The normal object stuff we can put inside a
@@ -102,39 +102,39 @@ _INSTANCE_VAR_ =
 # They hopefully do some magic computation
 ###
 _INSTANCE_METHOD_ =
-  _RETURN_TYPE_ _VAR_ID_ _ARGLIST_:
-    _STATEMENTS_
+  _RETURN_TYPE_ _VAR_ID_ _PARAMLIST_:
+    _BODY_
 
 ###
 # Initializers don't return anything, they
 # just possibly take data and set up state
 ###
 _INSTANCE_CONSTRUCTOR_ =
-  init _ARGLIST_:
-    _STATEMENTS_
+  init _PARAMLIST_:
+    _BODY_
 
 ###
 # Return types are either nothing or something
 ###
 _RETURN_TYPE_ =
-  void
-| CLASS_ID
+  unit
+| _CLASS_ID_
 
 ###
-# An arglist can be the empty string, this
+# An paramlist can be the empty string, this
 # way we can have methods like:
 #   toString:
 ###
-_ARGLIST_ =
+_PARAMLIST_ =
   epsilon
 | ( )
-| ( _ARGS_ )
+| ( _PARAMS_ )
 
-_ARGS_ =
-  _ARG_
-| _ARGS_, _ARG_
+_PARAMS_ =
+  _PARAM_
+| _PARAMS_, _PARAM_
 
-_ARG_ =
+_PARAM_ =
   _VAR_DECL_
 
 ###
@@ -144,7 +144,7 @@ _ARG_ =
 ###
 _MAIN_ =
   _MAIN_HEAD_:
-    _STATEMENTS_
+    _BODY_
 
 _MAIN_HEAD_ =
   main():
@@ -175,9 +175,9 @@ _ALPHANUMS_ =
 | _ALPHANUMS_ _ALPHANUM_
 
 _ALPHANUM_ =
-  LOWER
-| UPPER
-| DIGIT
+  _LOWER_
+| _UPPER_
+| _DIGIT_
 
 _LOWER_ =
   [abcdefghijklmnopqrstuvwxyz]
@@ -187,3 +187,68 @@ _UPPER_ =
 
 _DIGIT_ =
   [0123456789]
+
+
+###
+# Now for the fun stuff -- Statements & Expressions
+###
+_BODY_ =
+  _STATEMENTS_
+
+_STATEMENTS_ =
+  _STATEMENT_
+| _STATEMENTS_
+  _STATEMENT_
+
+_STATEMENT_ =
+  _LOCAL_
+| _ASSIGNMENT_
+| _CONDITIONAL_
+| _LOOP_
+| _EXPRESSION_
+
+_LOCAL_ =
+  _CLASS_ID_ _VAR_ID_
+| _CLASS_ID_ _VAR_ID_ := _EXPRESSION_
+
+_ASSIGNMENT_ =
+  _VAR_ID_ := _EXPRESSION_           # Local Assignment
+  this._VAR_ID_ := _EXPRESSION_      # Instance Assignment
+  _VAR_ID_._VAR_ID_ := _EXPRESSION_  # Far Assignment
+
+_CONDITIONAL_ =
+  if ( _EXPRESSION_ ):
+    _STATEMENTS_
+| if ( _EXPRESSION_ ):
+    _STATEMENTS_
+  else:
+    _STATEMENTS_
+
+_LOOP_ =
+  for (_ASSIGNMENT_, _EXPRESSION_, _ASSIGNMENT_):
+    _STATEMENTS_
+| while (_EXPRESSION_):
+    _STATEMENTS_
+
+_EXPRESSION_ =
+  _INVOCATION_      # Make something happen
+| _VAR_ID_          # Just the value of a variable
+| _ARITHMETIC_      # Do some math
+| _STRINGOP_        # Be fancy with strings
+| _TEST_            # Tests
+
+_INVOCATION_ =
+  this._METHOD_INVOKE_       # Instance Invocation
+| _VAR_ID_._METHOD_INVOKE_   # Far Invocation
+
+_METHOD_INVOKE_ =
+  _VAR_ID_()
+| _VAR_ID_( _ARGS_ )
+
+_ARGS_ =
+  _ARGS_
+| _ARGS_, _ARG_
+
+_ARG_ =
+  _EXPRESSION_
+
