@@ -1,0 +1,67 @@
+# General grammar
+
+_CLASS_ =
+  _CLASS_DECLARATION_:
+    _CLASS_DECLS_
+
+_CLASS_DECLARATION_ =
+  class _CLASS_ID_:
+| class _CLASS_ID_ extends _CLASS_ID_:
+
+_CLASS_DECLS_ =
+  _CLASS_DECL_
+| _CLASS_DECLS_
+  _CLASS_DECL_
+
+_CLASS_DECL_ =
+  _MAIN_
+| _ACCESS_TYPE_:
+    _CLASS_DEFNS_
+| refinements:
+  _REFINE_DEFNS_
+
+_ACCESS_TYPE_ =
+  private
+| protected
+| public
+
+_REFINE_DEFNS_ =
+  _REFINE_DEFN_
+| _REFINE_DEFNS_
+  _REFINE_DEFN_
+
+_REFINE_DEFN_ =
+  _RETURN_TYPE_ _VAR_ID_._VAR_ID_ ( _ARGLIST_ ):
+    _STATEMENTS_
+
+_CLASS_DEFNS_ =
+  _CLASS_DEFN_
+| _CLASS_DEFNS_ 
+  _CLASS_DEFN_
+
+_CLASS_DEFN_ =
+  _INSTANCE_VAR_
+| _INSTANCE_METHOD_
+| _INSTANCE_CONSTRUCTOR_
+
+_INSTANCE_VAR_ =
+  _CLASS_ID_ _VAR_ID_
+
+_INSTANCE_METHOD_ =
+  _RETURN_TYPE_ 
+
+_MAIN_ =
+  _MAIN_HEAD_:
+    _STATEMENTS_
+
+_MAIN_HEAD_:
+  main():
+| main(String[] _VAR_ID_):
+
+_CLASS_ID_ =
+  _UPPER_
+| _UPPER_ _ALPHANUMS_
+
+_VAR_ID_
+  _LOWER_
+| _LOWER_ _ALPHANUMS_
