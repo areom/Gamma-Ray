@@ -1,5 +1,4 @@
-# General grammar
-
+% Grammar
 ###
 # class SomeType:
 #    ....
@@ -9,7 +8,7 @@
 ###
 _CLASS_ =
   _CLASS_DECLARATION_:
-    _CLASS_DECLS_
+    _CLASS_DECL_+
 
 ###
 # This is the part of the above that
@@ -23,13 +22,7 @@ _CLASS_DECLARATION_ =
 # Anything that goes on inside a class
 # Instance variables, methods, constructors, refinements
 # Also a main
-###
-_CLASS_DECLS_ =
-  _CLASS_DECL_
-| _CLASS_DECLS_
-  _CLASS_DECL_
-
-###
+#
 # Options for a declaration section:
 #  1) main:
 #       ....
@@ -43,9 +36,9 @@ _CLASS_DECLS_ =
 _CLASS_DECL_ =
   _MAIN_
 | _ACCESS_TYPE_:
-    _CLASS_DEFNS_
+    _CLASS_DEFN_+
 | refinements:
-  _REFINE_DEFNS_
+  _REFINE_DEFN_+
 
 ###
 # Object boundary access
@@ -64,12 +57,6 @@ _ACCESS_TYPE_ =
 # A refinement is just like a normal method
 # except it can only be private and it has
 # a name like methodName.extension
-###
-_REFINE_DEFNS_ =
-  _REFINE_DEFN_
-| _REFINE_DEFNS_
-  _REFINE_DEFN_
-
 _REFINE_DEFN_ =
   _RETURN_TYPE_ _VAR_ID_._VAR_ID_ _PARAMLIST_:
     _BODY_
@@ -81,11 +68,6 @@ _REFINE_DEFN_ =
 #  - Instance Methods
 #  - Instance Constructors
 ###
-_CLASS_DEFNS_ =
-  _CLASS_DEFN_
-| _CLASS_DEFNS_ 
-  _CLASS_DEFN_
-
 _CLASS_DEFN_ =
   _INSTANCE_VAR_
 | _INSTANCE_METHOD_
@@ -102,16 +84,24 @@ _INSTANCE_VAR_ =
 # They hopefully do some magic computation
 ###
 _INSTANCE_METHOD_ =
-  _RETURN_TYPE_ _VAR_ID_ _PARAMLIST_:
+  _METHOD_HEAD_:
     _BODY_
+
+_METHOD_HEAD_:
+  _RETURN_TYPE_ _VAR_ID_:
+| _RETURN_TYPE_ ( [_PARAM_] ):
 
 ###
 # Initializers don't return anything, they
 # just possibly take data and set up state
 ###
 _INSTANCE_CONSTRUCTOR_ =
-  init _PARAMLIST_:
+  _INIT_HEAD_
     _BODY_
+
+_INIT_HEAD_:
+  init:
+| init ( [_PARAM_] ):
 
 ###
 # Types are either something or arrays of something
@@ -126,20 +116,6 @@ _TYPE_ =
 _RETURN_TYPE_ =
   unit
 | _TYPE_
-
-###
-# An paramlist can be the empty string, this
-# way we can have methods like:
-#   toString:
-###
-_PARAMLIST_ =
-  epsilon
-| ( )
-| ( _PARAMS_ )
-
-_PARAMS_ =
-  _PARAM_
-| _PARAMS_, _PARAM_
 
 _PARAM_ =
   _VAR_DECL_
@@ -182,19 +158,18 @@ _ALPHANUMS_ =
 | _ALPHANUMS_ _ALPHANUM_
 
 _ALPHANUM_ =
+  _ALPHA_
+| _DIGIT_
+
+_ALPHA_ =
   _LOWER_
 | _UPPER_
-| _DIGIT_
 
 _LOWER_ =
   [abcdefghijklmnopqrstuvwxyz]
 
 _UPPER_ =
   [ABCDEFGHIJKLMNOPQRSTUVWXYZ]
-
-_DIGITS_ =
-  _DIGIT_
-| _DIGITS_ _DIGIT_
 
 _DIGIT_ =
   [0123456789]
@@ -319,7 +294,7 @@ _OBJECT_INSTANTIATION_ =
 | new _CLASS_ID_ ( _EXPRESSION_SEQ_ )
 
 _ARRAY_INSTANTIATION_ =
-  new _TYPE_ [ _DIGITS_ ]
+  new _TYPE_ [ _DIGIT_+ ]
 
 _REFINEMENT_EXPR_ =
   refine _SPECIALIZE_ to _CLASS_ID_
@@ -335,14 +310,14 @@ _LITERAL_ =
 | _STRING_LITERAL_
 
 _INT_LITERAL_ =
-  _DIGITS_
+  _DIGIT_+
 
 _FLOAT_LITERAL_ =
   _REAL_
 | _REAL_ . e _EXPONENT_
 
 _REAL_ =
-  _DIGITS_._DIGITS_
+  _DIGIT_+._DIGIT_+
 
 _EXPONENT_ =
   -_INT_LITERAL_
