@@ -1,5 +1,7 @@
 We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph{upper}, \emph{alphanum}, and \emph{alphanums} to be predefined with their obvious meaning (plurality such as digits implies at least one digit). Then the grammar for the language is:
 
+\newcommand{\comment}[1]{{\escapegrammar$\bullet$\it\ #1}\\}
+
 \begin{grammar}
       [(colon){$\hskip 0.1cm \Rightarrow$\\$~\hskip 0.75cm$}]
       [(semicolon){\\$~\hskip 0.45cm|\hskip 0.2cm$}]
@@ -7,87 +9,102 @@ We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph
       [(period){\\}]
       [(quote){\begin{bf}}{\end{bf}}]
       [(nonterminal){$\langle$}{$\rangle$}]
+
+\comment{Classs may extend an object or default to extending Object.}
 <class>:"class ",<class id>,<extend>,<scope>,<class decls>.
 <extend>:"$\epsilon$";"extends ",<class id>.
 
+\comment{A class can be split up into five sections: private, protected, public members, refinements, and the main.}
 <class decls>:<class decl>;<class decls>,<class decl>.
 <class decl>:<refinement>;<access group>;<main>.
 
+\comment{Refinements are named method dot refinement}
 <refinement>:"refinement ",<scope>,<refines>.
-
 <refines>:<refine>;<refines>,<refine>.
-<refine>:<refine sig>,<scope>,<body>.
+<refine>:<refine sig>,<scope>,<statements>.
 <refine sig>:<return type>,<var id>,".",<var id>,<params>.
 
+\comment{Access groups contain all the members of a class}
 <access group>:<access type>,<scope>,<members>.
 <access type>:"private";"protected";"public".
-
 <members>:<member>;<members>,<member>.
 <member>:<ivar>;<method>;<init>.
-
 <ivar>:<var decl>.
-
-<method>:<method sig>,<scope>,<body>.
+<method>:<method sig>,<scope>,<statements>.
 <method sig>:<return type>,<var id>;<params>.
-
-<init>:<init sig>,<scope>,<body>.
+<init>:<init sig>,<scope>,<statements>.
 <init sig>:"init ",<params>.
 
-<main>:<main sig>,<scope>,<body>.
+\comment{The main is special -- it belongs to no object and is what can be used to start an execution}
+<main>:<main sig>,<scope>,<statements>.
 <main sig>:"main ";"main ","( ","String[] ",<var id>," )".
 
-<body>:<statements>.
+\comment{Finally, the meat and potatoes}
 <statements>:<statement>;<statements>,<statement>.
 <statement>:<local>;<refine stmt>;<assignment>;<conditional>;<loop>;<expression>.
 
+\comment{Local variables can be uninitialized (end up null) or initialized}
 <local>:<var decl>;<var decl>," := ",<expression>.
 
-<refine stmt>:"refine ",<specialize>;"refine ",<specialize>," to ",<return type>.
+\comment{Refine statements need not return type information}
+<refine stmt>:"refine ",<specialize>.
 
+\comment{Assignment works as in most languages -- lvalues receive the results of expressions}
 <assignment>:<lvalue>," := ",<expression>.
 <lvalue>:<var id>;"this"," . ",<var id>;<var id>," . ",<var id>,.
 
+\comment{If and else are the same as in every other language}
 <conditional>:<if>;<if>,<else>.
 <if>:"if ( ",<expression>," )",<scope>,<statements>.
 <else>:"else",<scope>.
 
-<loop>:<loop head>,<scope>,<body>.
+\comment{C and java style loop constructs}
+<loop>:<loop head>,<scope>,<statements>.
 <loop head>:"for ( ",<assigment>," , ",<expression>," , ",<assigment>," ) ";"while ( ",<expression>," ) ".
 
+\comment{An expression is anything that can result in a value -- note that assignment is not an expression (should we change?)}
 <expression>:<invocation>;<arithmetic>;<array expression>;<test>;<instantiate>;<refine expr>;<literal>;<var id>;"( ",<expression>, ")";"null".
 
+\comment{Method invocations always have a receiver}
 <invocation>:<receiver>," . ",<invoke>.
 <receiver>:"this";<var id>.
 <invoke>:<var id>," ()";<var id>," ( ",<args>," )".
 
+\comment{Basic arithmetic can and will be done!}
 <arithmetic>:<expression>,<bin op>,<expression>;<unary op>,<expression>.
 <bin op>:"+";"-";"*";"/";"\%".
 <unary op>:"-".
 
+\comment{Build an array on the fly (should we leave this out? TODO -- ARRAY ASSIGNMENT)}
 <array expression>:"[ ",<args>," ]".
 
+\comment{Common boolean predicates}
 <test>:<expression>,<bin pred>,<expression>;<unary pred>,<expression>;"refinable ( ",<var id>," )".
-<bin pred>:"and";"or";"xor";"<";"<=";"=";"~=";">=";">".
-<unary pred>:"~".
+<bin pred>:"and";"or";"xor";"$<$";"$<=$";"=";"!=";"$>=$";"$>$".
+<unary pred>:"!".
 
+\comment{Making something}
 <instantiate>:<object instantiate>;<array instantiate>.
 <object instantiate>:"new ",<class id>;"new ",<class id>," ( ",<args>," )".
 <array instantiate>:"new ",<type>," [ ",<digits>," ]".
 
+\comment{Refinement takes a specific specialization and notes the required return type}
 <refine expr>:"refine ",<specialize>," to ",<type>.
 <specialize>:<var id>," ()";<var id>," ( ",<args>," )".
 
+\comment{Literally necessary}
 <literal>:<int lit>;<bool lit>;<float lit>;<string lit>.
 <float lit>:<digits>," . ",<digits>.
 <int lit>:<sign><digits>.
 <bool lit>:"true";"false".
 <string lit>:"``",<string escape seq>,"''".
 
+\comment{Params and args are as expected}
 <params>:"$\epsilon$";" ( ",<paramlist>," )".
 <paramlist>:<var decl>;<paramlist>," , ",<var decl>.
-
 <args>:<expression>;<args>," , ",<expression>.
 
+\comment{All the basic stuff we've been saving up until now}
 <var decl>:<type>,<var id>.
 <return type>:"unit";<type>.
 <type>:<class id>;<type>,"[]".
