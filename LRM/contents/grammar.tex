@@ -1,0 +1,97 @@
+We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph{upper}, \emph{alphanum}, and \emph{alphanums} to be predefined with their obvious meaning (plurality such as digits implies at least one digit). Then the grammar for the language is:
+
+\begin{grammar}
+      [(colon){$\hskip 0.1cm \Rightarrow$\\$~\hskip 0.75cm$}]
+      [(semicolon){\\$~\hskip 0.45cm|\hskip 0.2cm$}]
+      [(comma){}]
+      [(period){\\}]
+      [(quote){\begin{bf}}{\end{bf}}]
+      [(nonterminal){$\langle$}{$\rangle$}]
+<class>:"class ",<class id>,<extend>,<scope>,<class decls>.
+<extend>:"$\epsilon$";"extends ",<class id>.
+
+<class decls>:<class decl>;<class decls>,<class decl>.
+<class decl>:<refinement>;<access group>;<main>.
+
+<refinement>:"refinement ",<scope>,<refines>.
+
+<refines>:<refine>;<refines>,<refine>.
+<refine>:<refine sig>,<scope>,<body>.
+<refine sig>:<return type>,<var id>,".",<var id>,<params>.
+
+<access group>:<access type>,<scope>,<members>.
+<access type>:"private";"protected";"public".
+
+<members>:<member>;<members>,<member>.
+<member>:<ivar>;<method>;<init>.
+
+<ivar>:<var decl>.
+
+<method>:<method sig>,<scope>,<body>.
+<method sig>:<return type>,<var id>;<params>.
+
+<init>:<init sig>,<scope>,<body>.
+<init sig>:"init ",<params>.
+
+<main>:<main sig>,<scope>,<body>.
+<main sig>:"main ";"main ","( ","String[] ",<var id>," )".
+
+<body>:<statements>.
+<statements>:<statement>;<statements>,<statement>.
+<statement>:<local>;<refine stmt>;<assignment>;<conditional>;<loop>;<expression>.
+
+<local>:<var decl>;<var decl>," := ",<expression>.
+
+<refine stmt>:"refine ",<specialize>;"refine ",<specialize>," to ",<return type>.
+
+<assignment>:<lvalue>," := ",<expression>.
+<lvalue>:<var id>;"this"," . ",<var id>;<var id>," . ",<var id>,.
+
+<conditional>:<if>;<if>,<else>.
+<if>:"if ( ",<expression>," )",<scope>,<statements>.
+<else>:"else",<scope>.
+
+<loop>:<loop head>,<scope>,<body>.
+<loop head>:"for ( ",<assigment>," , ",<expression>," , ",<assigment>," ) ";"while ( ",<expression>," ) ".
+
+<expression>:<invocation>;<arithmetic>;<array expression>;<test>;<instantiate>;<refine expr>;<literal>;<var id>;"( ",<expression>, ")";"null".
+
+<invocation>:<receiver>," . ",<invoke>.
+<receiver>:"this";<var id>.
+<invoke>:<var id>," ()";<var id>," ( ",<args>," )".
+
+<arithmetic>:<expression>,<bin op>,<expression>;<unary op>,<expression>.
+<bin op>:"+";"-";"*";"/";"\%".
+<unary op>:"-".
+
+<array expression>:"[ ",<args>," ]".
+
+<test>:<expression>,<bin pred>,<expression>;<unary pred>,<expression>;"refinable ( ",<var id>," )".
+<bin pred>:"and";"or";"xor";"<";"<=";"=";"~=";">=";">".
+<unary pred>:"~".
+
+<instantiate>:<object instantiate>;<array instantiate>.
+<object instantiate>:"new ",<class id>;"new ",<class id>," ( ",<args>," )".
+<array instantiate>:"new ",<type>," [ ",<digits>," ]".
+
+<refine expr>:"refine ",<specialize>," to ",<type>.
+<specialize>:<var id>," ()";<var id>," ( ",<args>," )".
+
+<literal>:<int lit>;<bool lit>;<float lit>;<string lit>.
+<float lit>:<digits>," . ",<digits>.
+<int lit>:<sign><digits>.
+<bool lit>:"true";"false".
+<string lit>:"``",<string escape seq>,"''".
+
+<params>:"$\epsilon$";" ( ",<paramlist>," )".
+<paramlist>:<var decl>;<paramlist>," , ",<var decl>.
+
+<args>:<expression>;<args>," , ",<expression>.
+
+<var decl>:<type>,<var id>.
+<return type>:"unit";<type>.
+<type>:<class id>;<type>,"[]".
+<class id>:<upper>;<upper>,<alphanums>.
+<var id>:<lower>;<lower>,<alphanums>.
+
+\end{grammar}
