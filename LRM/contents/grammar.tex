@@ -1,5 +1,3 @@
-We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph{upper}, \emph{alphanum}, and \emph{alphanums} to be predefined with their obvious meaning (plurality such as digits implies at least one digit). Then the grammar for the language is:
-
 \newcommand{\comment}[1]{{\escapegrammar$\bullet$\it\ #1}\\}
 
 \begin{grammar}
@@ -11,72 +9,59 @@ We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph
       [(nonterminal){$\langle$}{$\rangle$}]
 
 \comment{Classs may extend another class or default to extending Object}
-<class>:"class ",<class id>,<extend>,<scope>,<class decls>.
+<class>:"class ",<class id>,<extend>," \{ ",<class section>,"{\small *} \}".
 <extend>:"$\epsilon$";"extends ",<class id>.
 
-\comment{A class can be split up into five sections -- private protected public refinements and main}
-<class decls>:<class decl>;<class decls>,<class decl>.
-<class decl>:<refinement>;<access group>;<main>.
+\comment{Sections -- private protected public refinements and main}
+<class section>:<refinement>;<access group>;<main>.
 
 \comment{Refinements are named method dot refinement}
-<refinement>:"refinement ",<scope>,<refines>.
-<refines>:<refine>;<refines>,<refine>.
-<refine>:<refine sig>,<scope>,<statements>.
-<refine sig>:<return type>,<var id>,".",<var id>,<params>.
+<refinement>:"refinement \{ ",<refine>,"{\small *} \}".
+<refine>:<return type>,<var id>,".",<var id>,<params>," \{ ",<statement>,"{\small *} \}".
 
 \comment{Access groups contain all the members of a class}
-<access group>:<access type>,<scope>,<members>.
+<access group>:<access type>," \{ ",<member>,"{\small *} \}".
 <access type>:"private";"protected";"public".
-<members>:<member>;<members>,<member>.
-<member>:<ivar>;<method>;<init>.
-<ivar>:<var decl>.
-<method>:<method sig>,<scope>,<statements>.
-<method sig>:<return type>,<var id>;<params>.
-<init>:<init sig>,<scope>,<statements>.
-<init sig>:"init ",<params>.
+<member>:<var decl>;<method>;<init>.
+<method>:<return type>,<var id>,<params>," \{ ",<statement>,"{\small *} \}".
+<init>:"init ",<params>," \{ ",<statement>,"{\small *} \}".
 
-\comment{The main is special -- it belongs to no object and is what can be used to start an execution}
-<main>:<main sig>,<scope>,<statements>.
-<main sig>:"main ";"main ","( ","String[] ",<var id>," )".
+\comment{Main is special -- not instance data, starts execution}
+<main>:"main ","( ","String[] ",<var id>," )"," \{ ",<statement>,"{\small *} \}".
 
 \comment{Finally, the meat and potatoes}
-<statements>:<statement>;<statements>,<statement>.
-<statement>:<local>;<refine stmt>;<assignment>;<conditional>;<loop>;<expression>.
+<statement>:<var decl>," ;";<assignment>," ;";<conditional>;<loop>;<expression>," ;".
 
-\comment{Local variables can be uninitialized (end up null) or initialized}
-<local>:<var decl>;<var decl>," := ",<expression>.
+\comment{Accessing a variable possibly by index}
+<lpiece>:<var id>;<lpiece>," [ ",<expression>," ]".
 
-\comment{Refine statements need not return type information}
-<refine stmt>:"refine ",<specialize>.
+\comment{Accessing a member's member's member etc etc}
+<lvalue>:<lpiece>;<lvalue>," . ",<lpiece>.
 
-\comment{Assignment works as in most languages -- lvalues receive the results of expressions}
+\comment{Assignment -- lvalues receive the results of expressions}
 <assignment>:<lvalue>," := ",<expression>.
-<lvalue>:<var id>;"this"," . ",<var id>;<var id>," . ",<var id>,.
 
-\comment{If and else are the same as in every other language}
-<conditional>:<if>;<if>,<else>.
-<if>:"if ( ",<expression>," )",<scope>,<statements>.
-<else>:"else",<scope>.
+\comment{Basic control structures}
+<conditional>:"if ( ",<expression>," )"," \{ ",<statement>,"{\small *} \} else \{ ",<statement>,"{\small *} \}".
+<loop>:"while ( ",<expression>," ) "," \{ ",<statement>,"{\small *} \}".
 
-\comment{C and java style loop constructs}
-<loop>:<loop head>,<scope>,<statements>.
-<loop head>:"for ( ",<assigment>," , ",<expression>," , ",<assigment>," ) ";"while ( ",<expression>," ) ".
-
-\comment{An expression is anything that can result in a value -- note that assignment is not an expression (should we change?)}
-<expression>:<invocation>;<arithmetic>;<array expression>;<test>;<instantiate>;<refine expr>;<literal>;<var id>;"( ",<expression>, ")";"null".
+\comment{Anything that can result in a value}
+<expression>:<invocation>;<field>;<variable>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
 
 \comment{Method invocations always have a receiver}
-<invocation>:<receiver>," . ",<invoke>.
-<receiver>:"this";<var id>.
+<invocation>:<expression>," . ",<invoke>.
 <invoke>:<var id>," ()";<var id>," ( ",<args>," )".
+
+\comment{Field of some foreign object (or this)}
+<field>:<expression>," . ",<variable>.
+
+\comment{Variable values can be indexed or not}
+<variable>:<var id>;<variable>," [ ",<expression>,"]".
 
 \comment{Basic arithmetic can and will be done!}
 <arithmetic>:<expression>,<bin op>,<expression>;<unary op>,<expression>.
 <bin op>:"+";"-";"*";"/";"\%".
 <unary op>:"-".
-
-\comment{Build an array on the fly (should we leave this out? TODO -- ARRAY ASSIGNMENT)}
-<array expression>:"[ ",<args>," ]".
 
 \comment{Common boolean predicates}
 <test>:<expression>,<bin pred>,<expression>;<unary pred>,<expression>;"refinable ( ",<var id>," )".
@@ -86,7 +71,7 @@ We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph
 \comment{Making something}
 <instantiate>:<object instantiate>;<array instantiate>.
 <object instantiate>:"new ",<class id>;"new ",<class id>," ( ",<args>," )".
-<array instantiate>:"new ",<type>," [ ",<digits>," ]".
+<array instantiate>:"new ",<type>," [ ",<expression>," ]".
 
 \comment{Refinement takes a specific specialization and notes the required return type}
 <refine expr>:"refine ",<specialize>," to ",<type>.
@@ -100,7 +85,7 @@ We take the common nonterminals \emph{digit}, \emph{digits}, \emph{lower}, \emph
 <string lit>:"``",<string escape seq>,"''".
 
 \comment{Params and args are as expected}
-<params>:"$\epsilon$";" ( ",<paramlist>," )".
+<params>:"( ",<paramlist>," )".
 <paramlist>:<var decl>;<paramlist>," , ",<var decl>.
 <args>:<expression>;<args>," , ",<expression>.
 
