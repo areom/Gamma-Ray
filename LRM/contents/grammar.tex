@@ -56,7 +56,7 @@
 <field>:<expression>," . ",<variable>.
 
 \comment{Variable values can be indexed or not}
-<variable>:<var id>;<variable>," [ ",<expression>,"]".
+<variable>:<var id>;<variable>," [ ",<expression>," ]".
 
 \comment{Basic arithmetic can and will be done!}
 <arithmetic>:<expression>,<bin op>,<expression>;<unary op>,<expression>.
@@ -65,7 +65,7 @@
 
 \comment{Common boolean predicates}
 <test>:<expression>,<bin pred>,<expression>;<unary pred>,<expression>;"refinable ( ",<var id>," )".
-<bin pred>:"and";"or";"xor";"$<$";"$<=$";"=";"!=";"$>=$";"$>$".
+<bin pred>:"and";"or";"xor";"nand";"nor";"$<$";"$<=$";"=";"!=";"$>=$";"$>$".
 <unary pred>:"!".
 
 \comment{Making something}
