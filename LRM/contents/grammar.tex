@@ -79,8 +79,8 @@
 
 \comment{Literally necessary}
 <literal>:<int lit>;<bool lit>;<float lit>;<string lit>.
-<float lit>:<digits>," . ",<digits>.
-<int lit>:<sign><digits>.
+<float lit>:<digit>,"{\small *} . ",<digit>,"{\small *}".
+<int lit>:<digits>,"{\small *}".
 <bool lit>:"true";"false".
 <string lit>:"``",<string escape seq>,"''".
 
@@ -93,7 +93,7 @@
 <var decl>:<type>,<var id>.
 <return type>:"unit";<type>.
 <type>:<class id>;<type>,"[]".
-<class id>:<upper>;<upper>,<alphanums>.
-<var id>:<lower>;<lower>,<alphanums>.
+<class id>:<upper>,<alphanum>,"{\small *}".
+<var id>:<lower>,<alphanum>,"{\small *}".
 
 \end{grammar}
