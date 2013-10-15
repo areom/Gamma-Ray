@@ -45,6 +45,7 @@ type func_def = {
 (* Just pop init and main in there? *)
 type class_def = {
   cname : string;
+  cmutable : bool;
   csource : class_def;
   cprivate : func_def list * decl list;
   cprotected : func_def list * decl list;
