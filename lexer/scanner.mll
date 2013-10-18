@@ -21,6 +21,7 @@ rule token = parse
 |"init"	{INIT}
 |"main"	{MAIN}
 |'.'	{DOT}	
+|"super" { SUPER }
 |"switch" {SW}
 |"case" {CASE}
 |"default" {DEF}
