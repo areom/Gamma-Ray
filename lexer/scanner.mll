@@ -4,18 +4,18 @@ rule token = parse
   | [' ' '\t' '\r' '\n']       { token lexbuf }
   | "/*"                       { comment 0 lexbuf }
   | "refinable"                { RFNABLE }
-  | "and"	               { AND }
-  | "or" 	               { OR }
-  | "xor"	               { XOR }
+  | "and"                      { AND }
+  | "or"                       { OR }
+  | "xor"                      { XOR }
   | "nand"                     { NAND }
-  | "nor"	               { NOR }
-  | '!'	                       { NOT }
-  | "true"	               { TRUE }
+  | "nor"                      { NOR }
+  | '!'                        { NOT }
+  | "true"                     { TRUE }
   | "false"                    { FALSE }
   | '['                        { LBRACKET }
   | ']'                        { RBRACKET }
   | '('                        { LPAREN }
-  | ')'                        { RPAREN }	 
+  | ')'                        { RPAREN }
   | "to"                       { TO }
   | "NULL"                     { NULL }
   | "void"                     { VOID }
@@ -34,9 +34,9 @@ rule token = parse
   | "refinements"              { D_RFN }
   | "private"                  { PRIVATE }
   | "public"                   { PUBLIC }
-  | "protected"	               { PROTECTED }
+  | "protected"                { PROTECTED }
   | "new"                      { NEW }
-  |  '('                       { LPAREN }
+  | '('                        { LPAREN }
   | ')'                        { RPAREN }
   | '{'                        { LBRACE }
   | '}'                        { RBRACE }
