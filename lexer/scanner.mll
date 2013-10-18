@@ -16,11 +16,17 @@ rule token = parse
 |'(' { LPAREN }
 |')' {	RPAREN	}	 
 |"to" {	TO }
-| "null"| "NULL"	{NULL}
+| "NULL"	{NULL}
 | "void" { VOID }
 |"init"	{INIT}
 |"main"	{MAIN}
 |'.'	{DOT}	
+|"switch" {SW}
+|"case" {CASE}
+|"default" {DEF}
+|"break" {BRK}
+|"const" {CONST}
+|"continue" {CONT}
 |"class" 	{CLASS}
 |"extends"	{EXTEND}
 |"refinements"	{ D_RFN }
@@ -39,6 +45,9 @@ rule token = parse
 | ">=" { GEQ } | "if" { IF } (* keywords *)
 | "else" { ELSE } | "for" { FOR }
 | "while" { WHILE } | "return" { RETURN }
+| '?' {QN}
+| ':' {COL} | "&&" {RELAND} |"||" {RELOR}
+|'^' {CRT} | '%' {MOD} 
 | eof { EOF } (* End-of-file *)
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) } (* integers *)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
