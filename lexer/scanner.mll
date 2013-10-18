@@ -2,6 +2,32 @@
 rule token = parse
 [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
 | "/*" { comment lexbuf } (* Comments *)
+|"refinable" { RFNABLE }
+|"and"	{ AND }
+|"or" 	{ OR }
+|"xor"	{ XOR }
+|"nand" { NAND }
+|"nor"	{ NOR }
+|'!'	{ NOT }
+|"true"	{ TRUE }
+|"false" { FALSE }	
+|'[' { LBRACKET }
+|']' { RBRACKET }
+|'(' { LPAREN }
+|')' {	RPAREN	}	 
+|"to" {	TO }
+| "null"| "NULL"	{NULL}
+| "void" { VOID }
+|"init"	{INIT}
+|"main"	{MAIN}
+|'.'	{DOT}	
+|"class" 	{CLASS}
+|"extends"	{EXTEND}
+|"refinements"	{ D_RFN }
+|"private" { PRIVATE }
+|"public" { PUBLIC }
+|"protected"	{ PROTECTED }
+|"new"	NEW
 | '(' { LPAREN } | ')' { RPAREN } (* punctuation *)
 | '{' { LBRACE } | '}' { RBRACE }
 | ';' { SEMI } | ',' { COMMA }
