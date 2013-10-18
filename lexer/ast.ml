@@ -23,4 +23,17 @@ locals : string list; (* Locally defined variables *)
 body : stmt list;
 }
 
+type class = {
+	cname : string;
+	base : string;
+	primem : string list;
+	pubmem : string list;
+	promem : string list;
+	prifunc : func_decl list;
+	pubfunc : func_decl list;
+	profunc : func_decl list;
+	(*unfinished*)
+}
+
+
 type program = string list * func_decl list (* global vars, funcs *)
