@@ -27,7 +27,7 @@ rule token = parse
 |"private" { PRIVATE }
 |"public" { PUBLIC }
 |"protected"	{ PROTECTED }
-|"new"	NEW
+|"new"	{NEW}
 | '(' { LPAREN } | ')' { RPAREN } (* punctuation *)
 | '{' { LBRACE } | '}' { RBRACE }
 | ';' { SEMI } | ',' { COMMA }
