@@ -8,6 +8,12 @@ Literal of int (* 42 *)
 | Call of string * expr list (* foo(1, 25 *)
 | Noexpr (* for (;;) *)
 
+(** LOOK INTO THIS
+type newexpr = Call of string * expr list
+type newobj = 
+ New  of string * newexpr  (* new type(...) *)
+***)
+
 type stmt = (* Statements *)
 Block of stmt list (* { ... } *)
 | Expr of expr (* foo = bar + 3; *)
@@ -16,6 +22,7 @@ Block of stmt list (* { ... } *)
 | For of expr * expr * expr * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 | While of expr * stmt (* while (i<10) { i = i + 1 } *)
 
+
 type func_decl = {
 fname : string; (* Name of the function *)
 formals : string list; (* Formal argument names *)
@@ -23,7 +30,7 @@ locals : string list; (* Locally defined variables *)
 body : stmt list;
 }
 
-type class = {
+type class_decl = {
 	cname : string;
 	base : string;
 	primem : string list;
@@ -32,8 +39,7 @@ type class = {
 	prifunc : func_decl list;
 	pubfunc : func_decl list;
 	profunc : func_decl list;
-	(*unfinished*)
+	reffunc : func_decl list;
 }
-
 
 type program = string list * func_decl list (* global vars, funcs *)
