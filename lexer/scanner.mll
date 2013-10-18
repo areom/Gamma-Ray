@@ -1,7 +1,7 @@
 { open Parser } (* Get the token types *)
 rule token = parse
 [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
-| "/*" { comment lexbuf } (* Comments *)
+| "/*" { comment 0 lexbuf } (* Comments *)
 |"refinable" { RFNABLE }
 |"and"	{ AND }
 |"or" 	{ OR }
@@ -54,6 +54,8 @@ rule token = parse
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | _ as char { raise (Failure("illegal character " ^
 Char.escaped char)) }
-and comment = parse
-"*/" { token lexbuf } (* End-of-comment *)
+
+and comment level = parse
+| "/*" { comment (level + 1) lexbuf } (* Pop up a level *)
+| "*/" { if level = 0 then token lexbuf else comment (level - 1) lexbuf } (* Go down a level *)
 | _ { comment lexbuf } (* Eat everything else *)
