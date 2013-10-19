@@ -22,7 +22,7 @@ rule token = parse
   | '!'                        { NOT }
   | "true"                     { TRUE }
   | "false"                    { FALSE }
-  | "=="                       { EQ }
+  | "="                        { EQ }
   | "!="                       { NEQ }
   | '<'                        { LT }
   | "<="                       { LEQ }
@@ -46,7 +46,6 @@ rule token = parse
   | '-'                        { MINUS }
   | '*'                        { TIMES }
   | '/'                        { DIVIDE }
-  | '='                        { ASSIGN }
   | '%'                        { MOD }
 
   (* Control flow *)
@@ -67,7 +66,7 @@ rule token = parse
 
   (* Refinement / specialization related *)
   | "refine"                   { REFINE }
-  | "refinements"              { REFINES }
+  | "refinement"               { REFINES }
   | "to"                       { TO }
 
   (* Access *)
@@ -79,6 +78,7 @@ rule token = parse
   | '.'                        { DOT }
   | "main"                     { MAIN }
   | "new"                      { NEW }
+  | ":="                       { ASSIGN }
 
   (* Variable and Type IDs *)
   | lower alphanum+ as vid     { VAR(vid) }
