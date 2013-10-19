@@ -30,7 +30,7 @@
 <main>:"main ","( ","String[] ",<var id>," )"," \{ ",<statement>,"{\small *} \}".
 
 \comment{Finally, the meat and potatoes}
-<statement>:<var decl>," ;";<assignment>," ;";<conditional>;<loop>;<expression>," ;".
+<statement>:<var decl>," ;";<assignment>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
 
 \comment{Accessing a variable possibly by index}
 <lpiece>:<var id>;<lpiece>," [ ",<expression>," ]".
@@ -40,6 +40,12 @@
 
 \comment{Assignment -- lvalues receive the results of expressions}
 <assignment>:<lvalue>," := ",<expression>.
+
+\comment{Super invocation is so we can do constructor chaining}
+<super>:"super ( ",<args>," )".
+
+\comment{Methods need to be able to return something, too}
+<return>:"return ",<expression>.
 
 \comment{Basic control structures}
 <conditional>:"if ( ",<expression>," )"," \{ ",<statement>,"{\small *} \} else \{ ",<statement>,"{\small *} \}".
