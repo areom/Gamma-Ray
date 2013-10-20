@@ -51,4 +51,5 @@ type class_def = {
   cprotected : func_def list (* decl list*);
   cpublic : func_def list (* decl list*);
   crefine : func_def list;
+  cmain: func_def;
 }

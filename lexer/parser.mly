@@ -60,9 +60,51 @@ stmt:
     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, List.rev $6)}
 
 cdecl:
+	CLASS ID extend_opt LBRACE  private_list public_list protected_list refinement_list main_opt RBRACE 
+	{ { cname = $2; supername=$3; cprivate =$5; cpublic=$6; crefine=$7; cmain=$9  }}
+
+main_opt:
+		{  }
+	| MAIN LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE  
+		{ { fname = "main"; fstatic = 1; formals = $3 locals=List.rev $6; body=List.rev $7}   }
+
+extend_opt:
+ 		{ }
+	| EXTEND ID    { ID }
+
+
+private_list:
+		{ [] }
+	| PRIVATE LBRACE member_list RBRACE { List.rev $3 }
+public_list:
+		{  [] }
+	| PUBLIC LBRACE member_list RBRACE  { List.rev $3 }
+protected_list:
+		{ [] }
+	| PROTECTED LBRACE member_list RBRACE  { List.rev $3 }
+refinement_list:
+		{ [] }
+	| REFINES LBRACE refine_list RBRACE { List.rev $3 }
+refine_list:
+		{ [] }
+	| refine_list refmem { $2 :: $1 }
+
+refmem:
+	TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
+
+member_list:
+		{ [] }
+	| member_list member 	{ $2 :: $1 }
+member:
+	  vdecl_list
+	| fdecl_list
+	| INIT 
+
+/*
+
+cdecl:
 	   CLASS ID LBRACE section_list RBRACE 			{cname = $2;}
 	| CLASS ID EXTEND ID LBRACE section_list RBRACE 	{cname = $2; supername = $4;}
-
 section_list:
 							{ [] }
 	| section_list section { $2 :: $1 }
@@ -76,10 +118,4 @@ agroup:
 	  PRIVATE LBRACE member_list RBRACE
 	| PUBLIC LBRACE member_list RBRACE
 	| PROTECTED LBRACE member_list RBRACE
-
-member_list:
-							{ [] }
-	| member_list member 	{ $2 :: $1 }
-
-member:
-	
+*/
