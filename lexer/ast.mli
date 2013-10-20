@@ -1,22 +1,19 @@
 type lit =
-  Int of int
+    Int of int
   | Float of float
   | String of string
   | Bool of bool
 
 type arith = Add | Sub | Prod | Quot | Div | Mod | Neg | Pow
-
 type numtest = Eq | Neq | Less | Grtr | Leq | Geq
-
 type combtest = And | Or | Nand | Nor | Xor | Not
-
-type op = Arithmatic of arith | NumTest of numtest | CombTest of combtest
+type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
 
 type expr =
     Id of string
   | Literal of lit
   | Invoc of expr * expr * expr list (* object.function (args), args and object can be Noexpr*)
-  | Member of expr * expr (* road.pavement *)
+  | Field of expr * expr (* road.pavement *)
   | Deref of expr * expr (* road[pavement] *)
   | Unop of op * expr (* !x *)
   | Binop of expr * op * expr (* x + y *)
@@ -33,23 +30,30 @@ type stmt =
   | Expr of expr
   | Return of expr
 
-(* both functions and refinements *)
+(* we have four different kinds of callable code blocks:
+ *  main: only has formals, body (name / static / host known)
+ *  init: only has formals, body (name / static / host known)
+ *  refine: has host, name, formals, body (static known)
+ *  method: has name, formals, body (host / static known)
+ *)
 type func_def = {
-  fname : string;
-  fstatic : bool;
+  host : Option(string);
+  name : string;
+  static : bool;
   formals : var_def list;
-  locals : var_def list;
   body : stmt list;
 }
 
+(* A member is either a variable or some sort of function *)
+type member_def = VarMem of var_def | FuncMem of func_def
+	
 (* Just pop init and main in there? *)
 type class_def = {
-  cname : string;
-  cmutable : bool;
-  csource : class_def;
-  cprivate : func_def list (* decl list*);
-  cprotected : func_def list (* decl list*);
-  cpublic : func_def list (* decl list*);
-  crefine : func_def list;
-  cmain: func_def;
+  class : string;
+  parent : Option(string);
+  privates: member_def list;
+  protects: member_def list;
+  publics: member_def list;
+  refines : func_def list;
+  main: Option(func_def);
 }
