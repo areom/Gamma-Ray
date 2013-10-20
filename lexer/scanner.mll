@@ -1,4 +1,18 @@
-{ open Parser } (* Get the token types *)
+{
+  (* Get the token types *)
+  open Parser ;
+
+  (* from: http://caml.inria.fr/mantis/view.php?id=5367 *)
+  let implode l =
+    let res = String.create (List.length l) in
+    let rec imp i = function
+    | [] -> res
+    | c :: l -> res.[i] <- c; imp (i + 1) l in
+    imp 0 l ;
+
+  let lexfail msg =
+    raise (Failure(msg)) ;
+}
 
 let digit = ['0'-'9']
 let lower = ['a'-'z']
@@ -88,11 +102,11 @@ rule token = parse
   (* Literals *)
   | digit+ as inum             { ILIT(int_of_string inum) }
   | digit+ '.' digit+ as fnum  { FLIT(float_of_string fnum) }
-(*  | '"'                        { stringlit [] lexbuf }*)
+(*  | '"'                        { stringlit [] lexbuf } *)
 
   (* Some type of end, for sure *)
   | eof                        { EOF }
-  | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+  | _ as char { lexfail("illegal character " ^ Char.escaped char) }
 
 and comment level = parse
   (* Comments can be nested *)
@@ -100,15 +114,15 @@ and comment level = parse
   | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
   | _      { comment (0) lexbuf }
 and stringlit chars = parse
-  (* We only accept valid C string literals, as that is what we will output directly *)
+  (* Accept valid C string literals as that is what we will output directly *)
   | '\\'       { escapechar chars lexbuf }
-  | '\n'       { raise (Failure( "End of string literal " (* ^ implode(List.rev(chars))*) )) }
+  | '\n'       { lexfail("End of string literal " ^ implode(List.rev chars)) }
   | '"'        { SLIT (List.rev chars) }
   | _ as char  { stringlit (char::chars) lexbuf }
 
 and escapechar chars = parse
-  (* Only accept valid C escape sequences *)
+  (* Accept valid C escape sequences *)
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '\'' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
-  | _ as char { raise (Failure("illegal escape character:  \\" ^ Char.escaped char)) } 
+  | _ as char { lexfail("illegal escape character:  \\" ^ Char.escaped(char)) }
