@@ -102,7 +102,7 @@ rule token = parse
   (* Literals *)
   | digit+ as inum             { ILIT(int_of_string inum) }
   | digit+ '.' digit+ as fnum  { FLIT(float_of_string fnum) }
-(*  | '"'                        { stringlit [] lexbuf } *)
+  | '"'                        { stringlit [] lexbuf }
 
   (* Some type of end, for sure *)
   | eof                        { EOF }
