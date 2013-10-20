@@ -36,10 +36,10 @@ lit:
 	| FLIT { Float($1) }
 expr:
 	  lit { Literal($1) }
-	| expr PLUS expr { Binop($1, Arithmatic(Add), $3) }
-	| expr MINUS expr { Binop($1, Arithmatic(Sub), $3) }
-	| expr TIMES expr { Binop($1, Arithmatic(Prod) , $3) }
-	| expr DIVIDE expr { Binop($1, Arithmatic(Div) , $3) }
+	| expr PLUS expr { Binop($1, Arithmetic(Add), $3) }
+	| expr MINUS expr { Binop($1, Arithmetic(Sub), $3) }
+	| expr TIMES expr { Binop($1, Arithmetic(Prod) , $3) }
+	| expr DIVIDE expr { Binop($1, Arithmetic(Div) , $3) }
 	| expr EQ expr { Binop($1, NumTest(Eq), $3) }
 	| expr NEQ expr { Binop($1, NumTest(Neq), $3) }
 	| expr LT expr { Binop($1, NumTest(Less), $3) }
@@ -66,7 +66,7 @@ cdecl:
 main_opt:
 		{ }
 	| MAIN LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE  
-		{ { fname = "main"; fstatic = 1; formals = $3 locals=List.rev $6; body=List.rev $7}   }
+		{ { fname = "main"; fstatic = 1; formals = $3; locals=List.rev $6; body=List.rev $7}   }
 
 extend_opt:
  		{ }
