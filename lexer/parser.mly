@@ -85,12 +85,18 @@ stmt:
 
 cdecl:
   | CLASS TYPE extend_opt LBRACE  private_list public_list protected_list refinement_list main_opt RBRACE 
-    { {cname=$2; supername=$3; cprivate=$5; cpublic=$6; crefine=$7; cmain=$9} }
+    { { class     = $2;
+        parent    = $3;
+        privates  = $5;
+        publics   = $6;
+        refines   = $7;
+        main      = $9 } }
 
 main_opt:
   | { }
   | MAIN LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE  
-    { {fname="main"; fstatic=true; formals=$3; locals=List.rev $6; body=List.rev $7} }
+    { { formals = $3;
+        body=List.rev $7 } }
 
 extend_opt:
   | { }
@@ -118,14 +124,19 @@ refine_list:
 
 formals_opt:
   | { [] }
-  | formal_list {List.rev $1}
+  | formals_list {List.rev $1}
 
 formals_list:
   | VAR { [$1] }
-  | formal_list COMMA VAR { $3 :: $1 }
+  | formals_list COMMA VAR { $3 :: $1 }
 
 refmem:
-  TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
+  | TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
+    { { returns = $1;
+        method  = $2;
+        refines = $4;
+        formals = $6;
+        body    = List.rev $9 } }
 
 member_list:
   | { [] }
