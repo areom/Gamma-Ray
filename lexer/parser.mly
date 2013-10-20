@@ -53,8 +53,8 @@ stmt_list:
    | stmt_list stmt { $2 :: $1 }
 
 stmt:
-       expr SEMI 		{Expr($1)}
-/*   | RETURN expr              {Expr($2)}*/
+       expr	{Expr($1)}
+     | RETURN expr          {Expr($2)}
      | LBRACE stmt_list RBRACE  {Block(List.rev $2)}
-/*   | IF LPAREN expr RPAREN stmt ELSE stmt {If($3, $5, $7)}*/
-     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, $6)}
+     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE  {If($3, List.rev $6, List.rev $10)}
+     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, List.rev $6)}

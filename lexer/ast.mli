@@ -28,7 +28,7 @@ type stmt =
     Block of stmt list
   | Decl of var_def
   | Assign of string * expr (* as our grammer is written, assignment is a statement. Do we want this? *)
-  | If of expr * stmt list * stmt list (* Unless we program in optimization, this is bothersomely inefficient for elsif *)
+  | If of expr * stmt list * stmt list  (* Unless we program in optimization, this is bothersomely inefficient for elsif *)
   | While of expr * stmt list
   | Expr of expr
   | Return of expr
