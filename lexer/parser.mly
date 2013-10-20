@@ -60,18 +60,17 @@ stmt:
     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, List.rev $6)}
 
 cdecl:
-	CLASS ID extend_opt LBRACE  private_list public_list protected_list refinement_list main_opt RBRACE 
+	CLASS TYPE extend_opt LBRACE  private_list public_list protected_list refinement_list main_opt RBRACE 
 	{ { cname = $2; supername=$3; cprivate =$5; cpublic=$6; crefine=$7; cmain=$9  }}
 
 main_opt:
-		{  }
+		{ }
 	| MAIN LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE  
 		{ { fname = "main"; fstatic = 1; formals = $3 locals=List.rev $6; body=List.rev $7}   }
 
 extend_opt:
  		{ }
-	| EXTEND ID    { ID }
-
+	| EXTEND TYPE  { $2 }
 
 private_list:
 		{ [] }
@@ -86,19 +85,31 @@ refinement_list:
 		{ [] }
 	| REFINES LBRACE refine_list RBRACE { List.rev $3 }
 refine_list:
-		{ [] }
+	  refmem { [$1] }
 	| refine_list refmem { $2 :: $1 }
+formals_opt:
+		{ [] }
+	| formal_list {List.rev $1}
+formals_list:
+	  VAR { [$1] }
+	| formal_list  COMMA VAR {$3 :: $1}
 
 refmem:
 	TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
-
 member_list:
 		{ [] }
 	| member_list member 	{ $2 :: $1 }
 member:
-	  vdecl_list
-	| fdecl_list
+	  vdecl_list 	{List.rev $1}
+/*	| fdecl_list
 	| INIT 
+*/
+vdecl_list:
+		{ [] }
+	| vdecl_list vdecl	{ $2 :: $1 }
+
+vdecl:
+	TYPE VAR 		{ $2 }
 
 /*
 
