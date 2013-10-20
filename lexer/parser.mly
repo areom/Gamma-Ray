@@ -50,11 +50,36 @@ expr:
 
 stmt_list:
    /* nada */      { [] }
-   | stmt_list stmt { $2 :: $1 }
+    | stmt_list stmt { $2 :: $1 }
 
 stmt:
        expr	{Expr($1)}
-     | RETURN expr          {Expr($2)}
-     | LBRACE stmt_list RBRACE  {Block(List.rev $2)}
-     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE  {If($3, List.rev $6, List.rev $10)}
-     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, List.rev $6)}
+    | RETURN expr          {Expr($2)}
+    | LBRACE stmt_list RBRACE  {Block(List.rev $2)}
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE  {If($3, List.rev $6, List.rev $10)}
+    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, List.rev $6)}
+
+cdecl:
+	   CLASS ID LBRACE section_list RBRACE 			{cname = $2;}
+	| CLASS ID EXTEND ID LBRACE section_list RBRACE 	{cname = $2; supername = $4;}
+
+section_list:
+							{ [] }
+	| section_list section { $2 :: $1 }
+
+section:
+	  rfmt
+	| agroup
+	| MAIN
+
+agroup:
+	  PRIVATE LBRACE member_list RBRACE
+	| PUBLIC LBRACE member_list RBRACE
+	| PROTECTED LBRACE member_list RBRACE
+
+member_list:
+							{ [] }
+	| member_list member 	{ $2 :: $1 }
+
+member:
+	
