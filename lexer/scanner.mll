@@ -99,7 +99,6 @@ and comment level = parse
   | "/*"   { comment (level+1) lexbuf }
   | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
   | _      { comment (0) lexbuf }
-(*
 and stringlit chars = parse
   (* We only accept valid C string literals, as that is what we will output directly *)
   | '\\'       { escapechar chars lexbuf }
@@ -112,4 +111,4 @@ and escapechar chars = parse
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '\'' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
-  | _ as char { raise (Failure("illegal escape character:  \\" ^ Char.escaped char)) }*) 
+  | _ as char { raise (Failure("illegal escape character:  \\" ^ Char.escaped char)) } 
