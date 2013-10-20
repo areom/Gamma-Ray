@@ -36,16 +36,16 @@ lit:
   | FLIT { Float($1) }
 
 expr:
-  (* Literals are expressions *)
+  /* Literals are expressions */
   | lit { Literal($1) }
 
-  (* Arithmetic operations are expressions *)
+  /* Arithmetic operations are expressions */
   | expr PLUS expr    { Binop($1, Arithmetic(Add), $3) }
   | expr MINUS expr   { Binop($1, Arithmetic(Sub), $3) }
   | expr TIMES expr   { Binop($1, Arithmetic(Prod) , $3) }
   | expr DIVIDE expr  { Binop($1, Arithmetic(Div) , $3) }
 
-  (* Boolean operations are expressions *)
+  /* Boolean operations are expressions */
   | expr EQ expr   { Binop($1, NumTest(Eq), $3) }
   | expr NEQ expr  { Binop($1, NumTest(Neq), $3) }
   | expr LT expr   { Binop($1, NumTest(Less), $3) }
@@ -53,9 +53,9 @@ expr:
   | expr GT expr   { Binop($1, NumTest(Grtr), $3) }
   | expr GEQ expr  { Binop($1, NumTest(Geq), $3) }
 
-  (* Parentheses for grouping; saving the
+  /* Parentheses for grouping; saving the
    * day in languages since the beginning
-   *)
+   */
   | LPAREN expr RPAREN { $2 }
 
 stmt_list:
@@ -63,23 +63,23 @@ stmt_list:
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
-  (* An expression is a statement; just ignore the result *)
+  /* An expression is a statement; just ignore the result */
   | expr
     { Expr($1) }
 
-  (* We want to be able to return from methods *)
+  /* We want to be able to return from methods */
   | RETURN expr
     { Expr($2) }
 
-  (* Putting statements between { and } makes a block *)
+  /* Putting statements between { and } makes a block */
   | LBRACE stmt_list RBRACE
     { Block(List.rev $2) }
 
-  (* If has three parts -- predicate, then clause, else clause *)
+  /* If has three parts -- predicate, then clause, else clause */
   | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE 
     { If($3, List.rev $6, List.rev $10) }
 
-  (* While has the normal parts -- predicate and body *)
+  /* While has the normal parts -- predicate and body */
   | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
     { While($3, List.rev $6) }
 
