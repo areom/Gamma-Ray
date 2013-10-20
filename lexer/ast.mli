@@ -47,8 +47,8 @@ type class_def = {
   cname : string;
   cmutable : bool;
   csource : class_def;
-  cprivate : func_def list * decl list;
-  cprotected : func_def list * decl list;
-  cpublic : func_def list * decl list;
+  cprivate : func_def list (* decl list*);
+  cprotected : func_def list (* decl list*);
+  cpublic : func_def list (* decl list*);
   crefine : func_def list;
 }

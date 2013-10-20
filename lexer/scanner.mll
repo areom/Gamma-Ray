@@ -47,6 +47,7 @@ rule token = parse
   | '*'                        { TIMES }
   | '/'                        { DIVIDE }
   | '%'                        { MOD }
+  | '^'                        { POWER }
 
   (* Control flow *)
   | "if"                       { IF }
@@ -87,7 +88,7 @@ rule token = parse
   (* Literals *)
   | digit+ as inum             { ILIT(int_of_string inum) }
   | digit+ '.' digit+ as fnum  { FLIT(float_of_string fnum) }
-  | '"'                        { stringlit [] lexbuf }
+(*  | '"'                        { stringlit [] lexbuf }*)
 
   (* Some type of end, for sure *)
   | eof                        { EOF }
@@ -97,13 +98,13 @@ and comment level = parse
   (* Comments can be nested *)
   | "/*"   { comment (level+1) lexbuf }
   | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
-  | _      { comment lexbuf }
-
+  | _      { comment (0) lexbuf }
+(*
 and stringlit chars = parse
   (* We only accept valid C string literals, as that is what we will output directly *)
   | '\\'       { escapechar chars lexbuf }
-  | '\n'       { raise (Failure( "End of string literal " ^ implode(List.rev(chars)) )) }
-  | '"'        { SLIT(List.rev chars) }
+  | '\n'       { raise (Failure( "End of string literal " (* ^ implode(List.rev(chars))*) )) }
+  | '"'        { SLIT (List.rev chars) }
   | _ as char  { stringlit (char::chars) lexbuf }
 
 and escapechar chars = parse
@@ -111,4 +112,4 @@ and escapechar chars = parse
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '\'' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
-  | _ as char { raise (Failure("illegal escape character:  \\" ^ Char.escaped char)) }
+  | _ as char { raise (Failure("illegal escape character:  \\" ^ Char.escaped char)) }*) 
