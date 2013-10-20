@@ -32,84 +32,117 @@
 
 
 lit:
-	  ILIT { Int($1) }
-	| FLIT { Float($1) }
+  | ILIT { Int($1) }
+  | FLIT { Float($1) }
+
 expr:
-	  lit { Literal($1) }
-	| expr PLUS expr { Binop($1, Arithmetic(Add), $3) }
-	| expr MINUS expr { Binop($1, Arithmetic(Sub), $3) }
-	| expr TIMES expr { Binop($1, Arithmetic(Prod) , $3) }
-	| expr DIVIDE expr { Binop($1, Arithmetic(Div) , $3) }
-	| expr EQ expr { Binop($1, NumTest(Eq), $3) }
-	| expr NEQ expr { Binop($1, NumTest(Neq), $3) }
-	| expr LT expr { Binop($1, NumTest(Less), $3) }
-	| expr LEQ expr { Binop($1, NumTest(Leq), $3) }
-	| expr GT expr { Binop($1, NumTest(Grtr), $3) }
-	| expr GEQ expr { Binop($1, NumTest(Geq), $3) }
-	| LPAREN expr RPAREN { $2 }
+  (* Literals are expressions *)
+  | lit { Literal($1) }
+
+  (* Arithmetic operations are expressions *)
+  | expr PLUS expr    { Binop($1, Arithmetic(Add), $3) }
+  | expr MINUS expr   { Binop($1, Arithmetic(Sub), $3) }
+  | expr TIMES expr   { Binop($1, Arithmetic(Prod) , $3) }
+  | expr DIVIDE expr  { Binop($1, Arithmetic(Div) , $3) }
+
+  (* Boolean operations are expressions *)
+  | expr EQ expr   { Binop($1, NumTest(Eq), $3) }
+  | expr NEQ expr  { Binop($1, NumTest(Neq), $3) }
+  | expr LT expr   { Binop($1, NumTest(Less), $3) }
+  | expr LEQ expr  { Binop($1, NumTest(Leq), $3) }
+  | expr GT expr   { Binop($1, NumTest(Grtr), $3) }
+  | expr GEQ expr  { Binop($1, NumTest(Geq), $3) }
+
+  (* Parentheses for grouping; saving the
+   * day in languages since the beginning
+   *)
+  | LPAREN expr RPAREN { $2 }
 
 stmt_list:
-   /* nada */      { [] }
-    | stmt_list stmt { $2 :: $1 }
+  | /* nada */      { [] }
+  | stmt_list stmt { $2 :: $1 }
 
 stmt:
-       expr	{Expr($1)}
-    | RETURN expr          {Expr($2)}
-    | LBRACE stmt_list RBRACE  {Block(List.rev $2)}
-    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE  {If($3, List.rev $6, List.rev $10)}
-    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE {While($3, List.rev $6)}
+  (* An expression is a statement; just ignore the result *)
+  | expr
+    { Expr($1) }
+
+  (* We want to be able to return from methods *)
+  | RETURN expr
+    { Expr($2) }
+
+  (* Putting statements between { and } makes a block *)
+  | LBRACE stmt_list RBRACE
+    { Block(List.rev $2) }
+
+  (* If has three parts -- predicate, then clause, else clause *)
+  | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE 
+    { If($3, List.rev $6, List.rev $10) }
+
+  (* While has the normal parts -- predicate and body *)
+  | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
+    { While($3, List.rev $6) }
 
 cdecl:
-	CLASS TYPE extend_opt LBRACE  private_list public_list protected_list refinement_list main_opt RBRACE 
-	{ { cname = $2; supername=$3; cprivate =$5; cpublic=$6; crefine=$7; cmain=$9  }}
+  | CLASS TYPE extend_opt LBRACE  private_list public_list protected_list refinement_list main_opt RBRACE 
+    { {cname=$2; supername=$3; cprivate=$5; cpublic=$6; crefine=$7; cmain=$9} }
 
 main_opt:
-		{ }
-	| MAIN LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE  
-		{ { fname = "main"; fstatic = 1; formals = $3; locals=List.rev $6; body=List.rev $7}   }
+  | { }
+  | MAIN LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE  
+    { {fname="main"; fstatic=true; formals=$3; locals=List.rev $6; body=List.rev $7} }
 
 extend_opt:
- 		{ }
-	| EXTEND TYPE  { $2 }
+  | { }
+  | EXTEND TYPE { $2 }
 
 private_list:
-		{ [] }
-	| PRIVATE LBRACE member_list RBRACE { List.rev $3 }
+  | { [] }
+  | PRIVATE LBRACE member_list RBRACE { List.rev $3 }
+
 public_list:
-		{  [] }
-	| PUBLIC LBRACE member_list RBRACE  { List.rev $3 }
+  | { [] }
+  | PUBLIC LBRACE member_list RBRACE  { List.rev $3 }
+
 protected_list:
-		{ [] }
-	| PROTECTED LBRACE member_list RBRACE  { List.rev $3 }
+  | { [] }
+  | PROTECTED LBRACE member_list RBRACE  { List.rev $3 }
+
 refinement_list:
-		{ [] }
-	| REFINES LBRACE refine_list RBRACE { List.rev $3 }
+  | { [] }
+  | REFINES LBRACE refine_list RBRACE { List.rev $3 }
+
 refine_list:
-	  refmem { [$1] }
-	| refine_list refmem { $2 :: $1 }
+  | refmem { [$1] }
+  | refine_list refmem { $2 :: $1 }
+
 formals_opt:
-		{ [] }
-	| formal_list {List.rev $1}
+  | { [] }
+  | formal_list {List.rev $1}
+
 formals_list:
-	  VAR { [$1] }
-	| formal_list  COMMA VAR {$3 :: $1}
+  | VAR { [$1] }
+  | formal_list COMMA VAR { $3 :: $1 }
 
 refmem:
-	TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
+  TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
+
 member_list:
-		{ [] }
-	| member_list member 	{ $2 :: $1 }
+  | { [] }
+  | member_list member { $2 :: $1 }
+
 member:
-	  vdecl_list 	{List.rev $1}
+  | vdecl_list {List.rev $1}
 /*	| fdecl_list
 	| INIT 
 */
+
 vdecl_list:
-		{ [] }
-	| vdecl_list vdecl	{ $2 :: $1 }
+  | { [] }
+  | vdecl_list vdecl { $2 :: $1 }
 
 vdecl:
-	TYPE VAR 		{ $2 }
+  TYPE VAR { $2 }
 
 /*
 
