@@ -116,7 +116,7 @@ and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'       { escapechar chars lexbuf }
   | '\n'       { lexfail("End of string literal " ^ implode(List.rev chars)) }
-  | '"'        { SLIT (implode(List.rev chars)) }
+  | '"'        { SLIT(implode(List.rev chars)) }
   | _ as char  { stringlit (char::chars) lexbuf }
 
 and escapechar chars = parse
