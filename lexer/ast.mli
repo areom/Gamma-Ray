@@ -22,8 +22,7 @@ type expr =
 type var_def = string * string (* Oh typing, you pain in the ass *)
 
 type stmt =
-    Block of stmt list
-  | Decl of var_def
+    Decl of var_def
   | Assign of string * expr (* as our grammer is written, assignment is a statement. Do we want this? *)
   | If of expr * stmt list * stmt list  (* Unless we program in optimization, this is bothersomely inefficient for elsif *)
   | While of expr * stmt list
@@ -37,23 +36,29 @@ type stmt =
  *  method: has name, formals, body (host / static known)
  *)
 type func_def = {
-  host : Option(string);
-  name : string;
-  static : bool;
+  returns : Option(string);
+  host    : Option(string);
+  name    : string;
+  static  : bool;
   formals : var_def list;
-  body : stmt list;
+  body    : stmt list;
 }
 
 (* A member is either a variable or some sort of function *)
 type member_def = VarMem of var_def | FuncMem of func_def
+
+(* Things that can go in a class *)
+type class_sections_def = {
+  privates : member_def list;
+  protects : member_def list;
+  publics  : member_def list;
+  refines  : func_def list;
+  main     : func_def list;
+}
 	
 (* Just pop init and main in there? *)
 type class_def = {
-  class : string;
-  parent : Option(string);
-  privates: member_def list;
-  protects: member_def list;
-  publics: member_def list;
-  refines : func_def list;
-  main: Option(func_def);
+  class    : string;
+  parent   : Option(string);
+  sections : class_sections_def;
 }

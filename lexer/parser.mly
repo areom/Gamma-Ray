@@ -1,6 +1,6 @@
 %{ open Ast %}
 
-%token NEWL RINDENT LINDENT LPAREN RPAREN LBRACKET RBRACKET COMMA LBRACE RBRACE
+%token LPAREN RPAREN LBRACKET RBRACKET COMMA LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE MOD POWER ASSIGN
 %token EQ NEQ GT LT GEQ LEQ AND OR NAND NOR XOR NOT TRUE FALSE
 %token IF ELSE WHILE
@@ -30,6 +30,110 @@
 
 %%
 
+/* Class and subclassing -- cdecl / extend_opt */
+cdecl:
+  | CLASS TYPE extend_opt class_section_list
+    { { class     = $2;
+        parent    = $3;
+        sections  = $4; } }
+extend_opt:
+  | /* default */  { None }
+  | EXTEND TYPE    { Some($2) }
+
+/* Class sections */
+class_section_list:
+  | LBRACE class_sections RBRACE  { $2 }
+class_sections:
+  | /* Base Case */
+    { { privates = [];
+        protects = [];
+        publics  = [];
+        refines  = [];
+        mains    = [] } }
+  | class_sections private_list  { { $1 with privates = $2 @  $1.privates } }
+  | class_sections protect_list  { { $1 with protects = $2 @  $1.protects } }
+  | class_sections public_list   { { $1 with public   = $2 @  $1.publics  } }
+  | class_sections refine_list   { { $1 with refines  = $2 @  $1.refines  } }
+  | class_sections main_method   { { $1 with mains    = $2 :: $1.mains    } }
+
+/* Refinements */
+refine_list:
+  | REFINES LBRACE refinements RBRACE { $3 }
+refinements:
+  | /* Can be empty */      { [] }
+  | refinements refinement  { $2 :: $1 }
+refinement:
+  | TYPE ID DOT ID formals stmt_block
+    { { returns = Some($1);
+        host    = Some($2);
+        name    = $4;
+        static  = false;
+        formals = $5;
+        body    = List.rev $6 } }
+
+/* Private, protected, public members */
+private_list:
+  | PRIVATE member_list    { $2 }
+protect_list:
+  | PROTECTED member_list  { $2 }
+public_list:
+  | PUBLIC member_list     { $2 }
+
+/* Members of such access groups */
+member_list:
+  | LBRACE members RBRACE  { $2 }
+members:
+  | { [] }
+  | members member  { $2 :: $1 }
+member:
+  | vdecl  { VarMem($1) }
+  | mdecl  { FuncMem($1) }
+  | init   { FuncMem($1) }
+
+/* Methods */
+mdecl:
+  | TYPE ID formals stmt_block
+    { { returns = Some($1);
+        host    = None;
+        name    = $2;
+        static  = false;
+        formals = $3;
+        body    = List.rev $4 } }
+
+/* Constructors */
+init:
+  | INIT formals stmt_block
+    { { returns = None;
+        host    = None;
+        name    = "init";
+        static  = false;
+        formals = $2;
+        body    = $3 } }
+
+/* Each class has an optional main */
+main_method:
+  | MAIN formals stmt_block
+    { { returns = None;
+        host    = None;
+        name    = "main";
+        static  = true;
+        formals = $2;
+        body    = List.rev $3 } }
+
+/* Statements */
+stmt_block:
+  | LBRACE stmt_list RBRACE  { List.rev $2 }
+stmt_list:
+  | /* nada */      { [] }
+  | stmt_list stmt  { $2 :: $1 }
+stmt:
+  | expr                           { Expr($1) }
+  | RETURN expr                    { Expr($2) }
+  | IF pred stmt_block stmt_block  { If($2, $3, $4) }
+  | WHILE pred stmt_block          { While($2, $3) }
+pred:
+  | LPAREN expr RPAREN  { $2 }
+
 
 lit:
   | SLIT { String($1) }
@@ -58,125 +162,18 @@ expr:
   /* Parentheses for grouping; saving the
    * day in languages since the beginning
    */
-  | LPAREN expr RPAREN { $2 }
-
-stmt_block:
-  | LBRACE stmt_list RBRACE  { List.rev $2 }
-stmt_list:
-  | /* nada */     { [] }
-  | stmt_list stmt { $2 :: $1 }
-stmt:
-  | expr                           { Expr($1) }
-  | RETURN expr                    { Expr($2) }
-  | stmt_block                     { Block($1) }
-  | IF pred stmt_block stmt_block  { If($2, $3, $4) }
-  | WHILE pred stmt_block          { While($2, $3) }
-pred:
-  | LPAREN expr RPAREN       { $2 }
-
-/* Class and subclassing -- cdecl / extend_opt */
-cdecl:
-  | CLASS TYPE extend_opt LBRACE private_list public_list protected_list refinement_list main_opt RBRACE 
-    { { class     = $2;
-        parent    = $3;
-        privates  = $5;
-        protects  = $6;
-        publics   = $7;
-        refines   = $8;
-        main      = $9 } }
-extend_opt:
-  | { None }
-  | EXTEND TYPE { Some($2) }
-
-/* Private, protected, public members */
-private_list:
-  | PRIVATE members { $2 }
-protected_list:
-  | PROTECTED members { $2 }
-public_list:
-  | PUBLIC members { $2 }
-
-/* Members of such access groups */
-members:
-  | LBRACE member_list RBRACE { List.rev $2 }
-member_list:
-  | { [] }
-  | member_list member { $2 :: $1 }
-member:
-  | vdecl_list { $1 }
-  | mdecl_list { $1 }
-  | init_list { $1 }
-
-/* Refinements */
-refinement_list:
-  | { [] }
-  | REFINES refinements { $2 }
-refinements:
-  | LBRACE refine_list RBRACE { $2 }
-refine_list:
-  | refmem { [$1] }
-  | refine_list refmem { $2 :: $1 }
-refmem:
-  | TYPE ID DOT ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
-    { { returns = $1;
-        host    = Some($2);
-        name    = $4;
-        static  = false;
-        formals = $6;
-        body    = List.rev $9 } }
-
-/* Each class has an optional main */
-main_opt:
-  | { None }
-  | MAIN LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
-    { Some({
-        returns = None;
-        host    = None;
-        name    = "main";
-        static  = true;
-        formals = $3;
-        body    = List.rev $6 }) }
+  | LPAREN expr RPAREN  { $2 }
 
 /* Variable declaration */
-vdecl_list:
-  | { [] }
-  | vdecl_list vdecl { $2 :: $1 }
 vdecl:
-  TYPE VAR { VarDef($2) }
-
-/* Method declaration */
-mdecl_list:
-  | { [] }
-  | mdecl_list mdecl { $2 :: $1 }
-mdecl:
-  TYPE ID LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
-  { FuncMem({
-      returns = Some($1);
-      host    = None;
-      name    = $2;
-      static  = false;
-      formals = $4;
-      body    = List.rev $7; }) }
-
-/* Constructors */
-init_list:
-  | { [] }
-  | init_list init { $2 :: $1 }
-init:
-  | INIT LPAREN formals_opt RPAREN LBRACE stmt_list RBRACE
-    { FuncMem({
-        returns = None;
-        host    = None;
-        name    = "init";
-        static  = false;
-        formals = $3;
-        body    = $6; }) }
+  | TYPE VAR { VarDef($2) }
 
 /* Parameter lists */
+formals:
+  | LPAREN formals_opt RPAREN  { $2 }
 formals_opt:
   | { [] }
-  | formals_list { List.rev $1 }
-
+  | formals_list  { List.rev $1 }
 formals_list:
-  | vdecl { [$1] }
-  | formals_list COMMA vdecl { $3 :: $1 }
+  | vdecl  { [$1] }
+  | formals_list COMMA vdecl  { $3 :: $1 }
