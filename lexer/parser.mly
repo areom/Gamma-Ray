@@ -35,7 +35,7 @@ cdecl:
   | CLASS TYPE extend_opt class_section_list
     { { class     = $2;
         parent    = $3;
-        sections  = $4; } }
+        sections  = $4  } }
 extend_opt:
   | /* default */  { None }
   | EXTEND TYPE    { Some($2) }
