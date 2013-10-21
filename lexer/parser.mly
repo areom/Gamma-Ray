@@ -86,9 +86,9 @@ members:
   | { [] }
   | members member  { $2 :: $1 }
 member:
-  | vdecl  { VarMem($1) }
+  | vdecl  { VarMem($1)    }
   | mdecl  { MethodMem($1) }
-  | init   { InitMem($1) }
+  | init   { InitMem($1)   }
 
 /* Methods */
 mdecl:
@@ -134,13 +134,14 @@ stmt:
 pred:
   | LPAREN expr RPAREN  { $2 }
 
-
+/* Literally necessary */
 lit:
   | SLIT { String($1) }
   | ILIT { Int($1) }
   | FLIT { Float($1) }
   | BLIT { Bool($1) }
 
+/* Expressions */
 expr:
   /* Literals are expressions */
   | lit { Literal($1) }
