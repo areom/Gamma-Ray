@@ -36,8 +36,8 @@ type stmt =
  *  method: has name, formals, body (host / static known)
  *)
 type func_def = {
-  returns : Option(string);
-  host    : Option(string);
+  returns : string option;
+  host    : string option;
   name    : string;
   static  : bool;
   formals : var_def list;
@@ -53,12 +53,12 @@ type class_sections_def = {
   protects : member_def list;
   publics  : member_def list;
   refines  : func_def list;
-  main     : func_def list;
+  mains    : func_def list;
 }
 	
 (* Just pop init and main in there? *)
 type class_def = {
-  class    : string;
-  parent   : Option(string);
+  klass    : string;
+  parent   : string option;
   sections : class_sections_def;
 }
