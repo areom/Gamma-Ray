@@ -1,6 +1,5 @@
 {
-  (* Get the token types *)
-  open Parser ;
+  open Parser
 
   (* from: http://caml.inria.fr/mantis/view.php?id=5367 *)
   let implode l =
@@ -8,10 +7,10 @@
     let rec imp i = function
     | [] -> res
     | c :: l -> res.[i] <- c; imp (i + 1) l in
-    imp 0 l ;
+    imp 0 l
 
   let lexfail msg =
-    raise (Failure(msg)) ;
+    raise (Failure(msg))
 }
 
 let digit = ['0'-'9']
@@ -117,7 +116,7 @@ and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'       { escapechar chars lexbuf }
   | '\n'       { lexfail("End of string literal " ^ implode(List.rev chars)) }
-  | '"'        { SLIT (List.rev chars) }
+  | '"'        { SLIT (implode(List.rev chars)) }
   | _ as char  { stringlit (char::chars) lexbuf }
 
 and escapechar chars = parse
