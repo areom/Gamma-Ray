@@ -45,7 +45,7 @@ type func_def = {
 }
 
 (* A member is either a variable or some sort of function *)
-type member_def = VarMem of var_def | FuncMem of func_def | InitMem of func_def
+type member_def = VarMem of var_def | MethodMem of func_def | InitMem of func_def
 
 (* Things that can go in a class *)
 type class_sections_def = {

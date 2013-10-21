@@ -87,7 +87,7 @@ members:
   | members member  { $2 :: $1 }
 member:
   | vdecl  { VarMem($1) }
-  | mdecl  { FuncMem($1) }
+  | mdecl  { MethodMem($1) }
   | init   { InitMem($1) }
 
 /* Methods */
