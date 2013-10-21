@@ -33,7 +33,7 @@
 /* Class and subclassing -- cdecl / extend_opt */
 cdecl:
   | CLASS TYPE extend_opt class_section_list
-    { { class     = $2;
+    { { klass     = $2;
         parent    = $3;
         sections  = $4  } }
 extend_opt:
@@ -52,7 +52,7 @@ class_sections:
         mains    = [] } }
   | class_sections private_list  { { $1 with privates = $2 @  $1.privates } }
   | class_sections protect_list  { { $1 with protects = $2 @  $1.protects } }
-  | class_sections public_list   { { $1 with public   = $2 @  $1.publics  } }
+  | class_sections public_list   { { $1 with publics  = $2 @  $1.publics  } }
   | class_sections refine_list   { { $1 with refines  = $2 @  $1.refines  } }
   | class_sections main_method   { { $1 with mains    = $2 :: $1.mains    } }
 
@@ -139,7 +139,7 @@ lit:
   | SLIT { String($1) }
   | ILIT { Int($1) }
   | FLIT { Float($1) }
-  | BLIT { Boolean($1) }
+  | BLIT { Bool($1) }
 
 expr:
   /* Literals are expressions */
@@ -166,7 +166,7 @@ expr:
 
 /* Variable declaration */
 vdecl:
-  | TYPE VAR { VarDef($2) }
+  | TYPE VAR { ($1, $2) }
 
 /* Parameter lists */
 formals:
