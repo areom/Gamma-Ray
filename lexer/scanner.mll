@@ -17,7 +17,7 @@ let digit = ['0'-'9']
 let lower = ['a'-'z']
 let upper = ['A'-'Z']
 let alpha = lower | upper
-let alphanum = alpha | digit
+let ualphanum = '_' | alpha | digit
 
 rule token = parse
 
@@ -95,8 +95,8 @@ rule token = parse
   | ":="                       { ASSIGN }
 
   (* Variable and Type IDs *)
-  | lower alphanum+ as vid     { VAR(vid) }
-  | upper alphanum+ as tid     { TYPE(tid) }
+  | lower ualphanum+ as vid    { VAR(vid) }
+  | upper ualphanum+ as tid    { TYPE(tid) }
 
   (* Literals *)
   | digit+ as inum             { ILIT(int_of_string inum) }
