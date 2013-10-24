@@ -24,7 +24,7 @@ type var_def = string * string (* Oh typing, you pain in the ass *)
 type stmt =
     Decl of var_def
   | Assign of string * expr (* as our grammer is written, assignment is a statement. Do we want this? *)
-  | If of expr * stmt list * stmt list  (* Unless we program in optimization, this is bothersomely inefficient for elsif *)
+  | If of (expr option * stmt list) list
   | While of expr * stmt list
   | Expr of expr
   | Return of expr

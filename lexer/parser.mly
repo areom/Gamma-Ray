@@ -3,7 +3,7 @@
 %token LPAREN RPAREN LBRACKET RBRACKET COMMA LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE MOD POWER ASSIGN
 %token EQ NEQ GT LT GEQ LEQ AND OR NAND NOR XOR NOT TRUE FALSE
-%token IF ELSE WHILE
+%token IF ELSE ELSIF WHILE
 %token ASSIGN RETURN CLASS EXTEND SUPER INIT FUNC PRIVATE PROTECTED PUBLIC
 %token NULL VOID
 %token NEW MAIN 
@@ -128,12 +128,12 @@ stmt_list:
   | stmt_list stmt  { $2 :: $1 }
 else_list:
   | /* nada */                         { [] }
-  | ELSE stmt_block                    { $2 }
-  | ELSIF pred stmt_block else_list    { IF($2 $3 $4) }
+  | ELSE stmt_block                    { [(None, $2)] }
+  | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
   | expr                                { Expr($1) }
   | RETURN expr                         { Expr($2) }
-  | IF pred stmt_block else_list        { If($2, $3, $4) }
+  | IF pred stmt_block else_list        { If((Some($2), $3) :: List.rev($4)) }
   | WHILE pred stmt_block               { While($2, $3) }
 pred:
   | LPAREN expr RPAREN  { $2 }
