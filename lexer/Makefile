@@ -1,6 +1,10 @@
-ocamllex scanner.mll # create scanner.ml
-ocamlyacc parser.mly # create parser.ml and parser.mli
-ocamlc -c -g ast.mli # compile AST types
-ocamlc -c -g parser.mli # compile parser types
-ocamlc -c -g scanner.ml # compile the scanner
-ocamlc -c -g parser.ml # compile the parser
+all:
+	ocamllex scanner.mll
+	ocamlyacc parser.mly
+	ocamlc -c -g ast.mli
+	ocamlc -c -g parser.mli
+	ocamlc -c -g scanner.ml
+	ocamlc -c -g parser.ml
+
+clean:
+	rm *.cmi *.cmo parser.ml parser.mli scanner.ml
