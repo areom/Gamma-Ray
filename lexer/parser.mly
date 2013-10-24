@@ -127,10 +127,10 @@ stmt_list:
   | /* nada */      { [] }
   | stmt_list stmt  { $2 :: $1 }
 stmt:
-  | expr                           { Expr($1) }
-  | RETURN expr                    { Expr($2) }
-  | IF pred stmt_block stmt_block  { If($2, $3, $4) }
-  | WHILE pred stmt_block          { While($2, $3) }
+  | expr                                { Expr($1) }
+  | RETURN expr                         { Expr($2) }
+  | IF pred stmt_block ELSE stmt_block  { If($2, $3, $4) }
+  | WHILE pred stmt_block               { While($2, $3) }
 pred:
   | LPAREN expr RPAREN  { $2 }
 
