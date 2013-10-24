@@ -20,8 +20,3 @@
 
   - grammar
 
-
-
-we can get introduction, grammar by Friday
-we can get the semantics, lexer, scanner hopefully done by the end of the weekend.
-
