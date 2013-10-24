@@ -69,7 +69,7 @@ refinement:
         name    = $4;
         static  = false;
         formals = $5;
-        body    = List.rev $6 } }
+        body    = $6 } }
 
 /* Private, protected, public members */
 private_list:
@@ -98,7 +98,7 @@ mdecl:
         name    = $2;
         static  = false;
         formals = $3;
-        body    = List.rev $4 } }
+        body    = $4 } }
 
 /* Constructors */
 init:
@@ -118,7 +118,7 @@ main_method:
         name    = "main";
         static  = true;
         formals = $2;
-        body    = List.rev $3 } }
+        body    = $3 } }
 
 /* Statements */
 stmt_block:
@@ -133,7 +133,7 @@ else_list:
 stmt:
   | expr                                { Expr($1) }
   | RETURN expr                         { Expr($2) }
-  | IF pred stmt_block else_list        { If((Some($2), $3) :: List.rev($4)) }
+  | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block               { While($2, $3) }
 pred:
   | LPAREN expr RPAREN  { $2 }
