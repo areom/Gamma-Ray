@@ -18,6 +18,7 @@
 %token <string> ID
 
 /* Want to work on associtivity when I'm a bit fresher */
+%left ASSIGN
 %left EQ NEQ /* Equality operators: ==, != */
 %left LT GT LEQ GEQ /* Comparison operators: <, >, <=, => */
 %left PLUS MINUS /* Additive operators: +, - */
@@ -131,6 +132,7 @@ else_list:
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
   | expr                                { Expr($1) }
+  | ID ASSIGN expr                     { Assign($1, $3) }
   | RETURN expr                         { Expr($2) }
   | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block               { While($2, $3) }

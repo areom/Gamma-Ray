@@ -1,8 +1,7 @@
 class List {
   public {
     init(Int a) {
-      5+4;
+	a:=2+3
     }
   }
 }
-
