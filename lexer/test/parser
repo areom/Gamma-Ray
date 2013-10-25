@@ -1,27 +1,39 @@
 #!/bin/bash
 
+# These are things that are just program dependent (Scanner v Parser, etc)
 program="$( basename "$0" )"
-exe=
-old=
-save=
-verbose=
-oneline=0
-current=
-results=
 tmpfile="test/check"
 tmperr="test/err"
+testdir="test/tests"
+exe=
+old=
+
+# Arguments
+save=
+verbose=
+pattern=
+
+# Calculated values change in each iteration
+current=
+results=
+
+# Don't change per iteration
 maxlength=0
+oneline=0
+files=
 
-function errWith {
-  echo "$1" >& 2
-  exit 1
-}
-
+# Formatting values
 bold=`tput bold`
 normal=`tput sgr0`
 uline=`tput smul`
 green=`tput setaf 2`
 red=`tput setaf 1`
+
+
+function errWith {
+  echo "$1" >& 2
+  exit 1
+}
 
 function execerror {
   echo "${bold}${uline}${red}ERROR${normal} $1"
@@ -82,10 +94,12 @@ case "$program" in
         ;;
 esac
 
-while getopts "sv" OPTION ; do
+while getopts "lsvp:" OPTION ; do
   case "$OPTION" in
     s) save=1 ;;
     v) verbose=1 ;;
+    p) pattern=$OPTARG ;;
+    l) ls "$testdir" ; exit 0 ;;
     ?) errWith "Unknown option; aborting" ;;
   esac
 done
@@ -97,14 +111,21 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
 test -z "$save" && test -z "$verbose" && oneline=1
 
-for atest in test/tests/* ; do
+if [ -n "$pattern" ] ; then
+  files="$( find "$testdir" -maxdepth 1 -name "${pattern}" )"
+  test -z "$files" && errWith "No files match the given pattern. Good-bye."
+else
+  files="${testdir}/*"
+fi
+
+for atest in "$files" ; do
   current="$( basename "$atest" )"
   len=`echo "$current" | wc -c`
   test $len -gt $maxlength && maxlength="$len"
 done
 maxlength=$(( maxlength + 5 ))
 
-for atest in test/tests/* ; do
+for atest in "$files" ; do
   current="$( basename "$atest" )"
   results="test/$old/$current"
   testit "$atest"
