@@ -1,0 +1,71 @@
+#!/bin/bash
+
+program="$( basename "$0" )"
+shift
+exec=
+bold=`tput bold`
+normal=`tput sgr0`
+
+function errWith {
+  echo "$1" >& 2
+  exit 1
+}
+
+function testit {
+  echo "${bold}Testing:${normal} $1"
+  echo -n "${bold}Output:${normal} "
+  echo "$1" | "$exec"
+  echo ""
+}
+
+case "$program" in
+  scanner)
+        exec="./streams"
+        ;;
+  parser)
+        exec="./inspect"
+        ;;
+  *)
+        errWith "Unknown test program $program"
+        ;;
+esac
+
+test -e "$exec" || errWith "Testing $program but $exec unavailable"
+test -f "$exec" || errWith "Testing $program but $exec is not a file"
+test -x "$exec" || errWith "Testing $program but $exec unexecutable"
+
+
+testit 'class List {
+}'
+
+testit 'class List {
+  public {
+    init(Int a) {
+    }
+  }
+}'
+
+testit 'class List {
+  public {
+    String stringId(String in) {
+    }
+  }
+}'
+
+testit 'class List {
+  public {
+    init(Int a) {
+    }
+    String stringId(String in) {
+    }
+  }
+}'
+
+testit 'class List {
+  public {
+    init(Int a) {
+      5+4;
+    }
+  }
+}'
+
