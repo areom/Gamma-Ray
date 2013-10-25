@@ -5,9 +5,11 @@ exe=
 old=
 save=
 verbose=
+oneline=0
 current=
 results=
 tmpfile="test/check"
+maxlength=0
 
 function errWith {
   echo "$1" >& 2
@@ -24,15 +26,24 @@ function execerror {
   echo "${bold}${uline}${red}ERROR${normal} $1"
 }
 
+function dots {
+  len=`echo "$current" | wc -c`
+  for i in `seq $len $maxlength` ; do
+    echo -n '.'
+  done
+  echo -n ' '
+}
+
 function testit {
-  current="$( basename "$1" )"
-  results="test/$old/$current"
-  echo "${bold}Testing:${normal} ${uline}${current}${normal}"
+  testing="${bold}Testing:${normal} ${uline}${current}${normal}"
+  test "$oneline" -eq 0 && echo "$testing"
+  test "$oneline" -ne 0 && echo -n "$testing"
   test -n "$verbose" && cat "$1"
   cat "$1" | "$exe" &> "$tmpfile"
   if [ $? -ne 0 ] ; then
     execerror "Error testing $program with $current"
   elif [ -n "$save" ] ; then
+    echo "${bold}Saving${normal} $current"
     mv "$tmpfile" "$results"
   elif [ ! -e "$results" ] ; then
     execerror "Cannot check results -- standard does not exist"
@@ -41,7 +52,8 @@ function testit {
       echo -n "${bold}Output:${normal} "
       cat "$tmpfile"
     fi
-    echo -n "${bold}Results:${normal} "
+    test "$oneline" -ne 0 && dots
+    test "$oneline" -eq 0 && echo -n "${bold}Results:${normal} "
     diff -q "$tmpfile" "$results" &> /dev/null
     if [ $? -eq 0 ] ; then
       echo "${bold}${green}PASS${normal}"
@@ -50,7 +62,7 @@ function testit {
     fi
     rm "$tmpfile"
   fi
-  echo ""
+  test "$oneline" -eq 0 && echo ""
 }
 
 case "$program" in
@@ -80,7 +92,18 @@ test -e "$exe" || errWith "Testing $program but $exe unavailable"
 test -f "$exe" || errWith "Testing $program but $exe is not a file"
 test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
+test -z "$save" && test -z "$verbose" && oneline=1
+
 for atest in test/tests/* ; do
+  current="$( basename "$atest" )"
+  len=`echo "$current" | wc -c`
+  test $len -gt $maxlength && maxlength="$len"
+done
+maxlength=$(( maxlength + 5 ))
+
+for atest in test/tests/* ; do
+  current="$( basename "$atest" )"
+  results="test/$old/$current"
   testit "$atest"
 done
 
