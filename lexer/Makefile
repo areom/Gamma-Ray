@@ -6,7 +6,9 @@ all:
 	ocamlc -c -g scanner.ml
 	ocamlc -c -g parser.ml
 	ocamlc -c inspect.ml
+	ocamlc -c streams.ml
 	ocamlc -o inspect scanner.cmo parser.cmo inspect.cmo
+	ocamlc -o streams scanner.cmo parser.cmo streams.cmo
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml
