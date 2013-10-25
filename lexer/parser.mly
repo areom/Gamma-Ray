@@ -4,13 +4,12 @@
 %token PLUS MINUS TIMES DIVIDE MOD POWER ASSIGN
 %token EQ NEQ GT LT GEQ LEQ AND OR NAND NOR XOR NOT TRUE FALSE
 %token IF ELSE ELSIF WHILE
-%token ASSIGN RETURN CLASS EXTEND SUPER INIT FUNC PRIVATE PROTECTED PUBLIC
+%token ASSIGN RETURN CLASS EXTEND SUPER INIT PRIVATE PROTECTED PUBLIC
 %token NULL VOID
 %token NEW MAIN 
 %token REFINABLE REFINE REFINES TO 
 %token SEMI COMMA DOT EOF
 
-%token <string> VAR
 %token <string> TYPE
 %token <int> ILIT
 %token <float> FLIT
@@ -171,7 +170,7 @@ expr:
 
 /* Variable declaration */
 vdecl:
-  | TYPE VAR { ($1, $2) }
+  | TYPE ID { ($1, $2) }
 
 /* Parameter lists */
 formals:
