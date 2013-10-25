@@ -11,7 +11,7 @@ old=
 # Arguments
 save=
 verbose=
-pattern=
+pattern=*
 
 # Calculated values change in each iteration
 current=
@@ -20,7 +20,7 @@ results=
 # Don't change per iteration
 maxlength=0
 oneline=0
-files=
+files=()
 
 # Formatting values
 bold=`tput bold`
@@ -111,23 +111,21 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
 test -z "$save" && test -z "$verbose" && oneline=1
 
-if [ -n "$pattern" ] ; then
-  files="$( find "$testdir" -maxdepth 1 -name "${pattern}" )"
-  test -z "$files" && errWith "No files match the given pattern. Good-bye."
-else
-  files="${testdir}/*"
-fi
+for afile in $testdir/$pattern ; do
+  files+=( "$afile" )
+done
+test "${#files[@]}" -eq 0 && errWith "No files match the given pattern. Good-bye."
 
-for atest in "$files" ; do
+for atest in "${files[@]}" ; do
   current="$( basename "$atest" )"
   len=`echo "$current" | wc -c`
   test $len -gt $maxlength && maxlength="$len"
 done
 maxlength=$(( maxlength + 5 ))
 
-for atest in "$files" ; do
+for atest in "${files[@]}" ; do
   current="$( basename "$atest" )"
   results="test/$old/$current"
+
   testit "$atest"
 done
-
