@@ -12,8 +12,8 @@ type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
 type expr =
     Id of string
   | Literal of lit
-  | Invoc of expr * expr * expr list (* object.function (args), args and object can be Noexpr*)
-  | Field of expr * expr (* road.pavement *)
+  | Invoc of expr * string * expr list (* object.function (args), args and object can be Noexpr*)
+  | Field of expr * string (* road.pavement *)
   | Deref of expr * expr (* road[pavement] *)
   | Unop of op * expr (* !x *)
   | Binop of expr * op * expr (* x + y *)
