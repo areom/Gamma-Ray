@@ -95,8 +95,8 @@ rule token = parse
   | ":="                       { ASSIGN }
 
   (* Variable and Type IDs *)
-  | lower ualphanum+ as vid    { VAR(vid) }
-  | upper ualphanum+ as tid    { TYPE(tid) }
+  | lower ualphanum* as vid    { ID(vid) }
+  | upper ualphanum* as tid    { TYPE(tid) }
 
   (* Literals *)
   | digit+ as inum             { ILIT(int_of_string inum) }
