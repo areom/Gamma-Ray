@@ -1,8 +1,16 @@
 class List {
   public {
     init(Int a) {
-	Int c:=3 
-	Int b:=2+c
+	    Int c:=3 
+	    Int b:=2+c
+        if(a=b){
+            c:=2
+        }elsif(a>b){
+            c:=3
+        }
+
     }
+    
   }
+
 }

@@ -65,6 +65,7 @@ rule token = parse
   (* Control flow *)
   | "if"                       { IF }
   | "else"                     { ELSE }
+  | "elsif"                    { ELSIF }
   | "while"                    { WHILE }
   | "return"                   { RETURN }
 
