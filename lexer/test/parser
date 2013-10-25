@@ -31,7 +31,7 @@ red=`tput setaf 1`
 
 
 function errWith {
-  echo "$1" >& 2
+  echo "$1" >&2
   exit 1
 }
 
@@ -72,7 +72,7 @@ function testit {
     if [ $? -eq 0 ] ; then
       echo "${bold}${green}PASS${normal}"
     else
-      echo "${bold}${red}FAIL${normal}"
+      echo "${bold}${red}MISMATCH${normal}"
     fi
     rm "$tmpfile"
   fi
@@ -109,7 +109,7 @@ test -e "$exe" || errWith "Testing $program but $exe unavailable"
 test -f "$exe" || errWith "Testing $program but $exe is not a file"
 test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
-test -z "$save" && test -z "$verbose" && oneline=1
+test -z "$verbose" && oneline=1
 
 for afile in $testdir/$pattern ; do
   files+=( "$afile" )
