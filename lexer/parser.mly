@@ -131,8 +131,10 @@ else_list:
   | ELSE stmt_block                    { [(None, $2)] }
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
+  vdecl  				{ Decl($1) }
   | expr                                { Expr($1) }
-  | ID ASSIGN expr                     { Assign($1, $3) }
+  | TYPE ID ASSIGN expr                 { ignore(Decl(($1,$2))); Assign($2,$4) }
+  | ID ASSIGN expr                      { Assign($1, $3) }
   | RETURN expr                         { Expr($2) }
   | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block               { While($2, $3) }
@@ -150,6 +152,7 @@ lit:
 expr:
   /* Literals are expressions */
   | lit { Literal($1) }
+  | ID  { Id($1) }
 
   /* Arithmetic operations are expressions */
   | expr PLUS expr    { Binop($1, Arithmetic(Add), $3) }
