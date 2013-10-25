@@ -99,6 +99,13 @@ mdecl:
         static  = false;
         formals = $3;
         body    = $4 } }
+ | ID formals stmt_block
+    { { returns = None;
+        host    = None;
+        name    = $1;
+        static  = false;
+        formals = $2;
+        body    = $3 } }
 
 /* Constructors */
 init:
