@@ -30,16 +30,7 @@
 <main>:"main ( String[] ",<var id>," ) \{ ",<statement>,"{\small *} \}".
 
 \comment{Finally, the meat and potatoes}
-<statement>:<var decl>," ;";<assignment>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
-
-\comment{Accessing a variable possibly by index}
-<lpiece>:<var id>;<lpiece>," [ ",<expression>," ]".
-
-\comment{Accessing a member's member's member etc etc}
-<lvalue>:<lpiece>;<lvalue>," . ",<lpiece>.
-
-\comment{Assignment -- lvalues receive the results of expressions}
-<assignment>:<lvalue>," := ",<expression>.
+<statement>:<var decl>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
 
 \comment{Super invocation is so we can do constructor chaining}
 <super>:"super ( ",<args>," )".
@@ -54,17 +45,16 @@
 <loop>:"while ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
 
 \comment{Anything that can result in a value}
-<expression>:<invocation>;<field>;<variable>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
+<expression>:<assignment>;<invocation>;<field>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
 
-\comment{Method invocations always have a receiver}
-<invocation>:<expression>," . ",<invoke>.
+\comment{Assignment -- putting one thing in another}
+<assignment>:<expression>," := ",<expression>.
+
+\comment{Member / data access}
+<invocation>:<expression>," . ",<invoke>;<invoke>.
 <invoke>:<var id>," ()";<var id>," ( ",<args>," )".
-
-\comment{Field of some foreign object (or this)}
-<field>:<expression>," . ",<variable>.
-
-\comment{Variable values can be indexed or not}
-<variable>:<var id>;<variable>," [ ",<expression>," ]".
+<field>:<expression>," . ",<var id>.
+<deref>:<expression>," [ ",<expression>," ]".
 
 \comment{Basic arithmetic can and will be done!}
 <arithmetic>:<expression>,<bin op>,<expression>;<unary op>,<expression>.
