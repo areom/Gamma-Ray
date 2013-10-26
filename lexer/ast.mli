@@ -10,11 +10,11 @@ type combtest = And | Or | Nand | Nor | Xor | Not
 type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
 
 type expr =
-    Id of string
+    Id of string * expr
   | Assign of string * expr (* as our grammer is written, assignment is a statement. Do we want this? *)
   | Literal of lit
   | Invoc of expr * string * expr list (* object.function (args), args and object can be Noexpr*)
-  | Field of expr * string (* road.pavement *)
+  | Field of expr * string *expr (* road.pavement *)
   | Deref of expr * expr (* road[pavement] *)
   | Unop of op * expr (* !x *)
   | Binop of expr * op * expr (* x + y *)
@@ -22,7 +22,7 @@ type expr =
   | Call of string * expr list (* foo(), foo(a,b) *)
   | Noexpr
 
-type var_def = string * string (* Oh typing, you pain in the ass *)
+type var_def = string * string *int (* Oh typing, you pain in the ass, add a int for array *)
 
 type stmt =
     Decl of var_def * expr

@@ -43,10 +43,10 @@ let inspect_opt stringer opt = match opt with
   | Some(v) -> Printf.sprintf "Some(%s)" (stringer v)
 
 let rec inspect_expr the_expr = match the_expr with
-  | Id(id) -> Printf.sprintf "Id(%s)" id
+  | Id(id, opt_index) -> Printf.sprintf "Id(%s %s)" id (inspect_expr opt_index)
   | Literal(l) -> Printf.sprintf "Literal(%s)" (inspect_lit l)
   | Invoc(receiver, meth, args) -> Printf.sprintf "Invocation(%s, %s, %s)" (inspect_expr receiver) meth (inspect_str_list inspect_expr args)
-  | Field(receiver, field) -> Printf.sprintf "Field(%s, %s)" (inspect_expr receiver) field
+  | Field(receiver, field, opt_index) -> Printf.sprintf "Field(%s, %s %s)" (inspect_expr receiver) field (inspect_expr opt_index)
   | Deref(var, index) -> Printf.sprintf "Deref(%s, %s)" (inspect_expr var) (inspect_expr var)
   | Unop(an_op, exp) -> Printf.sprintf "Unop(%s, %s)" (inspect_op an_op) (inspect_expr exp)
   | Binop(left, an_op, right) -> Printf.sprintf "Binop(%s, %s, %s)" (inspect_op an_op) (inspect_expr left) (inspect_expr right)
@@ -55,7 +55,7 @@ let rec inspect_expr the_expr = match the_expr with
   | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
   | Noexpr -> Printf.sprintf "Noexpr"
 
-let inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
+let inspect_var_def (the_type, the_var, the_num) = Printf.sprintf "(%s, %s, %s)" the_type the_var (string_of_int the_num)
 
 let rec inspect_stmt the_stmt = match the_stmt with
   | Decl(the_def, the_expr) -> Printf.sprintf "Decl(%s %s)" (inspect_var_def the_def) (inspect_expr the_expr)

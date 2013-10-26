@@ -159,11 +159,15 @@ lit:
 expr:
   /* Literals are expressions */
   | lit { Literal($1) }
-  | ID  { Id($1) }
+  | ID  { Id($1,Noexpr) }
+  | ID LBRACKET expr RBRACKET { Id($1,$3) }
 
   /*Function call*/
   | expr DOT ID actuals { Invoc($1,$3,$4) }
-  | ID actuals { Call($1, $2) }
+  | ID actuals { Invoc(Noexpr,$1, $2) }
+  
+  | expr DOT ID { Field($1,$3,Noexpr) }
+  | expr DOT ID LBRACKET expr RBRACKET {Field($1,$3,$5) } 
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
@@ -192,7 +196,8 @@ expr:
 
 /* Variable declaration */
 vdecl:
-  | TYPE ID { ($1, $2) }
+  | TYPE ID { ($1, $2, 0) }
+  | TYPE ID LBRACKET ILIT RBRACKET { ($1,$2,$4) }
 
 /* Parameter lists */
 formals:
