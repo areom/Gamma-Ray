@@ -86,7 +86,7 @@ members:
   | { [] }
   | members member  { $2 :: $1 }
 member:
-  | vdecl  { VarMem($1)    }
+  | vdecl SEMI  { VarMem($1)    }
   | mdecl  { MethodMem($1) }
   | init   { InitMem($1)   }
 
@@ -138,10 +138,10 @@ else_list:
   | ELSE stmt_block                    { [(None, $2)] }
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
-  vdecl  				{ Decl($1) }
-  | expr                           { Expr($1) }
-  | TYPE ID ASSIGN expr             {ignore(Decl(($1,$2))); Assign($2,$4) } 
-  | RETURN expr                        { Expr($2) }
+  vdecl SEMI  				{ Decl($1) }
+  | expr SEMI                          { Expr($1) }
+  | TYPE ID ASSIGN expr SEMI           {ignore(Decl(($1,$2))); Assign($2,$4) } 
+  | RETURN expr SEMI                       { Expr($2) }
   | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block               { While($2, $3) }
 pred:
