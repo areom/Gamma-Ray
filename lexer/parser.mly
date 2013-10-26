@@ -138,9 +138,9 @@ else_list:
   | ELSE stmt_block                    { [(None, $2)] }
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
-  vdecl SEMI  				{ Decl($1) }
+  vdecl SEMI  				{ Decl($1,Noexpr) }
   | expr SEMI                          { Expr($1) }
-  | TYPE ID ASSIGN expr SEMI           {ignore(Decl(($1,$2))); Assign($2,$4) } 
+  | vdecl ASSIGN expr SEMI           { Decl($1,$3) } 
   | RETURN expr SEMI                       { Expr($2) }
   | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block               { While($2, $3) }

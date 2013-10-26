@@ -25,7 +25,7 @@ type expr =
 type var_def = string * string (* Oh typing, you pain in the ass *)
 
 type stmt =
-    Decl of var_def
+    Decl of var_def * expr
   | If of (expr option * stmt list) list
   | Assign of string * expr
   | While of expr * stmt list
