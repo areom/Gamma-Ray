@@ -192,7 +192,7 @@ expr:
 
   /* Refine part of expression */
   | REFINE ID actuals TO TYPE { Refine($2,$3,$5) }
-
+  | REFINABLE LPAREN ID RPAREN { Refinable($3) }
 
 /* Variable declaration */
 vdecl:

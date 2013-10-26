@@ -19,7 +19,7 @@ class List extends Node{
  		c:=3;
        	    }
 
-	    while(a=b) {
+	    while(refinable(x)) {
             }
      }
 

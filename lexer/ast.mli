@@ -19,6 +19,7 @@ type expr =
   | Unop of op * expr (* !x *)
   | Binop of expr * op * expr (* x + y *)
   | Refine of string * expr list * string 
+  | Refinable of string (* refinable *)
   | Call of string * expr list (* foo(), foo(a,b) *)
   | Noexpr
 
