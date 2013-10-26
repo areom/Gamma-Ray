@@ -50,7 +50,6 @@ let rec inspect_expr the_expr = match the_expr with
   | Deref(var, index) -> Printf.sprintf "Deref(%s, %s)" (inspect_expr var) (inspect_expr var)
   | Unop(an_op, exp) -> Printf.sprintf "Unop(%s, %s)" (inspect_op an_op) (inspect_expr exp)
   | Binop(left, an_op, right) -> Printf.sprintf "Binop(%s, %s, %s)" (inspect_op an_op) (inspect_expr left) (inspect_expr right)
-  | Call(fname, args) -> Printf.sprintf "Call(%s,%s)" fname (inspect_str_list inspect_expr args)
   | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) totype
   | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
   | Refinable(the_var) -> Printf.sprintf "Refinable(%s)" the_var
