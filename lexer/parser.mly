@@ -88,8 +88,8 @@ members:
   | members member  { $2 :: $1 }
 member:
   | vdecl SEMI  { VarMem($1)    }
-  | mdecl  { MethodMem($1) }
-  | init   { InitMem($1)   }
+  | mdecl       { MethodMem($1) }
+  | init        { InitMem($1)   }
 
 /* Methods */
 mdecl:
@@ -100,7 +100,7 @@ mdecl:
         static  = false;
         formals = $3;
         body    = $4 } }
- | VOID ID formals stmt_block
+  | VOID ID formals stmt_block
     { { returns = None;
         host    = None;
         name    = $2;
@@ -141,7 +141,7 @@ else_list:
 stmt:
   | vdecl SEMI                     { Decl($1,Noexpr) }
   | expr SEMI                      { Expr($1) }
-  | vdecl ASSIGN expr SEMI         { Decl($1,$3) } 
+  | vdecl ASSIGN expr SEMI         { Decl($1,$3) }
   | RETURN expr SEMI               { Expr($2) }
   | IF pred stmt_block else_list   { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block          { While($2, $3) }
@@ -165,9 +165,9 @@ expr:
   /*Function call*/
   | expr DOT ID actuals { Invoc($1,$3,$4) }
   | ID actuals { Invoc(Noexpr,$1, $2) }
-  
+
   | expr DOT ID { Field($1,$3,Noexpr) }
-  | expr DOT ID LBRACKET expr RBRACKET {Field($1,$3,$5) } 
+  | expr DOT ID LBRACKET expr RBRACKET { Field($1,$3,$5) }
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
