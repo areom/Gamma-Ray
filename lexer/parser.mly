@@ -102,10 +102,10 @@ mdecl:
  | VOID ID formals stmt_block
     { { returns = None;
         host    = None;
-        name    = $1;
+        name    = $2;
         static  = false;
-        formals = $2;
-        body    = $3 } }
+        formals = $3;
+        body    = $4 } }
 
 /* Constructors */
 init:
