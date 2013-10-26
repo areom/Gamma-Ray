@@ -23,6 +23,7 @@
 %left LT GT LEQ GEQ /* Comparison operators: <, >, <=, => */
 %left PLUS MINUS /* Additive operators: +, - */
 %left TIMES DIVIDE /* Multiplicative operators: *, / */
+%left DOT
 
 %start cdecl /* The start symbol */
 %type <Ast.class_def> cdecl
