@@ -78,6 +78,7 @@ rule token = parse
   (* Pre defined types / values *)
   | "null"                     { NULL }
   | "void"                     { VOID }
+  | "this"                     { THIS }
 
   (* Refinement / specialization related *)
   | "refine"                   { REFINE }
