@@ -138,12 +138,12 @@ else_list:
   | ELSE stmt_block                    { [(None, $2)] }
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
-  vdecl SEMI  				{ Decl($1,Noexpr) }
-  | expr SEMI                          { Expr($1) }
-  | vdecl ASSIGN expr SEMI           { Decl($1,$3) } 
-  | RETURN expr SEMI                       { Expr($2) }
-  | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
-  | WHILE pred stmt_block               { While($2, $3) }
+  | vdecl SEMI                     { Decl($1,Noexpr) }
+  | expr SEMI                      { Expr($1) }
+  | vdecl ASSIGN expr SEMI         { Decl($1,$3) } 
+  | RETURN expr SEMI               { Expr($2) }
+  | IF pred stmt_block else_list   { If((Some($2), $3) :: $4) }
+  | WHILE pred stmt_block          { While($2, $3) }
 pred:
   | LPAREN expr RPAREN  { $2 }
 
@@ -161,8 +161,8 @@ expr:
   | ID  { Id($1) }
 
   /*Function call*/
-  | ID LPAREN actuals RPAREN { Invoc(Noexpr,$1, $3) }
-  | expr DOT ID LPAREN actuals RPAREN { Invoc($1,$3,$5) }
+  | expr DOT ID actuals { Invoc($1,$3,$4) }
+  | ID actuals { Call($1, $2) }
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
@@ -185,8 +185,8 @@ expr:
    */
   | LPAREN expr RPAREN  { $2 }
 
-  /*Refine part of expression*/
-  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) }
+  /* Refine part of expression */
+  | REFINE ID actuals TO TYPE { Refine($2,$3,$5) }
 
 
 /* Variable declaration */
@@ -204,7 +204,7 @@ formals_list:
   | formals_list COMMA vdecl  { $3 :: $1 }
 
 actuals:
-  | actuals_opt { $1 }
+  | LPAREN actuals_opt RPAREN { $2 }
 
 actuals_opt:
   | { [] }
