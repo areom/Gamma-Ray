@@ -1,7 +1,7 @@
 %{ open Ast %}
 
 %token LPAREN RPAREN LBRACKET RBRACKET COMMA LBRACE RBRACE
-%token PLUS MINUS TIMES DIVIDE MOD
+%token PLUS MINUS TIMES DIVIDE MOD POWER
 %token EQ NEQ GT LT GEQ LEQ AND OR NAND NOR XOR NOT TRUE FALSE
 %token IF ELSE ELSIF WHILE
 %token ASSIGN RETURN CLASS EXTEND SUPER INIT PRIVATE PROTECTED PUBLIC
@@ -26,6 +26,7 @@
 %left PLUS MINUS /* Additive operators: +, - */
 %left TIMES DIVIDE MOD /* Multiplicative operators: *, / */
 %left NOT
+%left POWER
 %left DOT
 
 %start cdecl /* The start symbol */
@@ -193,6 +194,7 @@ arithmetic:
   | expr TIMES expr   { Binop($1, Arithmetic(Prod), $3) }
   | expr DIVIDE expr  { Binop($1, Arithmetic(Div), $3) }
   | expr MOD expr     { Binop($1, Arithmetic(Mod), $3) }
+  | expr POWER expr   { Binop($1, Arithmetic(Pow), $3) }
 
 test:
   | expr EQ expr   { Binop($1, NumTest(Eq), $3) }
