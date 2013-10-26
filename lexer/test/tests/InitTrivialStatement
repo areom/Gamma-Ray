@@ -1,9 +1,8 @@
-class List {
+class List extends Node{
 
   private {
-
-    Int val
-    String name
+	Int val
+	String name
     init(Int a) {
 
 	    Int c:=3 
@@ -55,5 +54,4 @@ class List {
  	Int foo(Int b) {
 	}
   }
-
 }

@@ -50,16 +50,19 @@ let rec inspect_expr the_expr = match the_expr with
   | Deref(var, index) -> Printf.sprintf "Deref(%s, %s)" (inspect_expr var) (inspect_expr var)
   | Unop(an_op, exp) -> Printf.sprintf "Unop(%s, %s)" (inspect_op an_op) (inspect_expr exp)
   | Binop(left, an_op, right) -> Printf.sprintf "Binop(%s, %s, %s)" (inspect_op an_op) (inspect_expr left) (inspect_expr right)
+  | Call(fname, args) -> Printf.sprintf "Call(%s,%s)" fname (inspect_str_list inspect_expr args)
+  | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) totype
+  | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
   | Noexpr -> Printf.sprintf "Noexpr"
 
 let inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
 
 let rec inspect_stmt the_stmt = match the_stmt with
   | Decl(the_def) -> Printf.sprintf "Decl(%s)" (inspect_var_def the_def)
-  | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
   | If(clauses) -> Printf.sprintf "If(%s)" (inspect_str_list inspect_clause clauses)
   | While(pred, body) -> Printf.sprintf "While(%s, %s)" (inspect_expr pred) (inspect_str_list inspect_stmt body)
   | Expr(the_expr) -> Printf.sprintf "Expr(%s)" (inspect_expr the_expr)
+  | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
   | Return(the_expr) -> Printf.sprintf "Return(%s)" (inspect_expr the_expr)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
 

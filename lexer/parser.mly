@@ -139,10 +139,9 @@ else_list:
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
   vdecl  				{ Decl($1) }
-  | expr                                { Expr($1) }
-  | TYPE ID ASSIGN expr                 { ignore(Decl(($1,$2))); Assign($2,$4) }
-  | ID ASSIGN expr                      { Assign($1, $3) }
-  | RETURN expr                         { Expr($2) }
+  | expr                           { Expr($1) }
+  | TYPE ID ASSIGN expr             {ignore(Decl(($1,$2))); Assign($2,$4) } 
+  | RETURN expr                        { Expr($2) }
   | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
   | WHILE pred stmt_block               { While($2, $3) }
 pred:
@@ -160,6 +159,11 @@ expr:
   /* Literals are expressions */
   | lit { Literal($1) }
   | ID  { Id($1) }
+
+  /*Function call*/
+  | ID LPAREN actuals RPAREN { Call($1, $3) } 
+
+  | ID ASSIGN expr  { Assign($1,$3) }
 
   /* Arithmetic operations are expressions */
   | expr PLUS expr    { Binop($1, Arithmetic(Add), $3) }
@@ -180,6 +184,10 @@ expr:
    */
   | LPAREN expr RPAREN  { $2 }
 
+  /*Refine part of expression*/
+  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) } 
+
+
 /* Variable declaration */
 vdecl:
   | TYPE ID { ($1, $2) }
@@ -193,3 +201,14 @@ formals_opt:
 formals_list:
   | vdecl  { [$1] }
   | formals_list COMMA vdecl  { $3 :: $1 }
+
+actuals:
+  | actuals_opt { $1 }
+
+actuals_opt:
+  | { [] }
+  | actuals_list { List.rev $1 }
+
+actuals_list:
+  | expr { [$1] }
+  | actuals_list COMMA expr { $3 :: $1}

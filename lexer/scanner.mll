@@ -22,7 +22,7 @@ let ualphanum = '_' | alpha | digit
 rule token = parse
 
   (* Comments & White Space *)
-  | [' ' '\t' '\r' '\n']       { token lexbuf }
+  | [' ' '\t' '\r' '\n' ]       { token lexbuf }
   | "/*"                       { comment 0 lexbuf }
 
   (* Boolean Tests & Values *)
