@@ -6,8 +6,8 @@
 %token IF ELSE ELSIF WHILE
 %token ASSIGN RETURN CLASS EXTEND SUPER INIT PRIVATE PROTECTED PUBLIC
 %token NULL VOID
-%token NEW MAIN 
-%token REFINABLE REFINE REFINES TO 
+%token NEW MAIN
+%token REFINABLE REFINE REFINES TO
 %token SEMI COMMA DOT EOF
 
 %token <string> TYPE
@@ -138,12 +138,12 @@ else_list:
   | ELSE stmt_block                    { [(None, $2)] }
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
 stmt:
-  vdecl  				{ Decl($1) }
-  | expr                           { Expr($1) }
-  | TYPE ID ASSIGN expr             {ignore(Decl(($1,$2))); Assign($2,$4) } 
-  | RETURN expr                        { Expr($2) }
-  | IF pred stmt_block else_list        { If((Some($2), $3) :: $4) }
-  | WHILE pred stmt_block               { While($2, $3) }
+  | vdecl                         { Decl($1) }
+  | expr                          { Expr($1) }
+  | TYPE ID ASSIGN expr           { ignore(Decl(($1,$2))); Assign($2,$4) }
+  | RETURN expr                   { Expr($2) }
+  | IF pred stmt_block else_list  { If((Some($2), $3) :: $4) }
+  | WHILE pred stmt_block         { While($2, $3) }
 pred:
   | LPAREN expr RPAREN  { $2 }
 
@@ -161,7 +161,7 @@ expr:
   | ID  { Id($1) }
 
   /*Function call*/
-  | ID LPAREN actuals RPAREN { Call($1, $3) } 
+  | ID LPAREN actuals RPAREN { Call($1, $3) }
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
@@ -185,7 +185,7 @@ expr:
   | LPAREN expr RPAREN  { $2 }
 
   /*Refine part of expression*/
-  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) } 
+  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) }
 
 
 /* Variable declaration */
