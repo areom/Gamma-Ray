@@ -161,7 +161,7 @@ expr:
   | ID  { Id($1) }
 
   /*Function call*/
-  | ID LPAREN actuals RPAREN { Call($1, $3) }
+  | ID actuals { Call($1, $2) }
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
@@ -184,8 +184,8 @@ expr:
    */
   | LPAREN expr RPAREN  { $2 }
 
-  /*Refine part of expression*/
-  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) }
+  /* Refine part of expression */
+  | REFINE ID actuals TO TYPE { Refine($2,$3,$5) }
 
 
 /* Variable declaration */
@@ -203,7 +203,7 @@ formals_list:
   | formals_list COMMA vdecl  { $3 :: $1 }
 
 actuals:
-  | actuals_opt { $1 }
+  | LPAREN actuals_opt RPAREN { $2 }
 
 actuals_opt:
   | { [] }
