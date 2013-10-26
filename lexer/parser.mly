@@ -6,8 +6,8 @@
 %token IF ELSE ELSIF WHILE
 %token ASSIGN RETURN CLASS EXTEND SUPER INIT PRIVATE PROTECTED PUBLIC
 %token NULL VOID
-%token NEW MAIN 
-%token REFINABLE REFINE REFINES TO 
+%token NEW MAIN
+%token REFINABLE REFINE REFINES TO
 %token SEMI COMMA DOT EOF
 
 %token <string> TYPE
@@ -161,7 +161,7 @@ expr:
   | ID  { Id($1) }
 
   /*Function call*/
-  | ID LPAREN actuals RPAREN { Call($1, $3) } 
+  | ID LPAREN actuals RPAREN { Call($1, $3) }
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
@@ -185,7 +185,7 @@ expr:
   | LPAREN expr RPAREN  { $2 }
 
   /*Refine part of expression*/
-  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) } 
+  | REFINE ID LPAREN actuals RPAREN TO TYPE { Refine($2,$4,$7) }
 
 
 /* Variable declaration */
