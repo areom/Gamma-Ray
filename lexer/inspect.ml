@@ -53,6 +53,7 @@ let rec inspect_expr the_expr = match the_expr with
   | Call(fname, args) -> Printf.sprintf "Call(%s,%s)" fname (inspect_str_list inspect_expr args)
   | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) totype
   | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
+  | Refinable(the_var) -> Printf.sprintf "Refinable(%s)" the_var
   | Noexpr -> Printf.sprintf "Noexpr"
 
 let inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
