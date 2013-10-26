@@ -32,6 +32,7 @@ type stmt =
   | While of expr * stmt list
   | Expr of expr
   | Return of expr
+  | Super of expr list
 
 (* we have four different kinds of callable code blocks:
  *  main: only has formals, body (name / static / host known)

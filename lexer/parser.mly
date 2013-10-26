@@ -134,19 +134,20 @@ stmt_block:
 stmt_list:
   | /* nada */      { [] }
   | stmt_list stmt  { $2 :: $1 }
+stmt:
+  | vdecl SEMI                     { Decl($1,Noexpr) }
+  | vdecl ASSIGN expr SEMI         { Decl($1,$3) }
+  | SUPER actuals                  { Super($2) }
+  | RETURN expr SEMI               { Expr($2) }
+  | IF pred stmt_block else_list   { If((Some($2), $3) :: $4) }
+  | WHILE pred stmt_block          { While($2, $3) }
+  | expr SEMI                      { Expr($1) }
+pred:
+  | LPAREN expr RPAREN  { $2 }
 else_list:
   | /* nada */                         { [] }
   | ELSE stmt_block                    { [(None, $2)] }
   | ELSIF pred stmt_block else_list    { (Some($2), $3) :: $4 }
-stmt:
-  | vdecl SEMI                     { Decl($1,Noexpr) }
-  | expr SEMI                      { Expr($1) }
-  | vdecl ASSIGN expr SEMI         { Decl($1,$3) }
-  | RETURN expr SEMI               { Expr($2) }
-  | IF pred stmt_block else_list   { If((Some($2), $3) :: $4) }
-  | WHILE pred stmt_block          { While($2, $3) }
-pred:
-  | LPAREN expr RPAREN  { $2 }
 
 /* Literally necessary */
 lit:
@@ -159,7 +160,7 @@ lit:
 expr:
   /* Literals are expressions */
   | lit { Literal($1) }
-  | ID  { Id($1,Noexpr) }
+  | ID  { Id($1, Noexpr) }
   | ID LBRACKET expr RBRACKET { Id($1,$3) }
 
   /*Function call*/
