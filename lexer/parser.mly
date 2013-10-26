@@ -161,7 +161,8 @@ expr:
   | ID  { Id($1) }
 
   /*Function call*/
-  | ID LPAREN actuals RPAREN { Call($1, $3) }
+  | ID LPAREN actuals RPAREN { Invoc(Noexpr,$1, $3) }
+  | expr DOT ID LPAREN actuals RPAREN { Invoc($1,$3,$5) }
 
   | ID ASSIGN expr  { Assign($1,$3) }
 
