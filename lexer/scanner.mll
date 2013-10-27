@@ -35,7 +35,7 @@ rule token = parse
   | "not"                      { NOT }
   | "true"                     { TRUE }
   | "false"                    { FALSE }
-  | "=="                       { EQ }
+  | "="                        { EQ }
   | "<>"                       { NEQ }
   | "=/="                      { NEQ }
   | '<'                        { LT }
