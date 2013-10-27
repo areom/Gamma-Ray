@@ -23,6 +23,9 @@
 *.synctex.gz
 *.swp
 *.DS_Store
-./lexer/parser.mli
-./lexer/parser.ml
-./lexer/scanner.ml
+parser.mli
+parser.ml
+scanner.ml
+Gamma-LRM.pdf
+inspect
+streams
