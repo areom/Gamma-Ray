@@ -19,46 +19,49 @@ A literal class is a value that may be expressed in code without the use of the 
 \subsubsection{Integer Literals}
 An integer literal is a sequence of digits. It may be prefaced by a unary minus symbol. For example:
 \begin{itemize}
-\item 777
-\item 42
-\item 2
-\item -999
-\item 0001
+\item \verb!777!
+\item \verb!42!
+\item \verb!2!
+\item \verb!-999!
+\item \verb!0001!
 \end{itemize}
 
 \subsubsection{Float Literals}
 A float literal is a sequence of digits and exactly one decimal point/period. It must have at least one digit before the decimal point and at least one digit after the decimal point. It may also be prefaced by a unary minus symbol. For example:
 \begin{itemize}
-\item 1.0
-\item -0.567
-\item 10000.1
-\item 00004.70000
-\item 12345.6789
+\item \verb!1.0!
+\item \verb!-0.567!
+\item \verb!10000.1!
+\item \verb!00004.70000!
+\item \verb!12345.6789!
 \end{itemize}
 
 \subsubsection{Boolean Literals}
-A boolean literal is a single keyword, either true or false.
+A boolean literal is a single keyword, either \verb!true! or \verb!false!.
 
 \subsubsection{String Literals}
 A string literal consists of a sequence of characters enclosed in either single or double quotes. Please note that the sequence may be of length zero. For example:
 \begin{itemize}
-\item "Yellow matter custard"
-\item ""
-\item "Dripping\textbackslash{}n   from a dead"
-\item "'s 3y3"
+\item \verb!"Yellow matter custard"!
+\item \verb!""!
+\item \verb!"Dripping\n   from a dead"!
+\item \verb!"'s 3y3"!
 \end{itemize}
 
 Note: There are a small number of escape sequences that provide special characters inside of a string:
 \begin{itemize}
-\item \textbackslash{}a - u0007/alert/BEL
-\item \textbackslash{}b - u0008/backspace/BB
-\item \textbackslash{}f - u000c/form feed/FF
-\item \textbackslash{}n - u000a/linefeed/LF
-\item \textbackslash{}r - u000d/carriage return/CR
-\item \textbackslash{}t - u0009/horizontal tab/HT
-\item \textbackslash{}v - u000b/vertical tab/VT
-\item \textbackslash{}' - u0027/single quote
-\item \textbackslash{}" - u0022/double quote
-\item \textbackslash{}\textbackslash{} - u005c/backslash
-\item \textbackslash{}0 - u0000/null character/NUL 
+\item \verb!\a! - u0007/alert/BEL
+\item \verb!\b! - u0008/backspace/BB
+\item \verb!\f! - u000c/form feed/FF
+\item \verb!\n! - u000a/linefeed/LF
+\item \verb!\r! - u000d/carriage return/CR
+\item \verb!\t! - u0009/horizontal tab/HT
+\item \verb!\v! - u000b/vertical tab/VT
+\item \verb!\'! - u0027/single quote
+\item \verb!\"! - u0022/double quote
+\item \verb!\\! - u005c/backslash
+\item \verb!\0! - u0000/null character/NUL 
 \end{itemize}
+
+\subsection{Comments}
+Comments begin with the sequence \verb!/*! and end with \verb!*/!. Comments nest within each other.
