@@ -79,6 +79,13 @@ refinement:
         static  = false;
         formals = $5;
         body    = $6 } }
+  | VOID ID DOT ID formals stmt_block
+    { { returns = None;
+        host    = Some($2);
+        name    = $4;
+        static  = false;
+        formals = $5;
+        body    = $6 } }
 
 /* Private, protected, public members */
 private_list:
