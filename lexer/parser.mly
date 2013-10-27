@@ -27,6 +27,8 @@
 %left TIMES DIVIDE MOD /* Multiplicative operators: *, / */
 %left NOT
 %left POWER
+%right LPAREN LBRACKET
+%left RPAREN RBRACKET
 %left DOT
 
 %start cdecl /* The start symbol */
