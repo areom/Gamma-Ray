@@ -145,7 +145,8 @@ stmt:
   | vdecl semi              { Decl($1, None) }
   | vdecl ASSIGN expr semi  { Decl($1, Some($3)) }
   | SUPER actuals semi      { Super($2) }
-  | RETURN expr semi        { Expr($2) }
+  | RETURN expr semi        { Return(Some($2)) }
+  | RETURN semi;            { Return(None) }
   | conditional             { $1 }
   | loop                    { $1 }
   | expr semi               { Expr($1) }

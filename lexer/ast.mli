@@ -30,7 +30,7 @@ and stmt =
   | If of (expr option * stmt list) list
   | While of expr * stmt list
   | Expr of expr
-  | Return of expr
+  | Return of expr option
   | Super of expr list
 
 (* we have four different kinds of callable code blocks:
