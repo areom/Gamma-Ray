@@ -124,7 +124,7 @@ and stringlit chars = parse
 
 and escapechar chars = parse
   (* Accept valid C escape sequences *)
-  | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '\'' '"' '0'] as char {
+  | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
   | _ as char { lexfail("illegal escape character:  \\" ^ Char.escaped(char)) }
