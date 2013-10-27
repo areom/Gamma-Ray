@@ -26,3 +26,6 @@
 ./lexer/parser.mli
 ./lexer/parser.ml
 ./lexer/scanner.ml
+./LRM/Gamma-LRM.pdf
+./lexer/inspect
+./lexer/streams
