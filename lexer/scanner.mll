@@ -43,6 +43,7 @@ rule token = parse
   | ">="                       { GEQ }
 
   (* Grouping [args, arrays, code, etc] *)
+  | "[]"                       { ARRAY }
   | '['                        { LBRACKET }
   | ']'                        { RBRACKET }
   | '('                        { LPAREN }
