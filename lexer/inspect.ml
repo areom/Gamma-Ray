@@ -43,22 +43,24 @@ let inspect_opt stringer opt = match opt with
   | Some(v) -> Printf.sprintf "Some(%s)" (stringer v)
 
 let rec inspect_expr the_expr = match the_expr with
-  | Id(id, opt_index) -> Printf.sprintf "Id(%s, %s)" id (inspect_expr opt_index)
+  | Id(id) -> Printf.sprintf "Id(%s)" id
+  | This -> "This"
+  | Null -> "Null"
+  | NewObj(the_type, args) -> Printf.sprintf("NewObj(%s, %s)") the_type (inspect_str_list inspect_expr args)
   | Literal(l) -> Printf.sprintf "Literal(%s)" (inspect_lit l)
   | Invoc(receiver, meth, args) -> Printf.sprintf "Invocation(%s, %s, %s)" (inspect_expr receiver) meth (inspect_str_list inspect_expr args)
-  | Field(receiver, field, opt_index) -> Printf.sprintf "Field(%s, %s, %s)" (inspect_expr receiver) field (inspect_expr opt_index)
+  | Field(receiver, field) -> Printf.sprintf "Field(%s, %s)" (inspect_expr receiver) field
   | Deref(var, index) -> Printf.sprintf "Deref(%s, %s)" (inspect_expr var) (inspect_expr var)
   | Unop(an_op, exp) -> Printf.sprintf "Unop(%s, %s)" (inspect_op an_op) (inspect_expr exp)
   | Binop(left, an_op, right) -> Printf.sprintf "Binop(%s, %s, %s)" (inspect_op an_op) (inspect_expr left) (inspect_expr right)
   | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) totype
-  | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
+  | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" (inspect_expr the_var) (inspect_expr the_expr)
   | Refinable(the_var) -> Printf.sprintf "Refinable(%s)" the_var
-  | Noexpr -> Printf.sprintf "Noexpr"
 
-let inspect_var_def (the_type, the_var, the_num) = Printf.sprintf "(%s, %s, %s)" the_type the_var (string_of_int the_num)
+let inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
 
 let rec inspect_stmt the_stmt = match the_stmt with
-  | Decl(the_def, the_expr) -> Printf.sprintf "Decl(%s, %s)" (inspect_var_def the_def) (inspect_expr the_expr)
+  | Decl(the_def, the_expr) -> Printf.sprintf "Decl(%s, %s)" (inspect_var_def the_def) (inspect_opt inspect_expr the_expr)
   | If(clauses) -> Printf.sprintf "If(%s)" (inspect_str_list inspect_clause clauses)
   | While(pred, body) -> Printf.sprintf "While(%s, %s)" (inspect_expr pred) (inspect_str_list inspect_stmt body)
   | Expr(the_expr) -> Printf.sprintf "Expr(%s)" (inspect_expr the_expr)

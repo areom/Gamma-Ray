@@ -1,6 +1,8 @@
 open Parser
 
 let stoken tk = match tk with
+  | THIS -> "THIS"
+  | ARRAY -> "ARRAY"
   | REFINABLE -> "REFINABLE"
   | AND -> "AND"
   | OR -> "OR"
