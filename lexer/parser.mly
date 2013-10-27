@@ -212,9 +212,7 @@ test:
   | REFINABLE LPAREN ID RPAREN { Refinable($3) }
 
 instantiate:
-  | NEW TYPE                   { NewObj($2, []) }
-  | NEW TYPE actuals           { NewObj($2, $3) }
-  | NEW vartype ARRAY actuals  { NewObj($2 ^ "[]", $4) }
+  | NEW vartype actuals  { NewObj($2, $3) }
 
 refineexpr:
   | REFINE ID actuals TO vartype  { Refine($2, $3, $5) }
