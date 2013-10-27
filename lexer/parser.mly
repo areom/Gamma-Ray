@@ -6,7 +6,7 @@
 %token IF ELSE ELSIF WHILE
 %token ASSIGN RETURN CLASS EXTEND SUPER INIT PRIVATE PROTECTED PUBLIC
 %token NULL VOID THIS
-%token NEW MAIN
+%token NEW MAIN ARRAY
 %token REFINABLE REFINE REFINES TO
 %token SEMI COMMA DOT EOF
 
@@ -70,7 +70,7 @@ refinements:
   | /* Can be empty */      { [] }
   | refinements refinement  { $2 :: $1 }
 refinement:
-  | TYPE ID DOT ID formals stmt_block
+  | vartype ID DOT ID formals stmt_block
     { { returns = Some($1);
         host    = Some($2);
         name    = $4;
@@ -99,7 +99,7 @@ member:
 
 /* Methods */
 mdecl:
-  | TYPE ID formals stmt_block
+  | vartype ID formals stmt_block
     { { returns = Some($1);
         host    = None;
         name    = $2;
@@ -141,7 +141,8 @@ stmt_list:
   | /* nada */      { [] }
   | stmt_list stmt  { $2 :: $1 }
 stmt:
-  | vdecl semi              { Decl($1) }
+  | vdecl semi              { Decl($1, None) }
+  | vdecl ASSIGN expr semi  { Decl($1, Some($3)) }
   | SUPER actuals semi      { Super($2) }
   | RETURN expr semi        { Expr($2) }
   | conditional             { $1 }
@@ -150,7 +151,7 @@ stmt:
 
 /* Control Flow */
 conditional:
-  | IF pred stmt_block else_list  { If((Some($2), $3) :: $4 }
+  | IF pred stmt_block else_list  { If((Some($2), $3) :: $4) }
 else_list:
   | /* nada */                         { [] }
   | ELSE stmt_block                    { [(None, $2)] }
@@ -209,12 +210,12 @@ test:
   | REFINABLE LPAREN ID RPAREN { Refinable($3) }
 
 instantiate:
-  | NEW TYPE                         { NewObj($2, []) }
-  | NEW TYPE actuals                 { NewObj($2, $3) }
-  | NEW TYPE LBRACKET expr RBRACKET  { NewArr($2, $4) }
+  | NEW TYPE                   { NewObj($2, []) }
+  | NEW TYPE actuals           { NewObj($2, $3) }
+  | NEW vartype ARRAY actuals  { NewObj($2 ^ "[]", $4) }
 
 refineexpr:
-  | REFINE ID actuals TO TYPE  { Refine($2, $3, $5) }
+  | REFINE ID actuals TO vartype  { Refine($2, $3, $5) }
 
 literal:
   | lit  { Literal($1) }
@@ -248,7 +249,10 @@ actuals_list:
 
 /* Variable declaration */
 vdecl:
-  | TYPE ID { ($1, $2) }
+  | vartype ID { ($1, $2) }
+vartype:
+  | TYPE          { $1 }
+  | vartype ARRAY { $1 ^ "[]" }
 
 /* Eat multiple semis */
 semi:
