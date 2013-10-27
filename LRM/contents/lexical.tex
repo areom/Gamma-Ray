@@ -86,4 +86,18 @@ The following characters are used to deliniate various aspects of program organi
 \end{center}
 
 \subsection{Whitespace and Nonconnonical Gamma}
-As written, cannonical Gamma ignores whitespace outside of string literals. Gamma code with rigid whitespace (pythonesque Gamma) ala python and no \verb!;!, \verb!{!, or \verb!}! can easily be feed through an interpreter to become cannonical Gamma.
+As written, canonical Gamma ignores whitespace outside of string literals. Gamma code with rigid whitespace (pythonesque Gamma) a la python and without \verb!;!, \verb!{!, or \verb!}! can easily be feed through a preprocessor to become canonical Gamma. Doing so respects the following rules:
+\begin{itemize}
+\item Tab characters are equivalent to eight spaces
+\item Wherever a \verb!{! could be used to start a scope, a \verb!:! can be used instead
+\item After starting a scope with \verb!:! the next line with non-whitespace characters determines the indentation level of that scope.
+\begin{itemize}
+\item If there is no such line (end of file) then the scope is assumed to end and is equivalent to \verb!{}!.
+\item If the next such line is indented no more than the line introducing the scope, then the scope is again equivalent to \verb!{}!.
+\item If the next line is indented more than the line introducing the scope then this sets the indentation level of the scope -- all statements in this scope \emph{must} be at the same exact level of indentation. The scope continues until end of file or the indentation returns to the indentation level of an outer scope.
+\end{itemize}
+\item If the line after a statement \emph{not} ending in a colon is indented more than the given line, then it is considered a continuation of that statement.
+\item At the end of a statement (either the end of the line starting the statement, or subsequent lines that are indented more as per the rule above), a newline is equivalent to a semicolon \verb!;!.
+\item If a scope is explicitly demarcated with \verb!{! and \verb!}! then there can be no whitespace related scoping within that scope -- all inner scoping and statement termination must be handled with \verb!{!, \verb!}!, \verb!;!. 
+\end{itemize}
+
