@@ -2,6 +2,7 @@
 
 %token LPAREN RPAREN LBRACKET RBRACKET COMMA LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE MOD POWER
+%token PLUSA MINUSA TIMESA DIVIDEA MODA POWERA
 %token EQ NEQ GT LT GEQ LEQ AND OR NAND NOR XOR NOT TRUE FALSE
 %token IF ELSE ELSIF WHILE
 %token ASSIGN RETURN CLASS EXTEND SUPER INIT PRIVATE PROTECTED PUBLIC
@@ -18,7 +19,7 @@
 %token <string> ID
 
 /* Want to work on associtivity when I'm a bit fresher */
-%right ASSIGN
+%right ASSIGN PLUSA MINUSA TIMESA DIVIDEA MODA POWERA
 %left OR NOR XOR
 %left AND NAND
 %left EQ NEQ
@@ -180,7 +181,13 @@ expr:
   | NULL                { Null }
 
 assignment:
-  | expr ASSIGN expr  { Assign($1, $3) }
+  | expr ASSIGN expr   { Assign($1, $3) }
+  | expr PLUSA expr    { Assign($1, Binop($1, Arithmetic(Add), $3)) }
+  | expr MINUSA expr   { Assign($1, Binop($1, Arithmetic(Sub), $3)) }
+  | expr TIMESA expr   { Assign($1, Binop($1, Arithmetic(Prod), $3)) }
+  | expr DIVIDEA expr  { Assign($1, Binop($1, Arithmetic(Div), $3)) }
+  | expr MODA expr     { Assign($1, Binop($1, Arithmetic(Mod), $3)) }
+  | expr POWERA expr   { Assign($1, Binop($1, Arithmetic(Pow), $3)) }
 
 invocation:
   | expr DOT ID actuals { Invoc($1, $3, $4) }

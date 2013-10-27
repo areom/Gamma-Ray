@@ -35,7 +35,7 @@ rule token = parse
   | "not"                      { NOT }
   | "true"                     { TRUE }
   | "false"                    { FALSE }
-  | "=="                       { EQ }
+  | "="                        { EQ }
   | "<>"                       { NEQ }
   | "=/="                      { NEQ }
   | '<'                        { LT }
@@ -63,6 +63,14 @@ rule token = parse
   | '/'                        { DIVIDE }
   | '%'                        { MOD }
   | '^'                        { POWER }
+
+  (* Arithmetic assignment *)
+  | "+="                       { PLUSA }
+  | "-="                       { MINUSA }
+  | "*="                       { TIMESA }
+  | "/="                       { DIVIDEA }
+  | "%="                       { MODA }
+  | "^="                       { POWERA }
 
   (* Control flow *)
   | "if"                       { IF }
