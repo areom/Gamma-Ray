@@ -14,6 +14,7 @@ type expr =
   | Null
   | Id of string
   | NewObj of string * expr list
+  | Anonymous of string * expr list * func_def list
   | Literal of lit
   | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
   | Deref of expr * expr (* road[pavement] *)
@@ -23,13 +24,10 @@ type expr =
   | Binop of expr * op * expr (* x + y *)
   | Refine of string * expr list * string
   | Refinable of string (* refinable *)
-
-type var_def = string * string  (* Oh typing, you pain in the ass, add a int for array *)
-
-type stmt =
+and var_def = string * string  (* Oh typing, you pain in the ass, add a int for array *)
+and stmt =
     Decl of var_def * expr option
   | If of (expr option * stmt list) list
-  | Assign of string * expr
   | While of expr * stmt list
   | Expr of expr
   | Return of expr
@@ -41,7 +39,7 @@ type stmt =
  *  refine: has host, name, formals, body (static known)
  *  method: has name, formals, body (host / static known)
  *)
-type func_def = {
+and func_def = {
   returns : string option;
   host    : string option;
   name    : string;

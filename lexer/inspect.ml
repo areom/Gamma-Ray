@@ -47,6 +47,7 @@ let rec inspect_expr the_expr = match the_expr with
   | This -> "This"
   | Null -> "Null"
   | NewObj(the_type, args) -> Printf.sprintf("NewObj(%s, %s)") the_type (inspect_str_list inspect_expr args)
+  | Anonymous(the_type, args, body) -> Printf.sprintf("Anonymous(%s, %s, %s)") the_type (inspect_str_list inspect_expr args) (inspect_str_list inspect_func_def body)
   | Literal(l) -> Printf.sprintf "Literal(%s)" (inspect_lit l)
   | Invoc(receiver, meth, args) -> Printf.sprintf "Invocation(%s, %s, %s)" (inspect_expr receiver) meth (inspect_str_list inspect_expr args)
   | Field(receiver, field) -> Printf.sprintf "Field(%s, %s)" (inspect_expr receiver) field
@@ -56,20 +57,16 @@ let rec inspect_expr the_expr = match the_expr with
   | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) totype
   | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" (inspect_expr the_var) (inspect_expr the_expr)
   | Refinable(the_var) -> Printf.sprintf "Refinable(%s)" the_var
-
-let inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
-
-let rec inspect_stmt the_stmt = match the_stmt with
+and inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
+and inspect_stmt the_stmt = match the_stmt with
   | Decl(the_def, the_expr) -> Printf.sprintf "Decl(%s, %s)" (inspect_var_def the_def) (inspect_opt inspect_expr the_expr)
   | If(clauses) -> Printf.sprintf "If(%s)" (inspect_str_list inspect_clause clauses)
   | While(pred, body) -> Printf.sprintf "While(%s, %s)" (inspect_expr pred) (inspect_str_list inspect_stmt body)
   | Expr(the_expr) -> Printf.sprintf "Expr(%s)" (inspect_expr the_expr)
-  | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" the_var (inspect_expr the_expr)
   | Return(the_expr) -> Printf.sprintf "Return(%s)" (inspect_expr the_expr)
   | Super(args) -> Printf.sprintf "Super(%s)" (inspect_str_list inspect_expr args)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
-
-let inspect_func_def func = let id x = x in Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s }"
+and inspect_func_def func = let id x = x in Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s }"
   (inspect_opt id func.returns)
   (inspect_opt id func.host)
   func.name
