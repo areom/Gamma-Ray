@@ -63,7 +63,7 @@ and inspect_stmt the_stmt = match the_stmt with
   | If(clauses) -> Printf.sprintf "If(%s)" (inspect_str_list inspect_clause clauses)
   | While(pred, body) -> Printf.sprintf "While(%s, %s)" (inspect_expr pred) (inspect_str_list inspect_stmt body)
   | Expr(the_expr) -> Printf.sprintf "Expr(%s)" (inspect_expr the_expr)
-  | Return(the_expr) -> Printf.sprintf "Return(%s)" (inspect_expr the_expr)
+  | Return(the_expr) -> Printf.sprintf "Return(%s)" (inspect_opt inspect_expr the_expr)
   | Super(args) -> Printf.sprintf "Super(%s)" (inspect_str_list inspect_expr args)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
 and inspect_func_def func = let id x = x in Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s }"
