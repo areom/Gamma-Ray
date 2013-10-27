@@ -30,13 +30,15 @@
 %left LPAREN RPAREN LBRACKET RBRACKET
 %left DOT
 
-%start cdecl /* The start symbol */
-%type <Ast.class_def> cdecl
-
+%start cdecls
+%type <Ast.program> cdecls
 
 %%
 
-/* Class and subclassing -- cdecl / extend_opt */
+/* Classe and subclassing */
+cdecls:
+  | cdecl { [$1] }
+  | cdecls cdecl { $2 :: $1 }
 cdecl:
   | CLASS TYPE extend_opt class_section_list
     { { klass     = $2;
