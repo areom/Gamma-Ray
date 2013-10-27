@@ -11,7 +11,9 @@ type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
 
 type expr =
     This
+  | Null
   | Id of string
+  | NewObj of string * expr list
   | Literal of lit
   | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
   | Deref of expr * expr (* road[pavement] *)
@@ -22,10 +24,10 @@ type expr =
   | Refine of string * expr list * string
   | Refinable of string (* refinable *)
 
-type var_def = string * string *int (* Oh typing, you pain in the ass, add a int for array *)
+type var_def = string * string  (* Oh typing, you pain in the ass, add a int for array *)
 
 type stmt =
-    Decl of var_def * expr
+    Decl of var_def * expr option
   | If of (expr option * stmt list) list
   | Assign of string * expr
   | While of expr * stmt list
