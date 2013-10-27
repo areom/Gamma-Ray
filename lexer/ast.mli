@@ -68,3 +68,5 @@ type class_def = {
   parent   : string option;
   sections : class_sections_def;
 }
+
+type program = class_def list

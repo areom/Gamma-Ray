@@ -94,11 +94,11 @@ let inspect_class_def the_klass = let id x = x in Printf.sprintf "{ klass = %s, 
   (inspect_opt id the_klass.parent)
   (inspect_class_sections the_klass.sections)
 
-let get_class lexer = Parser.cdecl Scanner.token lexer
+let get_classes lexer = Parser.cdecls Scanner.token lexer
 
-let read_class where = get_class (Lexing.from_channel where)
+let read_classes where = get_classes (Lexing.from_channel where)
 
-let inspect_class source = inspect_class_def (read_class source)
+let inspect_classes source = List.map inspect_class_def (read_classes source)
 
-let _ = print_string (inspect_class stdin) ; print_newline ()
+let _ = print_string (String.concat "\n\n" (inspect_classes stdin)) ; print_newline()
 
