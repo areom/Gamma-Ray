@@ -47,7 +47,7 @@
 <loop>:"while ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
 
 \comment{Anything that can result in a value}
-<expression>:<assignment>;<invocation>;<field>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
+<expression>:<assignment>;<invocation>;<field>;<var id>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
 
 \comment{Assignment -- putting one thing in another}
 <assignment>:<expression>," := ",<expression>.
@@ -69,11 +69,10 @@
 <unary pred>:"!".
 
 \comment{Making something}
-<instantiate>:<object instantiate>;<array instantiate>.
-<object instantiate>:"new ",<class id>;"new ",<class id>," ( ",<args>," )".
-<array instantiate>:"new ",<type>," [ ",<expression>," ]".
+<instantiate>:"new ",<type>," ( ",<args>," ) ",<optional refinements>.
+<optional refinements>:"$\epsilon$";"\{ ",<refine>,"{\small *} \}".
 
-\comment{Refinement takes a specific specialization and notes the required return type}
+\comment{Refinement takes a specialization and notes the required return type}
 <refine expr>:"refine ",<specialize>," to ",<type>.
 <specialize>:<var id>," ()";<var id>," ( ",<args>," )".
 
