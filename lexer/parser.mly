@@ -21,14 +21,13 @@
 %right ASSIGN
 %left OR NOR XOR
 %left AND NAND
-%left EQ NEQ /* Equality operators: ==, != */
-%left LT GT LEQ GEQ /* Comparison operators: <, >, <=, => */
-%left PLUS MINUS /* Additive operators: +, - */
-%left TIMES DIVIDE MOD /* Multiplicative operators: *, / */
-%left NOT
-%left POWER
-%right LPAREN LBRACKET
-%left RPAREN RBRACKET
+%left EQ NEQ
+%left LT GT LEQ GEQ
+%left PLUS MINUS
+%left TIMES DIVIDE MOD
+%nonassoc UMINUS
+%left NOT POWER
+%left LPAREN RPAREN LBRACKET RBRACKET
 %left DOT
 
 %start cdecl /* The start symbol */
@@ -192,12 +191,13 @@ value:
   | expr LBRACKET expr RBRACKET  { Deref($1, $3) }
 
 arithmetic:
-  | expr PLUS expr    { Binop($1, Arithmetic(Add), $3) }
-  | expr MINUS expr   { Binop($1, Arithmetic(Sub), $3) }
-  | expr TIMES expr   { Binop($1, Arithmetic(Prod), $3) }
-  | expr DIVIDE expr  { Binop($1, Arithmetic(Div), $3) }
-  | expr MOD expr     { Binop($1, Arithmetic(Mod), $3) }
-  | expr POWER expr   { Binop($1, Arithmetic(Pow), $3) }
+  | expr PLUS expr           { Binop($1, Arithmetic(Add), $3) }
+  | expr MINUS expr          { Binop($1, Arithmetic(Sub), $3) }
+  | expr TIMES expr          { Binop($1, Arithmetic(Prod), $3) }
+  | expr DIVIDE expr         { Binop($1, Arithmetic(Div), $3) }
+  | expr MOD expr            { Binop($1, Arithmetic(Mod), $3) }
+  | expr POWER expr          { Binop($1, Arithmetic(Pow), $3) }
+  | MINUS expr %prec UMINUS  { Unop(Arithmetic(Neg), $2) }
 
 test:
   | expr EQ expr   { Binop($1, NumTest(Eq), $3) }
