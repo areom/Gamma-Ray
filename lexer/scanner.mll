@@ -64,6 +64,14 @@ rule token = parse
   | '%'                        { MOD }
   | '^'                        { POWER }
 
+  (* Arithmetic assignment *)
+  | "+="                       { PLUSA }
+  | "-="                       { MINUSA }
+  | "*="                       { TIMESA }
+  | "/="                       { DIVIDEA }
+  | "%="                       { MODA }
+  | "^="                       { POWERA }
+
   (* Control flow *)
   | "if"                       { IF }
   | "else"                     { ELSE }
