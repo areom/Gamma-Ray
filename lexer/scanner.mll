@@ -32,11 +32,12 @@ rule token = parse
   | "xor"                      { XOR }
   | "nand"                     { NAND }
   | "nor"                      { NOR }
-  | '!'                        { NOT }
+  | "not"                      { NOT }
   | "true"                     { TRUE }
   | "false"                    { FALSE }
-  | "="                        { EQ }
-  | "!="                       { NEQ }
+  | "=="                       { EQ }
+  | "<>"                       { NEQ }
+  | "=/="                      { NEQ }
   | '<'                        { LT }
   | "<="                       { LEQ }
   | ">"                        { GT }
