@@ -37,8 +37,8 @@
 \comment{Super invocation is so we can do constructor chaining}
 <super>:"super ( ",<args>," )".
 
-\comment{Methods need to be able to return something, too}
-<return>:"return ",<expression>.
+\comment{Methods yield values (or just exit for void/init/main)}
+<return>:"return";"return ",<expression>.
 
 \comment{Basic control structures}
 <conditional>:"if ( ",<expression>," ) \{ ",<statement>,"{\small *} \} ",<else>.
