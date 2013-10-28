@@ -4,7 +4,6 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
 
 \Lang{} combines three disparate but equally important tenants:
 
-
 \begin{enumerate}
 \item Purely object-oriented 
 
@@ -16,7 +15,11 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
 
 \item Versatile
 
-\Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Anonymous instantiation allows for extension of your classes in a quick easy fashion.
+\Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Refining methods are inherited from the great work that went into the BETA programming language and were further explored in BetaJava and are a part of PLTScheme/Racket (and, of course, there are perlisms to copy the behavior, as is to be expected from \emph{that} community).
+
+Refinement in \Lang{} is different though -- the \Lang{} view of refinement is that methods themselves are singular objects of computation associated with classes and these objects themselves provide an extendable interface.
+
+In addition to refinement, anonymous instantiation allows for extension of your classes in a quick \& easy fashion.
 \end{enumerate}
 
 \subsection{The Motivation Behind \Lang{}}
