@@ -1,7 +1,11 @@
 \section{Semantics}
-\subsection{Classes}
-
-\subsubsection{The Object Class}
-\subsubsection{The Literal Classes}
-\subsubsection{The Derived Classes}
+\subsection{Types and Variables}
+Every \textit{variable} in Gamma is initalized with a \textit{type} and an \textit{identifier}. The typing is static and will always be known at compile time for every variable. The variable itself holds a reference to an instance of that type. At compile time, each new instantiation reserves space for one instance of that type. To be an instance of a type, an instance must be an instance of the class of the same name as that type, an instance of one of the set of subclasses of that class, or the null instance.
 \subsection{Methods}
+A method is a reusable subdivision of code that takes multiple instances as arguments and returns either a variable of the type specified for the method or null.
+\subsection{Classes, Subclasses and Their Members}
+A class contains an initialization method named init and three collections of \textit{members} organized in \textit{private}, \textit{protected}, and \textit{public} sections. Members are references to either a method or a variable. All other classes contain members that only hold instances of other classes. Each class must be derived from another class as a \textit{subclass}. Method members of a class can have \textit{refine} statements placed in their bodies. Subclasses must implement \textit{refinements}, special functions that are called for their superclass' refine statements. Optionally, the superclass can conditionally check if the refinement has been implemented to avoid runtime errors.
+\subsubsection{The Object Class}
+Since every class must be derived from another, there must be one class that is the final ancestor: Object is that class. Object as itself is not very useful, it has a few essential methods within its sections.
+\subsubsection{The Literal Classes}
+There are several \textit{literal classes} that contain unique members that hold strictly data. These classes generally have methods developed for most operators. They are also all subclasses of Object.
