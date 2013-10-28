@@ -16,6 +16,40 @@
 \newcommand{\Lang}{GAMMA}
 \newcommand{\Compiler}{ray}
 
+\renewcommand{\lstlistingname}{Example}
+
+\definecolor{tintedgray}{rgb}{0.96,0.96,0.96}
+
+\lstset{ %
+  aboveskip=8pt,
+  abovecaptionskip=8pt,
+  backgroundcolor=\color{tintedgray},
+  basicstyle=\footnotesize,
+  belowskip=2pt,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{orange},
+  frame=single,
+  framesep=8pt,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  morekeywords={and,class,else,elsif,extends,false,
+  	if,init,main,nand,new,nor,not,null,or,private,
+  	protected,public,refinable,refine,refinement,
+  	return,super,this,to,true,void,while,xor},           
+  numbers=left,
+  numbersep=14pt,
+  numberstyle=\tiny\color{gray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=2,
+  tabsize=2,
+  title=\lstname
+}
+
 \begin{document}
 
 \noindent\includegraphics[width=\textwidth]{logo.png}
@@ -31,6 +65,8 @@
 \include{contents/lexical}
 
 \include{contents/semantics}
+
+\include{contents/syntax}
 
 \include{contents/grammar}
 

@@ -1,0 +1,68 @@
+\section{Syntax}
+\subsection{Variable Initialization}
+Initializing a variable requires a type and a list of identifiers deliminated by commas:
+
+\begin{lstlisting}
+type identifier[, identifier[, identifier[...]]];
+\end{lstlisting}
+
+If we wanted to initialize variables for the pythagorean theorem, we would do it like so:
+
+\begin{lstlisting}[caption=Variable Initialization for the Pythagorean Theorem]
+Float a, b, c;
+\end{lstlisting}
+
+\subsection{Variable Assignment}
+Assigning an instance to a variable requires an expression and a variable identifier:
+
+\begin{lstlisting}
+identifier := expression;
+\end{lstlisting}
+
+If we wanted to assign instances of Integer for our pythagorean theorem, we'd do it like so:
+
+\begin{lstlisting}[caption=Variable Assignment for the Pythagorean Theorem]
+a := 3;
+b := 4;
+\end{lstlisting}
+
+\subsection{Method Invocation}
+Invoking a method requires at least an identifier for the function. The instance that the method is invoked upon can be provided as a variable. If it is not provided, the method is invoked upon the global state.
+
+\begin{lstlisting}
+[expression.]identifier([expression[, expression[...]]])
+\end{lstlisting}
+
+Alternatively, certain base methods allow for the use of more familiar binary operators in place of a method invocation.
+
+\begin{lstlisting}
+expression operator expression
+\end{lstlisting}
+
+Finishing our pythagorean example, we use method invocations and assignment to calculate the length of our third side, c.
+
+\begin{lstlisting}[label=Method Invocation,caption=Method Invocation for the Pythagorean Theorem Using Operators]
+c := ( a^2 + b^2 )^0.5;
+\end{lstlisting}
+
+\begin{lstlisting}[label=Method Invocation,caption=Method Invocation for the Pythagorean Theorem Using Methods]
+c := ((a.power(2)).plus(b.power(2))).power(0.5);
+\end{lstlisting}
+
+\subsection{Operator Precidence}
+In the previous example, parentheses were used heavily in a context not directly related to method invocation. Parentheses have one additional function: they modify precedence among operators. Every operator has a precidence in relation to its fellow operators. Operators of higher precidence are enacted first. Please consider the following table for determining precidence:
+\begin{center}
+\begin{tabular}{ccccccc}
+\verb!:=! & \verb!+=! & \verb!-=! & \verb!*=! & \verb!/=! & \verb!%=! & \verb!^=!\\
+or & xor & nor &&&&\\
+and & nand &&&&&\\
+\verb!=! & \verb!<>! & \verb!=/=! &&&&\\
+\verb!>! & \verb!<! & \verb!>=! & \verb!<=! &&&\\
+\verb!+! & \verb!-! &&&&&\\
+\verb!*! & \verb!/! & \verb!%! &&&&\\
+not & \verb!^! &&&&&\\
+\verb!(! & \verb!)! &&&&&\\
+\multicolumn{3}{c}{array dereferencing}&&&&\\
+\multicolumn{3}{c}{method invocation}&&&&\\
+\end{tabular}
+\end{center}
