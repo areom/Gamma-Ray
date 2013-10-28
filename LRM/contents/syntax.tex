@@ -27,7 +27,7 @@ b := 4;
 \end{lstlisting}
 
 \subsection{Method Invocation}
-Invoking a method requires at least an identifier for the method of the current context (i.e. implicit \verb!this! receiver). The instance that the method is invoked upon can be provided as a variable. If it is not provided, the method is invoked upon the global state.
+Invoking a method requires at least an identifier for the method of the current context (i.e. implicit \verb!this! receiver). The instance that the method is invoked upon can be provided as an expression. If it is not provided, the method is invoked upon \verb!this!.
 
 \begin{lstlisting}
 [expression.]identifier([expression[, expression[...]]])
