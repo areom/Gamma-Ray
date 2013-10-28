@@ -33,25 +33,28 @@ Invoking a method requires at least an identifier for the function. The instance
 [expression.]identifier([expression[, expression[...]]])
 \end{lstlisting}
 
+Finishing our pythagorean example, we use method invocations and assignment to calculate the length of our third side, c.
+
+\begin{lstlisting}[label=Method Invocation,caption=Method Invocation for the Pythagorean Theorem Using Methods]
+c := ((a.power(2)).plus(b.power(2))).power(0.5);
+\end{lstlisting}
+
+\subsection{Method Invocation Using Operators}
 Alternatively, certain base methods allow for the use of more familiar binary operators in place of a method invocation.
 
 \begin{lstlisting}
 expression operator expression
 \end{lstlisting}
 
-Finishing our pythagorean example, we use method invocations and assignment to calculate the length of our third side, c.
+Using operators has advantages in clarity and succinctness even if the end result is the same.
 
 \begin{lstlisting}[label=Method Invocation,caption=Method Invocation for the Pythagorean Theorem Using Operators]
 c := ( a^2 + b^2 )^0.5;
 \end{lstlisting}
 
-\begin{lstlisting}[label=Method Invocation,caption=Method Invocation for the Pythagorean Theorem Using Methods]
-c := ((a.power(2)).plus(b.power(2))).power(0.5);
-\end{lstlisting}
-
 \subsection{Operator Precidence}
-In the previous example, parentheses were used heavily in a context not directly related to method invocation. Parentheses have one additional function: they modify precedence among operators. Every operator has a precidence in relation to its fellow operators. Operators of higher precidence are enacted first. Please consider the following table for determining precidence:
-\begin{center}
+In the previous examples, parentheses were used heavily in a context not directly related to method invocation. Parentheses have one additional function: they modify precedence among operators. Every operator has a precidence in relation to its fellow operators. Operators of higher precidence are enacted first. Please consider the following table for determining precidence:
+\begin{table}[h]\footnotesize
 \begin{tabular}{ccccccc}
 \verb!:=! & \verb!+=! & \verb!-=! & \verb!*=! & \verb!/=! & \verb!%=! & \verb!^=!\\
 or & xor & nor &&&&\\
@@ -65,4 +68,54 @@ not & \verb!^! &&&&&\\
 \multicolumn{3}{c}{array dereferencing}&&&&\\
 \multicolumn{3}{c}{method invocation}&&&&\\
 \end{tabular}
-\end{center}
+\caption{Operator Precidence}
+\end{table}
+
+\subsection{Method Declaration}
+A method definition begins with either a return type or Void. The identifier for the function is followed by a pair of parentheses that may enclose the argument variable definitions. There is one type and one identifier for each argument; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. In the body, there must be at least one statement but there may be many more. At least one of those statements must be a return statement. Additionally, refinements may be placed throughout the statements.
+ 
+\begin{lstlisting}
+return_type | Void method_identifier ([var_type var_identifier[, var_type var_identifier[, var_type var_identifier[...]]]]){
+	statement*
+	[statement*]
+	[statement*]
+	...
+}
+\end{lstlisting}
+
+Finally, we may define a method to do our pythagorean theorem calculation
+
+\begin{lstlisting}[label=Method Invocation,caption=Method Definition for the Pythagorean Theorem]
+Float pythagorean_theorem(Float a, Float b){
+	c := ( a^2 + b^2 )^0.5;
+	return c;
+}
+\end{lstlisting}
+
+\subsection{Class Declaration}
+A class definition always starts with the keyword \verb!class! followed by an identifier. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an init\_method, an optional main method, and the three access-level member sections.
+
+\begin{lstlisting}
+class class_identifier [extends superclass_identifier]{
+	init_method
+	[main_method]
+	[private:
+		[private_method_decl | private_var_decl]
+		[private_method_decl | private_var_decl]
+		...
+	]
+	[protected:
+		[protected_method_decl | protected_var_decl]
+		[protected_method_decl | protected_var_decl]
+		...
+	]
+	[public:
+		[public_method_decl | public_var_decl]
+		[public_method_decl | public_var_decl]
+		...
+	]
+}
+\end{lstlisting}
+
+
+\subsection{Refinements}
