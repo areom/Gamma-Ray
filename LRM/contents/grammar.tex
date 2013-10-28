@@ -32,10 +32,10 @@
 <main>:"main ( String[] ",<var id>," ) \{ ",<statement>,"{\small *} \}".
 
 \comment{Finally, the meat and potatoes}
-<statement>:<var decl>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
+<statement>:<var decl>," ;";<var decl>," := ",<expression>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
 
 \comment{Super invocation is so we can do constructor chaining}
-<super>:"super ( ",<args>," )".
+<super>:"super ",<args>.
 
 \comment{Methods yield values (or just exit for void/init/main)}
 <return>:"return";"return ",<expression>.
@@ -47,15 +47,14 @@
 <loop>:"while ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
 
 \comment{Anything that can result in a value}
-<expression>:<assignment>;<invocation>;<field>;<var id>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
+<expression>:<assignment>;<invocation>;<field>;<var id>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"this";"null".
 
 \comment{Assignment -- putting one thing in another}
 <assignment>:<expression>,<assign op>,<expression>.
 <assign op>:":=";"+=";"-=";"*=";"/=";"\%=";"$\hat{}=$".
 
 \comment{Member / data access}
-<invocation>:<expression>," . ",<invoke>;<invoke>.
-<invoke>:<var id>," ()";<var id>," ( ",<args>," )".
+<invocation>:<expression>," . ",<var id>,<args>;<var id>,<args>.
 <field>:<expression>," . ",<var id>.
 <deref>:<expression>," [ ",<expression>," ]".
 
@@ -70,12 +69,11 @@
 <unary pred>:"not".
 
 \comment{Making something}
-<instantiate>:"new ",<type>," ( ",<args>," ) ",<optional refinements>.
+<instantiate>:"new ",<type>,<args>,<optional refinements>.
 <optional refinements>:"$\epsilon$";"\{ ",<refine>,"{\small *} \}".
 
 \comment{Refinement takes a specialization and notes the required return type}
-<refine expr>:"refine ",<specialize>," to ",<type>.
-<specialize>:<var id>," ()";<var id>," ( ",<args>," )".
+<refine expr>:"refine ",<var id>,<args>," to ",<type>.
 
 \comment{Literally necessary}
 <literal>:<int lit>;<bool lit>;<float lit>;<string lit>.
@@ -85,9 +83,10 @@
 <string lit>:"``",<string escape seq>,"''".
 
 \comment{Params and args are as expected}
-<params>:"( ",<paramlist>," )".
+<params>:"( )";"( ",<paramlist>," )".
 <paramlist>:<var decl>;<paramlist>," , ",<var decl>.
-<args>:<expression>;<args>," , ",<expression>.
+<args>:"( )";"( ",<arglist>, " )".
+<arglist>:<expression>;<arglist>," , ",<expression>.
 
 \comment{All the basic stuff we've been saving up until now}
 <var decl>:<type>,<var id>.
