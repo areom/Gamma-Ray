@@ -53,8 +53,8 @@ c := ( a^2 + b^2 )^0.5;
 \end{lstlisting}
 
 \subsection{Operator Precidence}
-In the previous examples, parentheses were used heavily in a context not directly related to method invocation. Parentheses have one additional function: they modify precedence among operators. Every operator has a precidence in relation to its fellow operators. Operators of higher precidence are enacted first. Please consider the following table for determining precidence:
-\begin{table}[h]\footnotesize
+In the previous examples, parentheses were used heavily in a context not directly related to method invocation. Parentheses have one additional function: they modify precedence among operators. Every operator has a precidence in relation to its fellow operators. Operators of higher precedence are enacted first. Please consider the following table for determining precidence:
+\begin{table}[h]
 \begin{tabular}{ccccccc}
 \verb!:=! & \verb!+=! & \verb!-=! & \verb!*=! & \verb!/=! & \verb!%=! & \verb!^=!\\
 or & xor & nor &&&&\\
@@ -63,23 +63,22 @@ and & nand &&&&&\\
 \verb!>! & \verb!<! & \verb!>=! & \verb!<=! &&&\\
 \verb!+! & \verb!-! &&&&&\\
 \verb!*! & \verb!/! & \verb!%! &&&&\\
+\multicolumn{2}{c}{unary minus}\\
 not & \verb!^! &&&&&\\
-\verb!(! & \verb!)! &&&&&\\
-\multicolumn{3}{c}{array dereferencing}&&&&\\
+\multicolumn{3}{c}{array dereferencing}&\verb!(!&\verb!)!&&\\
 \multicolumn{3}{c}{method invocation}&&&&\\
 \end{tabular}
 \caption{Operator Precidence}
 \end{table}
 
 \subsection{Method Declaration}
-A method definition begins with either a return type or Void. The identifier for the function is followed by a pair of parentheses that may enclose the argument variable definitions. There is one type and one identifier for each argument; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. In the body, there must be at least one statement but there may be many more. At least one of those statements must be a return statement. Additionally, refinements may be placed throughout the statements.
+A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. The identifier for the function is followed by a pair of parentheses that may enclose the argument variable declarations. There is one type and one identifier for each argument; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. In the body, there must be at least one statement but there may be many more. There can be zero or more statements in the body.. Additionally, refinements may be placed throughout the statements.
  
 \begin{lstlisting}
-return_type | Void method_identifier ([var_type var_identifier[, var_type var_identifier[, var_type var_identifier[...]]]]){
-	statement*
-	[statement*]
-	[statement*]
-	...
+return_type | void method_identifier ([var_type var_identifier[, var_type var_identifier[, var_type var_identifier[...]]]]){
+    [statement*]
+    [statement*]
+    ...
 }
 \end{lstlisting}
 
@@ -87,38 +86,40 @@ Finally, we may define a method to do our pythagorean theorem calculation.
 
 \begin{lstlisting}[label=Method Invocation,caption=Method Definition for the Pythagorean Theorem]
 Float pythagorean_theorem(Float a, Float b){
-	c := ( a^2 + b^2 )^0.5;
-	return c;
+    Float c;
+    c := ( a^2 + b^2 )^0.5;
+    return c;
 }
 \end{lstlisting}
 
 \subsection{Class Declaration}
-A class definition always starts with the keyword \verb!class! followed by an identifier. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an optional \verb!main! method and the three access-level member sections. There may be \verb!init! methods in any of the three sections.
+A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an optional \verb!main! method and the three access-level member sections. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to make methods).
+
+While the grammar allows multiple main methods to be defined in a class, any more than one will result in an error during compilation.
 
 \begin{lstlisting}
-class class_identifier [extends superclass_identifier]{
-	init_method
-	[main_method]
-	[private{
-		[private_method_decl | private_var_decl]
-		[private_method_decl | private_var_decl]
-		...
-	}]
-	[protected{
-		[protected_method_decl | protected_var_decl]
-		[protected_method_decl | protected_var_decl]
-		...
-	}]
-	[public {
-		[public_method_decl | public_var_decl]
-		[public_method_decl | public_var_decl]
-		...
-	}]
-	[refinement {
-		[refinement_decl]
-		[refinement_decl]
-		...
-	}]
+class class_identifier [extends superclass_identifier] {
+    [main_method]
+    [private {
+        [private_method_decl | private_var_decl | init_decl]
+        [private_method_decl | private_var_decl | init_decl]
+        ...
+    }]
+    [protected {
+        [protected_method_decl | protected_var_decl | init_decl]
+        [protected_method_decl | protected_var_decl | init_decl]
+        ...
+    }]
+    [public {
+        [public_method_decl | public_var_decl | init_decl]
+        [public_method_decl | public_var_decl | init_decl]
+        ...
+    }]
+    [refinement {
+        [refinement_decl]
+        [refinement_decl]
+        ...
+    }]
 }
 \end{lstlisting}
 
@@ -126,25 +127,25 @@ Let's make a basic geometric shape class in anticipation of later examples. We h
 
 
 \begin{lstlisting}[label=Method Invocation,caption=Class Declaration for a Geometric Shape class]
-class Geometric_Shape{
-	private{
-		String name;
-		Float area;
-		Float circumfrence;
-	}
-	public{
-	    init (String name){
-	    	    this.name = name;
-	    	    if(refinable(improve_name)){
-	    	    		this.name += refine(improve_name to String)
-	    	    	} 
-	    	    	return
-	    }
-	    Float get_area(){
-	    		Float area;
-	    		area := refine(custom_area to Float)
-	    }
-	}
+class Geometric_Shape {
+    private {
+        String name;
+        Float area;
+        Float circumfrence;
+    }
+    public {
+        init (String name) {
+            this.name = name;
+            if (refinable(improve_name)) {
+                this.name += refine improve_name() to String;
+            }
+            return;
+        }
+        Float get_area() {
+            Float area;
+            area := refine custom_area() to Float;
+        }
+    }
 }
 \end{lstlisting}
 
@@ -160,8 +161,6 @@ For instance:
 \begin{lstlisting}[label=Method Invocation,caption=Class Instantiation for a Geometric Shape class]
 Geometric_Shape = new Geometric_Shape("circle");
 \end{lstlisting}
-
-Note: If literal classes are always objects, can you use the \verb!new! construct with them? The answer has to be no. It conveys no benefit even if it was usable.
 
 \subsection{Array Initialization}
 Initializing an array is almost the same as initializing a normal variable, simply add square brackets after the type.
