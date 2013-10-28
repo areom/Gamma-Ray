@@ -72,20 +72,8 @@ refinements:
   | /* Can be empty */      { [] }
   | refinements refinement  { $2 :: $1 }
 refinement:
-  | vartype ID DOT ID formals stmt_block
-    { { returns = Some($1);
-        host    = Some($2);
-        name    = $4;
-        static  = false;
-        formals = $5;
-        body    = $6 } }
-  | VOID ID DOT ID formals stmt_block
-    { { returns = None;
-        host    = Some($2);
-        name    = $4;
-        static  = false;
-        formals = $5;
-        body    = $6 } }
+  | vartype ID DOT invocable  { { $4 with returns = Some($1); host = Some($2) } }
+  | VOID ID DOT invocable     { { $4 with host = Some($2) } }
 
 /* Private, protected, public members */
 private_list:
@@ -108,40 +96,28 @@ member:
 
 /* Methods */
 mdecl:
-  | vartype ID formals stmt_block
-    { { returns = Some($1);
-        host    = None;
-        name    = $2;
-        static  = false;
-        formals = $3;
-        body    = $4 } }
-  | VOID ID formals stmt_block
-    { { returns = None;
-        host    = None;
-        name    = $2;
-        static  = false;
-        formals = $3;
-        body    = $4 } }
+  | vartype invocable  { { $2 with returns = Some($1) } }
+  | VOID invocable     { $2 }
 
 /* Constructors */
 init:
-  | INIT formals stmt_block
-    { { returns = None;
-        host    = None;
-        name    = "init";
-        static  = false;
-        formals = $2;
-        body    = $3 } }
+  | INIT callable  { { $2 with name = "init" } }
 
 /* Each class has an optional main */
 main_method:
-  | MAIN formals stmt_block
+  | MAIN callable  { { $2 with name = "main"; static = true } }
+
+/* Anything that is callable has these forms */
+invocable:
+  | ID callable  { { $2 with name = $1 } }
+callable:
+  | formals stmt_block
     { { returns = None;
         host    = None;
-        name    = "main";
-        static  = true;
-        formals = $2;
-        body    = $3 } }
+        name    = "";
+        static  = false;
+        formals = $1;
+        body    = $2 } }
 
 /* Statements */
 stmt_block:
@@ -217,13 +193,18 @@ arithmetic:
   | MINUS expr %prec UMINUS  { Unop(Arithmetic(Neg), $2) }
 
 test:
-  | expr EQ expr   { Binop($1, NumTest(Eq), $3) }
-  | expr NEQ expr  { Binop($1, NumTest(Neq), $3) }
-  | expr LT expr   { Binop($1, NumTest(Less), $3) }
-  | expr LEQ expr  { Binop($1, NumTest(Leq), $3) }
-  | expr GT expr   { Binop($1, NumTest(Grtr), $3) }
-  | expr GEQ expr  { Binop($1, NumTest(Geq), $3) }
-  | NOT expr       { Unop(CombTest(Not), $2) }
+  | expr AND expr   { Binop($1, CombTest(And), $3) }
+  | expr OR expr    { Binop($1, CombTest(Or), $3) }
+  | expr XOR expr   { Binop($1, CombTest(Xor), $3) }
+  | expr NAND expr  { Binop($1, CombTest(Nand), $3) }
+  | expr NOR expr   { Binop($1, CombTest(Nor), $3) }
+  | expr LT expr    { Binop($1, NumTest(Less), $3) }
+  | expr LEQ expr   { Binop($1, NumTest(Leq), $3) }
+  | expr EQ expr    { Binop($1, NumTest(Eq), $3) }
+  | expr NEQ expr   { Binop($1, NumTest(Neq), $3) }
+  | expr GEQ expr   { Binop($1, NumTest(Geq), $3) }
+  | expr GT expr    { Binop($1, NumTest(Grtr), $3) }
+  | NOT expr        { Unop(CombTest(Not), $2) }
   | REFINABLE LPAREN ID RPAREN { Refinable($3) }
 
 instantiate:
