@@ -3,6 +3,9 @@
 \subsection{Types and Variables}
 Every \textit{variable} in Gamma is declared with a \textit{type} and an \textit{identifier}. The typing is static and will always be known at compile time for every variable. The variable itself holds a reference to an instance of that type. At compile time, each new instantiation reserves space for one instance of that type. To be an instance of a type, an instance must be an instance of the class of the same name as that type, an instance of one of the set of descendants (i.e. a subclass defined via \verb!extends!) of that class, or the {\tt null} instance. For the purposes of function declaration, there is a special type, \textit{Void}, that allows a function to use the \verb!return! keyword without an expression.
 
+\subsubsection{Arrays}
+When specifying a type, the type can be suffixed with square brackets to indicate that it instead an array of that type. The individual instances of the array can be accesed by using the variable identifier with an index. --- I'm just not sure how to do this.
+
 \subsection{Classes, Subclasses and Their Members}
 \Lang{} is a pure object-oriented language, which means every value is an object--with the exception of the reserved references \verb!null! and \verb!this!. A class always extends another class; a class inherits all of its superclass's methods and may refine the methods of its superclass. A class must contain a constructor routine named {\tt init} and it must invoke its superclass's constructor via the super keyword -- either directly or transitively by referring to other constructors within the class. In the scope of every class, the keyword \verb!this! explicitly refers to the instance itself. Additionally, a class contains three sets of \textit{members} organized in \textit{private}, \textit{protected}, and \textit{public} sections. Members may be either variables or methods. Each class must be derived from another class as a \textit{subclass}.
 
