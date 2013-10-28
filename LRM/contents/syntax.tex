@@ -1,16 +1,18 @@
 \section{Syntax}
-\subsection{Variable Initialization}
-Initializing a variable requires a type and a list of identifiers deliminated by commas:
+\subsection{Variable Declaration}
+Declaring a variable requires a type and a list of identifiers deliminated by commas:
 
 \begin{lstlisting}
 type identifier[, identifier[, identifier[...]]];
 \end{lstlisting}
 
-If we wanted to initialize variables for the pythagorean theorem, we would do it like so:
+If we wanted to declare variables for the pythagorean theorem, we would do it like so:
 
 \begin{lstlisting}[caption=Variable Initialization for the Pythagorean Theorem]
 Float a, b, c;
 \end{lstlisting}
+
+\subsection{Variable Declaration with Initialization}
 
 \subsection{Variable Assignment}
 Assigning an instance to a variable requires an expression and a variable identifier:
@@ -162,12 +164,16 @@ For instance:
 Geometric_Shape = new Geometric_Shape("circle");
 \end{lstlisting}
 
-\subsection{Array Initialization}
-Initializing an array is almost the same as initializing a normal variable, simply add square brackets after the type.
+\subsection{Array Declaration}
+Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type.
 
 \begin{lstlisting}
 type[] identifier[, identifier[, identifier[...]]];
 \end{lstlisting}
+
+\subsection{Array Declaration with Initialization}
+
+have Type[][] var := new Type[][](dim1, dim2) here...
 
 \subsection{Conditional Structures}
 
