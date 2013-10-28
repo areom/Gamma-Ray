@@ -193,13 +193,18 @@ arithmetic:
   | MINUS expr %prec UMINUS  { Unop(Arithmetic(Neg), $2) }
 
 test:
-  | expr EQ expr   { Binop($1, NumTest(Eq), $3) }
-  | expr NEQ expr  { Binop($1, NumTest(Neq), $3) }
-  | expr LT expr   { Binop($1, NumTest(Less), $3) }
-  | expr LEQ expr  { Binop($1, NumTest(Leq), $3) }
-  | expr GT expr   { Binop($1, NumTest(Grtr), $3) }
-  | expr GEQ expr  { Binop($1, NumTest(Geq), $3) }
-  | NOT expr       { Unop(CombTest(Not), $2) }
+  | expr AND expr   { Binop($1, CombTest(And), $3) }
+  | expr OR expr    { Binop($1, CombTest(Or), $3) }
+  | expr XOR expr   { Binop($1, CombTest(Xor), $3) }
+  | expr NAND expr  { Binop($1, CombTest(Nand), $3) }
+  | expr NOR expr   { Binop($1, CombTest(Nor), $3) }
+  | expr LT expr    { Binop($1, NumTest(Less), $3) }
+  | expr LEQ expr   { Binop($1, NumTest(Leq), $3) }
+  | expr EQ expr    { Binop($1, NumTest(Eq), $3) }
+  | expr NEQ expr   { Binop($1, NumTest(Neq), $3) }
+  | expr GEQ expr   { Binop($1, NumTest(Geq), $3) }
+  | expr GT expr    { Binop($1, NumTest(Grtr), $3) }
+  | NOT expr        { Unop(CombTest(Not), $2) }
   | REFINABLE LPAREN ID RPAREN { Refinable($3) }
 
 instantiate:
