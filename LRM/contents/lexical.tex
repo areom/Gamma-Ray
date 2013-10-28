@@ -52,7 +52,7 @@ A float literal is a sequence of digits and exactly one decimal point/period. It
 A boolean literal is a single keyword, either \verb!true! or \verb!false!.
 
 \subsubsection{String Literals}
-A string literal consists of a sequence of characters enclosed in either single or double quotes. Please note that the sequence may be of length zero. For example:
+A string literal consists of a sequence of characters enclosed in double quotes. Note that a string literal can have the newline escape sequence within it (see below), but cannot have a newline (line feed), form feed, carriage return, or vertical tab within it; nor can it have the end of file. Please note that the sequence may be of length zero. For example:
 \begin{itemize}
 \item \verb!"Yellow matter custard"!
 \item \verb!""!
@@ -76,7 +76,7 @@ Note: There are a small number of escape sequences that provide special characte
 \end{itemize}
 
 \subsection{Comments}
-Comments begin with the sequence \verb!/*! and end with \verb!*/!. Comments nest within each other.
+Comments begin with the sequence \verb!/*! and end with \verb!*/!. Comments nest within each other.  Comments must be closed before the end of file is reached.
 
 \subsection{Separators}
 The following characters are used to deliniate various aspects of program organizaiton (function arguments, array indexing, blocks, and expressions):
