@@ -50,7 +50,8 @@
 <expression>:<assignment>;<invocation>;<field>;<var id>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"null".
 
 \comment{Assignment -- putting one thing in another}
-<assignment>:<expression>," := ",<expression>.
+<assignment>:<expression>,<assign op>,<expression>.
+<assign op>:":=";"+=";"-=";"*=";"/=";"\%=";"$\hat{}=$".
 
 \comment{Member / data access}
 <invocation>:<expression>," . ",<invoke>;<invoke>.
