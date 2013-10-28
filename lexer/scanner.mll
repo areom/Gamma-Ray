@@ -123,10 +123,12 @@ and comment level = parse
   (* Comments can be nested *)
   | "/*"   { comment (level+1) lexbuf }
   | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
+  | eof    { lexfail("File ended inside comment.") }
   | _      { comment (0) lexbuf }
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'       { escapechar chars lexbuf }
+  | eof        { lexfail("File ended inside string literal") }
   | '\n'       { lexfail("End of string literal " ^ implode(List.rev chars)) }
   | '"'        { SLIT(implode(List.rev chars)) }
   | _ as char  { stringlit (char::chars) lexbuf }
@@ -136,4 +138,5 @@ and escapechar chars = parse
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
+  | eof       { lexfail("File ended while seeking escape character") }
   | _ as char { lexfail("illegal escape character:  \\" ^ Char.escaped(char)) }
