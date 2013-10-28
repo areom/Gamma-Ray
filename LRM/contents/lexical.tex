@@ -1,6 +1,9 @@
 \section{Lexical Elements}
+\subsection{Whitespace}
+The new line (line feed), form feed, carriage return, and vertical tab characters will all be treated equivalently as vertical whitespace. Tokens are separated by horizontal (space, tab) and vertical (see previous remark) whitespace of any length (including zero).
+
 \subsection{Identifiers}
-Identifiers are used for the identification of variable,  methods and types. An identifer is a sequence of alphanumeric characters, uppercase and lowercase, and underscores. A variable or method identifier must start with a lowercase alphabetic character. A type identifier must start with an uppercase alphabetic character.
+Identifiers are used for the identification of variables,  methods and types. An identifer is a sequence of alphanumeric characters, uppercase and lowercase, and underscores. A type identifier must start with an uppercase letter; all others must start with a lower case letter. Additionally, the lexeme of a left bracket followed immediately by a right bracket -- \verb![]! -- may appear at the end of a type identifier in certain contexts, and that there may be multiple present in this case (denoting arrays, arrays of arrays, etc, etc). The legal contexts for such will be described later.
 
 \subsection{Keywords}
 The following words are reserved keywords. They may not be used as identifiers:
@@ -52,7 +55,7 @@ A float literal is a sequence of digits and exactly one decimal point/period. It
 A boolean literal is a single keyword, either \verb!true! or \verb!false!.
 
 \subsubsection{String Literals}
-A string literal consists of a sequence of characters enclosed in double quotes. Note that a string literal can have the newline escape sequence within it (see below), but cannot have a newline (line feed), form feed, carriage return, or vertical tab within it; nor can it have the end of file. Please note that the sequence may be of length zero. For example:
+A string literal consists of a sequence of characters enclosed in double quotes. Note that a string literal can have the new line escape sequence within it (among others, see below), but cannot have a new line (line feed), form feed, carriage return, or vertical tab within it; nor can it have the end of file. Please note that the sequence may be of length zero. For example:
 \begin{itemize}
 \item \verb!"Yellow matter custard"!
 \item \verb!""!
@@ -85,12 +88,13 @@ The following characters are used to deliniate various aspects of program organi
 \verb![! & \verb|]| & \verb!(! & \verb!)! & \verb!{! & \verb!}! & \verb!,! & \verb!;!\\
 \end{tabular}
 \end{center}
+Note that \verb![]! itself is a lexeme related to array types and there can be no space between the two characters in this regard.
 
 \subsection{Whitespace and Noncanonical Gamma}
-As written, canonical Gamma ignores whitespace outside of string literals. Gamma code with rigid whitespace (pythonesque Gamma) a la python and without \verb!;!, \verb!{!, or \verb!}! can easily be feed through a preprocessor to become canonical Gamma. Doing so respects the following rules:
+As written, canonical Gamma ignores whitespace outside of string literals. Gamma code with rigid whitespace (pythonesque Gamma) a la python and without \verb!;!, \verb!{!, or \verb!}! can transformed to canonical Gamma easily. Such transformation respects the following rules:
 \begin{itemize}
 \item Tab characters are equivalent to eight spaces
-\item Wherever a \verb!{! could be used to start a scope, a \verb!:! can be used instead
+\item Wherever a \verb!{! could be used to start a scope, a \verb!:! can be used instead; in such case a closing \verb!}! is not necessary as it will be inferred by the indentation level
 \item After starting a scope with \verb!:! the next line with non-whitespace characters determines the indentation level of that scope.
 \begin{itemize}
 \item If there is no such line (end of file) then the scope is assumed to end and is equivalent to \verb!{}!.
@@ -98,7 +102,7 @@ As written, canonical Gamma ignores whitespace outside of string literals. Gamma
 \item If the next line is indented more than the line introducing the scope then this sets the indentation level of the scope -- all statements in this scope \emph{must} be at the same exact level of indentation. The scope continues until end of file or the indentation returns to the indentation level of an outer scope.
 \end{itemize}
 \item If the line after a statement \emph{not} ending in a colon is indented more than the given line, then it is considered a continuation of that statement.
-\item At the end of a statement (either the end of the line starting the statement, or subsequent lines that are indented more as per the rule above), a newline is equivalent to a semicolon \verb!;!.
+\item At the end of a statement (either the end of the line starting the statement, or subsequent lines that are indented more as per the rule above), a new line is equivalent to a semicolon \verb!;!.
 \item If a scope is explicitly demarcated with \verb!{! and \verb!}! then there can be no whitespace related scoping within that scope -- all inner scoping and statement termination must be handled with \verb!{!, \verb!}!, \verb!;!. 
 \end{itemize}
 
