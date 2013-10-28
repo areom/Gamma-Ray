@@ -19,7 +19,7 @@ There are a large number of (mostly binary) operators:
 \begin{center}
 \begin{tabular}{ccccccc}
 \verb!=! & \verb!=/=! & \verb|<>| & \verb!<! & \verb!<=! & \verb!>! & \verb!>=!\\
-\verb!:=! & \verb!+! & \verb!-! & \verb!*! & \verb!/! & \verb!%! & \verb!^!\\
+\verb!+! & \verb!-! & \verb!*! & \verb!/! & \verb!%! & \verb!^! & \verb!:=!\\
 \verb!+=! & \verb!-=! & \verb!*=! & \verb!/=! & \verb!%=! & \verb!%=! \\
 \verb!and! & \verb!or! & \verb!not! & \verb!nand! & \verb!nor! & \verb!xor!&\verb!refinable!\\
 \end{tabular}
@@ -86,7 +86,7 @@ The following characters are used to deliniate various aspects of program organi
 \end{tabular}
 \end{center}
 
-\subsection{Whitespace and Nonconnonical Gamma}
+\subsection{Whitespace and Noncanonical Gamma}
 As written, canonical Gamma ignores whitespace outside of string literals. Gamma code with rigid whitespace (pythonesque Gamma) a la python and without \verb!;!, \verb!{!, or \verb!}! can easily be feed through a preprocessor to become canonical Gamma. Doing so respects the following rules:
 \begin{itemize}
 \item Tab characters are equivalent to eight spaces
