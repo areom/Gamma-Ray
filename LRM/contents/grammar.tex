@@ -2,6 +2,22 @@
 
 \section{Grammar}
 
+The following conventions are taken:
+
+\begin{itemize}
+\item Sequential semicolons (even separated by whitespace) are treated as one.
+\item the `digit' class of characters are the numerical digits zero through nine
+\item the `upper' class of characters are the upper case roman letters
+\item the `lower' class of characters are the lower case roman letters
+\item the `ualphanum' class of characters consists of the digit, upper, and lower classes together with the underscore
+\item a program is a collection of classes; this grammar describes solely classes
+\item the argument to main is semantically enforced after parsing; its presence here is meant to increase readability
+\end{itemize}
+
+The grammar follows:\\
+
+\noindent\hrule
+
 \begin{grammar}
       [(colon){$\hskip 0.1cm \Rightarrow$\\$~\hskip 0.75cm$}]
       [(semicolon){\\$~\hskip 0.45cm|\hskip 0.2cm$}]
