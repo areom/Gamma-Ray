@@ -83,7 +83,7 @@ return_type | Void method_identifier ([var_type var_identifier[, var_type var_id
 }
 \end{lstlisting}
 
-Finally, we may define a method to do our pythagorean theorem calculation
+Finally, we may define a method to do our pythagorean theorem calculation.
 
 \begin{lstlisting}[label=Method Invocation,caption=Method Definition for the Pythagorean Theorem]
 Float pythagorean_theorem(Float a, Float b){
@@ -93,29 +93,83 @@ Float pythagorean_theorem(Float a, Float b){
 \end{lstlisting}
 
 \subsection{Class Declaration}
-A class definition always starts with the keyword \verb!class! followed by an identifier. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an init\_method, an optional main method, and the three access-level member sections.
+A class definition always starts with the keyword \verb!class! followed by an identifier. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an optional \verb!main! method and the three access-level member sections. There may be \verb!init! methods in any of the three sections.
 
 \begin{lstlisting}
 class class_identifier [extends superclass_identifier]{
 	init_method
 	[main_method]
-	[private:
+	[private{
 		[private_method_decl | private_var_decl]
 		[private_method_decl | private_var_decl]
 		...
-	]
-	[protected:
+	}]
+	[protected{
 		[protected_method_decl | protected_var_decl]
 		[protected_method_decl | protected_var_decl]
 		...
-	]
-	[public:
+	}]
+	[public {
 		[public_method_decl | public_var_decl]
 		[public_method_decl | public_var_decl]
 		...
-	]
+	}]
+	[refinement {
+		[refinement_decl]
+		[refinement_decl]
+		...
+	}]
 }
 \end{lstlisting}
 
+Let's make a basic geometric shape class in anticipation of later examples. We have private members, two access-level sections and an init method. No extends is specified, so it is assumed to inherit from Object.
+
+
+\begin{lstlisting}[label=Method Invocation,caption=Class Declaration for a Geometric Shape class]
+class Geometric_Shape{
+	private{
+		String name;
+		Float area;
+		Float circumfrence;
+	}
+	public{
+	    init (String name){
+	    	    this.name = name;
+	    	    if(refinable(improve_name)){
+	    	    		this.name += refine(improve_name to String)
+	    	    	} 
+	    	    	return
+	    }
+	    Float get_area(){
+	    		Float area;
+	    		area := refine(custom_area to Float)
+	    }
+	}
+}
+\end{lstlisting}
+
+\subsection{Class Instantiation}
+Making a new instance of a class is simple.
+
+\begin{lstlisting}
+new class_identifier([expr[,expre[,expr[...]]]])
+\end{lstlisting}
+
+For instance:
+
+\begin{lstlisting}[label=Method Invocation,caption=Class Instantiation for a Geometric Shape class]
+Geometric_Shape = new Geometric_Shape("circle");
+\end{lstlisting}
+
+Note: If literal classes are always objects, can you use the \verb!new! construct with them? The answer has to be no. It conveys no benefit even if it was usable.
+
+\subsection{Array Initialization}
+Initializing an array is almost the same as initializing a normal variable, simply add square brackets after the type.
+
+\begin{lstlisting}
+type[] identifier[, identifier[, identifier[...]]];
+\end{lstlisting}
+
+\subsection{Conditional Structures}
 
 \subsection{Refinements}
