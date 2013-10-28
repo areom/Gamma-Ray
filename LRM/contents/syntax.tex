@@ -73,7 +73,7 @@ not & \verb!^! &&&&&\\
 \caption{Operator Precidence}
 \end{table}
 
-\subsection{Method Declaration}
+\subsection{Method Declaration \& Definition}
 A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. The identifier for the function is followed by a pair of parentheses that may enclose the argument variable declarations. There is one type and one identifier for each argument; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. In the body, there must be at least one statement but there may be many more. There can be zero or more statements in the body.. Additionally, refinements may be placed throughout the statements.
  
 \begin{lstlisting}
@@ -94,7 +94,7 @@ Float pythagorean_theorem(Float a, Float b){
 }
 \end{lstlisting}
 
-\subsection{Class Declaration}
+\subsection{Class Declaration \& Definition}
 A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an optional \verb!main! method and the three access-level member sections. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to make methods).
 
 While the grammar allows multiple main methods to be defined in a class, any more than one will result in an error during compilation.
