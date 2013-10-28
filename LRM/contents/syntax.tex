@@ -1,24 +1,21 @@
 \section{Syntax}
-\subsection{Variable Declaration}
-Declaring a variable requires a type and a list of identifiers deliminated by commas:
+\subsection{Statement Grouping via Bodies}
+A body of statements is a series of statements bounded by curly braces.
 
 \begin{lstlisting}
-type identifier[, identifier[, identifier[...]]];
+{
+	[stmt1_statement
+	[stmt2_statement
+	[stmt3_statement
+	[...]]]]
+}
 \end{lstlisting}
-
-If we wanted to declare variables for the pythagorean theorem, we would do it like so:
-
-\begin{lstlisting}[caption=Variable Initialization for the Pythagorean Theorem]
-Float a, b, c;
-\end{lstlisting}
-
-\subsection{Variable Declaration with Initialization}
 
 \subsection{Variable Assignment}
 Assigning an instance to a variable requires an expression and a variable identifier:
 
 \begin{lstlisting}
-identifier := expression;
+var_identifier := val_expr;
 \end{lstlisting}
 
 If we wanted to assign instances of Integer for our pythagorean theorem, we'd do it like so:
@@ -28,11 +25,24 @@ a := 3;
 b := 4;
 \end{lstlisting}
 
+\subsection{Variable Declaration}
+Declaring a variable requires a type and a list of identifiers deliminated by commas. Each identifier may be followed by the assignment operator and an expression so as to combine assignment and declaration.
+
+\begin{lstlisting}
+var_type var1_identifier [:= val1_expr][, var2_identifier [:= val2_expr][, var3_identifier [:= val3_expr][...]]];
+\end{lstlisting}
+
+If we wanted to declare variables for the pythagorean theorem, we would do it like so:
+
+\begin{lstlisting}[caption=Variable Initialization for the Pythagorean Theorem]
+Float a, b, c;
+\end{lstlisting}
+
 \subsection{Method Invocation}
 Invoking a method requires at least an identifier for the method of the current context (i.e. implicit \verb!this! receiver). The instance that the method is invoked upon can be provided as an expression. If it is not provided, the method is invoked upon \verb!this!.
 
 \begin{lstlisting}
-[expression.]identifier([expression[, expression[...]]])
+[instance_expr.]method_identifier([arg1_expr[, arg2_expr[...]]])
 \end{lstlisting}
 
 Finishing our pythagorean example, we use method invocations and assignment to calculate the length of our third side, c.
@@ -45,7 +55,7 @@ c := ((a.power(2)).plus(b.power(2))).power(0.5);
 Alternatively, certain base methods allow for the use of more familiar binary operators in place of a method invocation.
 
 \begin{lstlisting}
-expression operator expression
+op1_expr operator op2_expr
 \end{lstlisting}
 
 Using operators has advantages in clarity and succinctness even if the end result is the same.
@@ -77,11 +87,7 @@ not & \verb!^! &&&&&\\
 A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. The identifier for the function is followed by a pair of parentheses that may enclose the argument variable declarations. There is one type and one identifier for each argument; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. In the body, there must be at least one statement but there may be many more. There can be zero or more statements in the body.. Additionally, refinements may be placed throughout the statements.
  
 \begin{lstlisting}
-return_type | void method_identifier ([var_type var_identifier[, var_type var_identifier[, var_type var_identifier[...]]]]){
-    [statement*]
-    [statement*]
-    ...
-}
+return_type | void method_identifier ([var_type var_identifier[, var_type var_identifier[, var_type var_identifier[...]]]]) method_body
 \end{lstlisting}
 
 Finally, we may define a method to do our pythagorean theorem calculation.
@@ -139,7 +145,7 @@ class Geometric_Shape {
         init (String name) {
             this.name = name;
             if (refinable(improve_name)) {
-                this.name += refine improve_name() to String;
+              this.name += refine improve_name() to String;
             }
             return;
         }
@@ -165,16 +171,51 @@ Geometric_Shape = new Geometric_Shape("circle");
 \end{lstlisting}
 
 \subsection{Array Declaration}
-Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type.
+Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type. Remember that an array is a type as well, and so the source type can very well be an array of arrays of a certain type before you make declaration. Please note that \{\} are used instead of [] for optional parts in the following for clarity.
 
 \begin{lstlisting}
-type[] identifier[, identifier[, identifier[...]]];
+type[] identifier {:= new type[](dim1_expr)};
 \end{lstlisting}
 
-\subsection{Array Declaration with Initialization}
+\subsection{Array Dereferencing}
+To dereference an instance of an array type down to an instance its element type, place the index of the element instance inside the array instance between [ and ] lexemes after the variable identifier. This syntax can be used to provide a variable for use in assignment or expressions.
 
-have Type[][] var := new Type[][](dim1, dim2) here...
+\begin{lstlisting}
+var_identifier[index_expr]
+\end{lstlisting}
 
 \subsection{Conditional Structures}
+\subsubsection{If Statements}
+The fundamental unit of an if statement is a keyword, followed by a test expression between parentheses, and then a body of statements between curly braces. The first keyword is always \verb!if!, each additional condition to be tested in sequence has the keyword \verb!elsif! and a final body of statements may optionally come after the keyword \verb!else!.
+
+\begin{lstlisting}
+if (test1_expr) if1_body
+[elsif (test2_expr) if2_body
+[elsif(test3_expr) if3_body
+[...]]][else if4_body]
+\end{lstlisting}
+
+\subsubsection{While Statements}
+A while statement consists of only the \verb!while! keyword, a test expression and a body.
+
+\begin{lstlisting}
+while(test_expr) while_body
+\end{lstlisting}
 
 \subsection{Refinements}
+\subsubsection{The Refine Invocation}
+A refine invocation will eventually evaluate to an expression as long as the appropriate refinement is implemented. It is formed by using the keyword \verb!refine!, the identifier for the refinement, the keyword \verb!to!, and the type for the desired expression.
+
+\begin{lstlisting}
+refine refine_identifier to refine_type
+\end{lstlisting}
+
+\subsubsection{The Refinable Test}
+The original programmer cannot garuantee that future extenders will implement the refinement. If it is allowable that the refinement does not happen, then the programmer can use the \verb!refinable! keyword as a callable identifier that evaluates to a Boolean instance.
+
+\begin{lstlisting}
+refinable(supermethod_identifier.refinement_identifier)
+\end{lstlisting}
+
+\subsubsection{The Refinement Declaration}
+To declare a refinement, declare a method in your subclass' refinement section with the special identifier \verb!supermethod_identifier.refinement_identifier!.
