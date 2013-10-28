@@ -19,10 +19,16 @@ let upper = ['A'-'Z']
 let alpha = lower | upper
 let ualphanum = '_' | alpha | digit
 
+(* horizontal spacing: space & tab *)
+let space = [' ' '\t']
+
+(* vertical spaces: newline (line feed), carriage return, vertical tab, form feed *)
+let lines = ['\n' '\r' '\011' '\012']
+
 rule token = parse
 
   (* Comments & White Space *)
-  | [' ' '\t' '\r' '\n']       { token lexbuf }
+  | space|lines                { token lexbuf }
   | "/*"                       { comment 0 lexbuf }
 
   (* Boolean Tests & Values *)
@@ -127,11 +133,11 @@ and comment level = parse
   | _      { comment (0) lexbuf }
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
-  | '\\'       { escapechar chars lexbuf }
-  | eof        { lexfail("File ended inside string literal") }
-  | '\n'       { lexfail("End of string literal " ^ implode(List.rev chars)) }
-  | '"'        { SLIT(implode(List.rev chars)) }
-  | _ as char  { stringlit (char::chars) lexbuf }
+  | '\\'           { escapechar chars lexbuf }
+  | eof            { lexfail("File ended inside string literal") }
+  | lines as char  { lexfail("Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
+  | '"'            { SLIT(implode(List.rev chars)) }
+  | _ as char      { stringlit (char::chars) lexbuf }
 
 and escapechar chars = parse
   (* Accept valid C escape sequences *)
