@@ -1,1 +1,11 @@
 \section{Operators and Literal Types}
+The following defines the approved behaviour for each combination of operator and literal type. If the literal type is not listed for a certain operator, the operator's behaviour for the literal is undefined. These operators never take operands of different types.
+\subsection{The Operator \verb!=!}
+\subsubsection{Integer}
+If two Integer instances have the exact same value, \verb!=! returns \verb!true!. If they do not have the same value, it returns false.
+\subsubsection{Float}
+If two Float instances have an absolute difference of less than an epsilon of 2^{-24}, \verb!=! returns \verb!true!. If the absolute difference is greater than that epsilon, it returns false.
+\subsubsection{Boolean}
+If two Boolean instances have the same keyword, either \verb!true! or \verb!false!, \verb!=! returns \verb!true!. If their keyword differs, it returns \verb!false!.
+\subsubsection{String}
+If two String instances have the same sequence of characters, \verb!=! returns \verb!true!. If their sequence of characters differs, it returns \verb!false!.
