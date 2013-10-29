@@ -52,10 +52,10 @@ Float a, b, c;
 \end{lstlisting}
 
 \subsubsection{Array Declaration}
-Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type. Remember that an array is a type as well, and so the source type can very well be an array of arrays of a certain type before you make declaration.
+Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type. Remember that an array is a type as well, and so the source type can very well be an array of arrays of a certain type before you make declaration. And note that not all dimensions need be given (and for you may want to later make non-rectangular multi dimensional arrays).
 
 \begin{lstlisting}
-element_type[] array_identifier << := new element_type[](dim1_expr) >>;
+element_type[]...[] array_identifier << := new element_type[](dim1_expr,...,dimN_expr) >>;
 \end{lstlisting}
 
 If we wanted a set of triangles to operate on, for instance:
@@ -74,7 +74,7 @@ Triangle[][] triangles;
 To dereference an instance of an array type down to an instance its element type, place the index of the element instance inside the array instance between [ and ] lexemes after the variable identifier. This syntax can be used to provide a variable for use in assignment or expressions.
 
 \begin{lstlisting}
-var_identifier[index_expr]
+var_identifier[dim1_index]...[dimN_index]
 \end{lstlisting}
 
 Perhaps we care about the fifth triangle in our array from before for some reason.
@@ -131,7 +131,7 @@ not & \verb!^! &&&&&\\
 \end{table}
 
 \subsubsection{Method Declaration \& Definition}
-A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. The identifier for the function is followed by a pair of parentheses that may enclose the argument variable declarations. There is one type and one identifier for each argument; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. In the body, there must be at least one statement but there may be many more. There can be zero or more statements in the body.. Additionally, refinements may be placed throughout the statements.
+A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. The identifier for the function is followed by a pair of parentheses that may enclose the parameter declarations. There is one type and one identifier for each parameter; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. There can be zero or more statements in the body. Additionally, refinements may be placed throughout the statements.
  
 \begin{lstlisting}
 {{return_type | Void}} method_identifier (<<arg1_type arg1_identifier>> <<, arg2_type arg2_identifier>> <<...>>) method_body
@@ -161,7 +161,7 @@ Every class always has at least one section that denotes members in a certain ac
 \end{lstlisting}
 
 \subsubsection{Class Declaration \& Definition}
-A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an optional \verb!main! method and the three access-level member sections. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to make methods).
+A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body enclosed in braces: an optional \verb!main! method, the three access-level member sections, and refinements. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to generate instances).
 
 While the grammar allows multiple main methods to be defined in a class, any more than one will result in an error during compilation.
 
@@ -214,19 +214,17 @@ Geometric_Shape = new Geometric_Shape("circle");
 \end{lstlisting}
 
 \subsubsection{Anonymous Classes}
-An anonymous class definition takes a class instatiation and places it in the position of the class keyword from class declaration. The \verb!main! method, while allowed, has no purpose in this syntax.
+An anonymous class definition is used in the instantiation of the class and can only provide refinements, no additional public, protected, or private members. Additionally no init or main can be given.
 
 \begin{lstlisting}
 new superclass_identifier(<<arg1_expr>> <<,arg2_expr>> <<...>>) {
-    <<{{private | protected | public | refinement}} section1>>
-    <<{{private | protected | public | refinement}} section2>>
-    <<...>>
+    <<refinements>>
 }
 \end{lstlisting}
 
 \subsection{Conditional Structures}
 \subsubsection{If Statements}
-The fundamental unit of an if statement is a keyword, followed by a test expression between parentheses, and then a body of statements between curly braces. The first keyword is always \verb!if!, each additional condition to be tested in sequence has the keyword \verb!elsif! and a final body of statements may optionally come after the keyword \verb!else!.
+The fundamental unit of an if statement is a keyword, followed by an expression between parentheses to test, and then a body of statements between curly braces. The first keyword is always \verb!if!, each additional condition to be tested in sequence has the keyword \verb!elsif! and a final body of statements may optionally come after the keyword \verb!else!.
 
 \begin{lstlisting}
 if (test1_expr) if1_body
@@ -245,17 +243,17 @@ while(test_expr) while_body
 
 \subsection{Refinements}
 \subsubsection{The Refine Invocation}
-A refine invocation will eventually evaluate to an expression as long as the appropriate refinement is implemented. It is formed by using the keyword \verb!refine!, the identifier for the refinement, the keyword \verb!to!, and the type for the desired expression.
+A refine invocation will eventually evaluate to an expression as long as the appropriate refinement is implemented. It is formed by using the keyword \verb!refine!, the identifier for the refinement, the keyword \verb!to!, and the type for the desired expression. Note that a method can only invoke its own refinements, not others -- but refinements defined \emph{within} a class can be called. This is done in addition to normal invocation. Also note that all overloaded methods of the same name share the same refinements.
 
 \begin{lstlisting}
 refine refine_identifier to refine_type
 \end{lstlisting}
 
 \subsubsection{The Refinable Test}
-The original programmer cannot garuantee that future extenders will implement the refinement. If it is allowable that the refinement does not happen, then the programmer can use the \verb!refinable! keyword as a callable identifier that evaluates to a Boolean instance.
+The original programmer cannot garuantee that future extenders will implement the refinement. If it is allowable that the refinement does not happen, then the programmer can use the \verb!refinable! keyword as a callable identifier that evaluates to a Boolean instance. If the programmer contrives a situation where the compiler recognizes that a refinement is guarded but still executes a refine despite the refinement not existing, a runtime error will result.
 
 \begin{lstlisting}
-refinable(supermethod_identifier.refinement_identifier)
+refinable(refinement_identifier)
 \end{lstlisting}
 
 \subsubsection{The Refinement Declaration}
