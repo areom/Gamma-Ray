@@ -11,20 +11,20 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
 
 \item Controllable
 
-\Lang{} provides innate security by choosing object level access control as opposed to class level access specifiers. Private members of one object are inaccessible to other objects of the same type. Overriding is not allowed. No subclass can turn your functionality on its head.
+\Lang{} provides innate security by choosing object level access control as opposed to class level access specifiers. Private and protected members of one object are inaccessible to other objects of the same type. Overriding is not allowed. No subclass can turn your functionality on its head.
 
 \item Versatile
 
-\Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. Refining methods are inherited from the great work that went into the BETA programming language and were further explored in BetaJava and are a part of PLTScheme/Racket (and, of course, there are perlisms to copy the behavior, as is to be expected from \emph{that} community).
+\Lang{} allows programmers to place "refinement methods" inside their code. Alone these methods do nothing, but may be defined by subclasses so as to extend functionality at certain important positions. The idea of refining methods are inherited from the great work that went into the BETA programming language and were further explored in BetaJava and are a part of PLTScheme/Racket (and, of course, there are perlisms to copy the behavior, as is to be expected from \emph{that} community).
 
-Refinement in \Lang{} is different though -- the \Lang{} view of refinement is that methods themselves are singular objects of computation associated with classes and these objects themselves provide an extendable interface.
+Refinement in \Lang{} is different than the above, though -- the \Lang{} philosophy of refinement is that methods themselves are singular objects of computation associated with classes and these objects themselves provide an extendable interface.
 
 In addition to refinement, anonymous instantiation allows for extension of your classes in a quick \& easy fashion.
 \end{enumerate}
 
 \subsection{The Motivation Behind \Lang{}}
-\Lang{} is a reaction to the object-oriented languages before it. Obtuse syntax, flaws in security, and awkward implementations plague the average object-oriented language. \Lang{} is intended as a step toward ease and comfort as an object-oriented programmer.
+\Lang{} is a reaction to the various object-oriented languages that came before it. Obtuse syntax, flaws in security, and awkward implementations plague the average object-oriented language. \Lang{} is intended as a step toward ease and comfort as an object-oriented programmer.
 
 The first goal is to make an object-oriented language that is comfortable in its own skin. It should naturally lend itself to constructing API-layers and abstracting general models. It should serve the programmer towards their goal instead of exerting unnecessary effort through verbosity and awkwardness of structure.
 
-The second goal is to make a language that is stable and controllable. The programmer in the lowest abstraction layer has control over how those higher may procede. Unexpected runtime behavior should be reduced through firmness of semantic structure and debugging should be a straight-forward process due to pure object and method nature of \Lang{}.
+The second goal is to make a language that is stable and controllable. The programmer in the lowest abstraction layer has control over how those higher may procede. Unexpected runtime behavior should be reduced through firmness of semantic structure and debugging should be a straight-forward process due to pure object oriented nature of \Lang{}.
