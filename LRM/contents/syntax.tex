@@ -149,6 +149,17 @@ Float pythagorean_theorem(Float a, Float b){
 
 \subsection{Classes}
 
+\subsection{Section Definition}
+Every class always has at least one section that denotes members in a certain access level. A section resembles a body, it has the lexemes \verb!{! and \verb!}! surrounding a set of variable and method declarations, including \verb!init! methods.
+
+\begin{lstlisting}
+{
+	<<{{method1_decl | var1_decl | init1_decl}}>>
+	<<{{method2_decl | var2_decl | init2_decl}}>>
+	<<...>>
+}
+\end{lstlisting}
+
 \subsubsection{Class Declaration \& Definition}
 A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body in brackets: an optional \verb!main! method and the three access-level member sections. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to make methods).
 
@@ -157,26 +168,9 @@ While the grammar allows multiple main methods to be defined in a class, any mor
 \begin{lstlisting}
 class class_identifier <<extends superclass_identifier>> {
     <<main_method>>
-    <<private {
-        {{ private_method1_decl | private_var1_decl | init1_decl }}
-        <<{{ private_method2_decl | private_var2_decl | init_decl }}>>
-        <<...>>
-    }>>
-    <<protected {
-        {{ protected_method1_decl | protected_var1_decl | init1_decl }}
-        <<protected_method2_decl | protected_var2_decl | init2_decl>>
-        <<...>>
-    }>>
-    <<public {
-        [public_method_decl | public_var_decl | init_decl]
-        << {{ public_method_decl | public_var_decl | init_decl }} >>
-        <<...>>
-    }>>
-    [refinement {
-        [refinement_decl]
-        [refinement_decl]
-        ...
-    }]
+    <<{{private | protected | public | refinement}} section1>>
+    <<{{private | protected | public | refinement}} section1>>
+    <<...>>
 }
 \end{lstlisting}
 
@@ -220,31 +214,13 @@ Geometric_Shape = new Geometric_Shape("circle");
 \end{lstlisting}
 
 \subsubsection{Anonymous Classes}
-An anonymous class definition takes a class instatiation and places it in the position of the class keyword from class declaration.
+An anonymous class definition takes a class instatiation and places it in the position of the class keyword from class declaration. The \verb!main! method, while allowed, has no purpose in this syntax.
 
 \begin{lstlisting}
 new superclass_identifier([expr[,expre[,expr[...]]]]) {
-    <<main_method>>
-    <<private {
-        {{ private_method1_decl | private_var1_decl | init1_decl }}
-        <<{{ private_method2_decl | private_var2_decl | init_decl }}>>
-        <<...>>
-    }>>
-    <<protected {
-        {{ protected_method1_decl | protected_var1_decl | init1_decl }}
-        <<protected_method2_decl | protected_var2_decl | init2_decl>>
-        <<...>>
-    }>>
-    <<public {
-        [public_method_decl | public_var_decl | init_decl]
-        << {{ public_method_decl | public_var_decl | init_decl }} >>
-        <<...>>
-    }>>
-    [refinement {
-        [refinement_decl]
-        [refinement_decl]
-        ...
-    }]
+    <<{{private | protected | public | refinement}} section1>>
+    <<{{private | protected | public | refinement}} section1>>
+    <<...>>
 }
 \end{lstlisting}
 
