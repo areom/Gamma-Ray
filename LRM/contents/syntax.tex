@@ -111,7 +111,7 @@ Using operators has advantages in clarity and succinctness even if the end resul
 c := ( a^2 + b^2 )^0.5;
 \end{lstlisting}
 
-\subsubsection{Operator Precidence}
+\subsubsection{Operator Precedence}
 In the previous examples, parentheses were used heavily in a context not directly related to method invocation. Parentheses have one additional function: they modify precedence among operators. Every operator has a precidence in relation to its fellow operators. Operators of higher precedence are enacted first. Please consider the following table for determining precidence:
 \begin{table}[h]
 \begin{tabular}{ccccccc}
@@ -127,7 +127,7 @@ not & \verb!^! &&&&&\\
 \multicolumn{3}{c}{array dereferencing}&\verb!(!&\verb!)!&&\\
 \multicolumn{3}{c}{method invocation}&&&&\\
 \end{tabular}
-\caption{Operator Precidence}
+\caption{Operator Precedence}
 \end{table}
 
 \subsubsection{Method Declaration \& Definition}
@@ -177,7 +177,7 @@ class class_identifier <<extends superclass_identifier>> {
 Let's make a basic geometric shape class in anticipation of later examples. We have private members, two access-level sections and an init method. No extends is specified, so it is assumed to inherit from Object.
 
 
-\begin{lstlisting}[label=Method Invocation,caption=Class Declaration for a Geometric Shape class]
+\begin{lstlisting}[backgroundcolor=\color{tintedorange},label=Method Invocation,caption=Class Declaration for a Geometric Shape class]
 class Geometric_Shape {
     private {
         String name;
@@ -204,12 +204,12 @@ class Geometric_Shape {
 Making a new instance of a class is simple.
 
 \begin{lstlisting}
-new class_identifier([expr[,expre[,expr[...]]]])
+new class_identifier(<<arg1_expr>> <<,arg2_expr>> <<...>>)
 \end{lstlisting}
 
 For instance:
 
-\begin{lstlisting}[label=Method Invocation,caption=Class Instantiation for a Geometric Shape class]
+\begin{lstlisting}[backgroundcolor=\color{tintedorange},label=Method Invocation,caption=Class Instantiation for a Geometric Shape class]
 Geometric_Shape = new Geometric_Shape("circle");
 \end{lstlisting}
 
@@ -217,9 +217,9 @@ Geometric_Shape = new Geometric_Shape("circle");
 An anonymous class definition takes a class instatiation and places it in the position of the class keyword from class declaration. The \verb!main! method, while allowed, has no purpose in this syntax.
 
 \begin{lstlisting}
-new superclass_identifier([expr[,expre[,expr[...]]]]) {
+new superclass_identifier(<<arg1_expr>> <<,arg2_expr>> <<...>>) {
     <<{{private | protected | public | refinement}} section1>>
-    <<{{private | protected | public | refinement}} section1>>
+    <<{{private | protected | public | refinement}} section2>>
     <<...>>
 }
 \end{lstlisting}
@@ -230,9 +230,10 @@ The fundamental unit of an if statement is a keyword, followed by a test express
 
 \begin{lstlisting}
 if (test1_expr) if1_body
-[elsif (test2_expr) if2_body
-[elsif(test3_expr) if3_body
-[...]]][else if4_body]
+<<elsif (test2_expr) if2_body>>
+<<elsif(test3_expr) if3_body>>
+<<...>>
+<<else if4_body>>
 \end{lstlisting}
 
 \subsubsection{While Statements}
