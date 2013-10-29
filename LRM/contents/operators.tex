@@ -2,10 +2,20 @@
 The following defines the approved behaviour for each combination of operator and literal type. If the literal type is not listed for a certain operator, the operator's behaviour for the literal is undefined. These operators never take operands of different types.
 \subsection{The Operator \verb!=!}
 \subsubsection{Integer}
-If two Integer instances have the exact same value, \verb!=! returns \verb!true!. If they do not have the same value, it returns false.
+If two Integer instances have the same value, \verb!=! returns \verb!true!. If they do not have the same value, it returns \verb!false!.
 \subsubsection{Float}
-If two Float instances have an absolute difference of less than an epsilon of 2^{-24}, \verb!=! returns \verb!true!. If the absolute difference is greater than that epsilon, it returns false.
+If two Float instances have an absolute difference of less than or equal to an epsilon of 2^{-24}, \verb!=! returns \verb!true!. If the absolute difference is greater than that epsilon, it returns \verb!false!.
 \subsubsection{Boolean}
 If two Boolean instances have the same keyword, either \verb!true! or \verb!false!, \verb!=! returns \verb!true!. If their keyword differs, it returns \verb!false!.
 \subsubsection{String}
 If two String instances have the same sequence of characters, \verb!=! returns \verb!true!. If their sequence of characters differs, it returns \verb!false!.
+
+\subsection{The Operators \verb!=/=! and \verb!<>!}
+\subsubsection{Integer}
+If two Integer instances have a different value, \verb!=/=! and \verb!<>! return \verb!true!. If they do have the same value, they returns \verb!false!.
+\subsubsection{Float}
+If two Float instances have an absolute difference of greater than than an epsilon of 2^{-24}, \verb!=! returns \verb!true!. If the absolute difference is less than or equal to that epsilon, it returns \verb!false!.
+\subsubsection{Boolean}
+If two Boolean instances have different keywords, \verb!=/=! and \verb!<>! return \verb!true!. If their keywords are the same, they return \verb!false!.
+\subsubsection{String}
+If two String instances have the different sequences of characters, \verb!=/=! and \verb!<>! return \verb!true!. If their sequence of characters is the same, they return \verb!false!.
