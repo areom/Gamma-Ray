@@ -67,6 +67,42 @@ If the left operand comes after the right operand in dictionary order, \verb!<! 
 \subsubsection{Integer and Float}
 \verb!%! returns the modulo of the left operand by the right operand.
 
-\subsection{The Operator {\tt hat}}
+\subsection{The Operator {\tt \textasciicircum}}
 \subsubsection{Integer and Float}
 \verb!^! returns the left operand raised to the power of the right operand.
+
+\subsection{The Operator {\tt :=}}
+\subsubsection{Integer, Float, Boolean, and String}
+\verb!:=! assigns the right operand to the left operand and returns the value of the the right operand. This is the sole right precedence operator.
+
+\subsection{The Operators {\tt +=, -=, *=, /= \%=, and \textasciicircum=}}
+\subsubsection{Integer, Float, Boolean, and String}
+This set of operators first applies the operator indicated by the first character of each operator as normal on the operands. It then assigns this value to its left operand.
+
+\subsection{The Operator {\tt and}}
+\subsubsection{Boolean}
+\verb!and! returns the conjunction of the operands.
+
+\subsection{The Operator {\tt or}}
+\subsubsection{Boolean}
+\verb!or! returns the disjunction of the operands.
+
+\subsection{The Operator {\tt not}}
+\subsubsection{Boolean}
+\verb!not! returns the negation of the operands.
+
+\subsection{The Operator {\tt nand}}
+\subsubsection{Boolean}
+\verb!nand! returns the negation of the conjunction of the operands.
+
+\subsection{The Operator {\tt nor}}
+\subsubsection{Boolean}
+\verb!nor! returns the negation of the disjunction of the operands.
+
+\subsection{The Operator {\tt xor}}
+\subsubsection{Boolean}
+\verb!xor! returns the exclusive disjunction of the operands.
+
+\subsection{The Operator {\tt refinable}}
+\subsubsection{Boolean}
+\verb!refinable! returns \verb!true! if the refinement is implemented in the current subclass. It returns \verb!false! otherwise.
