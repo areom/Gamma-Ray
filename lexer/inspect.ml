@@ -1,5 +1,7 @@
 open Ast
 
+let id x = x
+
 let inspect_lit lit = match lit with
   | Int(i)    -> Printf.sprintf "Int(%d)" i
   | Float(f)  -> Printf.sprintf "Float(%f)" f
@@ -66,7 +68,7 @@ and inspect_stmt the_stmt = match the_stmt with
   | Return(the_expr) -> Printf.sprintf "Return(%s)" (inspect_opt inspect_expr the_expr)
   | Super(args) -> Printf.sprintf "Super(%s)" (inspect_str_list inspect_expr args)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
-and inspect_func_def func = let id x = x in Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s }"
+and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s }"
   (inspect_opt id func.returns)
   (inspect_opt id func.host)
   func.name
@@ -86,7 +88,7 @@ let inspect_class_sections sections = Printf.sprintf "{ privates = %s, protects 
   (inspect_str_list inspect_func_def sections.refines)
   (inspect_str_list inspect_func_def sections.mains)
 
-let inspect_class_def the_klass = let id x = x in Printf.sprintf "{ klass = %s, parent = %s, sections = %s }"
+let inspect_class_def the_klass = Printf.sprintf "{ klass = %s, parent = %s, sections = %s }"
   the_klass.klass
   (inspect_opt id the_klass.parent)
   (inspect_class_sections the_klass.sections)
