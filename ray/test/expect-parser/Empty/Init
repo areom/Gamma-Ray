@@ -1,1 +1,0 @@
-{ klass = List, parent = None, sections = { privates = [], protects = [], publics = [InitMem({ returns = None, host = None, name = init, static = false, formals = [], body = [] })], refines = [], mains = [] } }

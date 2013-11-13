@@ -2,10 +2,7 @@
 
 # These are things that are just program dependent (Scanner v Parser, etc)
 program="$( basename "$0" )"
-tmpfile="test/check"
-tmperr="test/err"
-testdir="test/tests"
-testlen=$(( `echo "$testdir" | wc -c` + 1 ))
+scriptdir="$( dirname "$0" )"
 exe=
 old=
 
@@ -19,6 +16,10 @@ current=
 results=
 
 # Don't change per iteration
+scripts=( $scriptdir/scanner $scriptdir/parser )  ## ADD NEW SCRIPTS HERE
+tmpfile="test/check"
+tmperr="test/err"
+testdir="test/tests"
 maxlength=0
 oneline=0
 files=()
@@ -48,8 +49,11 @@ function dots {
   echo -n ' '
 }
 
-function setcurrent {
-  current=`echo "$1" | cut -c $testlen-`
+function dropdirprefix {
+  word="$1"
+  prefix="$2"
+  prefixlen=$(( `echo "$prefix" | wc -c` + 1 ))
+  echo "$word" | cut -c $prefixlen-
 }
 
 function testit {
@@ -88,6 +92,45 @@ function testit {
   test "$oneline" -eq 0 && echo ""
 }
 
+function listandexit {
+  for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
+    current=$( dropdirprefix "$afile" "$testdir" )
+    echo "$current"
+  done
+  exit 0
+}
+
+function usage {
+cat <<USAGE
+$program -[chlpsv]
+  -c
+     Merely validate that all test scripts are identical and exit
+
+  -h
+     Display this help
+
+  -l
+     Display the name of all tests; note that pattern can be used
+
+  -p pattern
+     Filter tests to be used based on pattern (as in find -name)
+
+  -s
+     save results
+
+  -v
+     verbose output
+USAGE
+  exit 0
+}
+
+script="${scripts[0]}"
+for ascript in "${scripts[@]}" ; do
+  scriptfile=$( dropdirprefix "$script" "$scriptdir" )
+  ascriptfile=$( dropdirprefix "$ascript" "$scriptdir" )
+  diff -q "$script" "$ascript" &> /dev/null || errWith "Test scripts $scriptfile and $ascriptfile differ; they should match."
+done
+
 case "$program" in
   scanner)
         exe="./streams"
@@ -102,37 +145,9 @@ case "$program" in
         ;;
 esac
 
-function listandexit {
-  for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
-    setcurrent "$afile"
-    echo "$current"
-  done
-  exit 0
-}
-
-function usage {
-cat <<USAGE
-$program -[hlpsv]
-  -h
-     Display this help
-
-  -l
-     Display the name of all tests; note that pattern can be used.
-
-  -p pattern
-     Filter tests to be used based on pattern (as in find -name)
-
-  -s
-     save results
-
-  -v
-     verbose output
-USAGE
-  exit 0
-}
-
-while getopts "hlsvp:" OPTION ; do
+while getopts "chlsvp:" OPTION ; do
   case "$OPTION" in
+    c) exit 0 ;;
     h) usage ;;
     s) save=1 ;;
     v) verbose=1 ;;
@@ -157,14 +172,14 @@ done
 test "${#files[@]}" -eq 0 && errWith "No files match the given pattern. Good-bye."
 
 for atest in "${files[@]}" ; do
-  setcurrent "$atest"
+  current=$( dropdirprefix "$afile" "$testdir" )
   len=`echo "$current" | wc -c`
   test $len -gt $maxlength && maxlength="$len"
 done
 maxlength=$(( maxlength + 5 ))
 
 for atest in "${files[@]}" ; do
-  setcurrent "$atest"
+  current=$( dropdirprefix "$afile" "$testdir" )
   results="test/$old/$current"
 
   testit "$atest"

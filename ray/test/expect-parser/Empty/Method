@@ -1,1 +1,0 @@
-{ klass = List, parent = None, sections = { privates = [], protects = [], publics = [MethodMem({ returns = None, host = None, name = noop, static = false, formals = [], body = [] })], refines = [], mains = [] } }
