@@ -80,9 +80,8 @@ function testit {
     else
       echo "${bold}${red}MISMATCH${normal}"
     fi
-    rm "$tmpfile"
   fi
-  rm "$tmperr"
+  rm "$tmperr" "$tmpfile"
   test "$oneline" -eq 0 && echo ""
 }
 
@@ -150,7 +149,7 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 test -z "$verbose" && oneline=1
 
 for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
-  files+=( "$afile" )
+  test "README" = $( basename "$afile" ) || files+=( "$afile" )
 done
 test "${#files[@]}" -eq 0 && errWith "No files match the given pattern. Good-bye."
 
