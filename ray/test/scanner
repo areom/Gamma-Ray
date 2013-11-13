@@ -81,7 +81,10 @@ function testit {
       echo "${bold}${red}MISMATCH${normal}"
     fi
   fi
-  rm "$tmperr" "$tmpfile"
+
+  test -e "$tmpfile" && rm "$tmpfile"  # Sometimes happens
+  test -e "$tmperr" && rm "$tmperr"    # Always happens
+
   test "$oneline" -eq 0 && echo ""
 }
 
