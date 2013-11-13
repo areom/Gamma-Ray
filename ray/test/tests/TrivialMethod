@@ -1,6 +1,0 @@
-class List {
-  public {
-    String stringId(String in) {
-    }
-  }
-}

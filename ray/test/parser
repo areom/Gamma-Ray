@@ -5,6 +5,7 @@ program="$( basename "$0" )"
 tmpfile="test/check"
 tmperr="test/err"
 testdir="test/tests"
+testlen=$(( `echo "$testdir" | wc -c` + 1 ))
 exe=
 old=
 
@@ -47,6 +48,10 @@ function dots {
   echo -n ' '
 }
 
+function setcurrent {
+  current=`echo "$1" | cut -c $testlen-`
+}
+
 function testit {
   testing="${bold}Testing:${normal} ${uline}${current}${normal}"
   test "$oneline" -eq 0 && echo "$testing"
@@ -59,6 +64,7 @@ function testit {
     cat "$tmperr"
   elif [ -n "$save" ] ; then
     echo "${bold}Saving${normal} $current"
+    mkdir -p $( dirname "$results" )
     mv "$tmpfile" "$results"
   elif [ ! -e "$results" ] ; then
     execerror "Cannot check results -- standard does not exist"
@@ -94,16 +100,48 @@ case "$program" in
         ;;
 esac
 
-while getopts "lsvp:" OPTION ; do
+function listandexit {
+  for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
+    setcurrent "$afile"
+    echo "$current"
+  done
+  exit 0
+}
+
+function usage {
+cat <<USAGE
+$program -[hlpsv]
+  -h
+     Display this help
+
+  -l
+     Display the name of all tests; note that pattern can be used.
+
+  -p pattern
+     Filter tests to be used based on pattern (as in find -name)
+
+  -s
+     save results
+
+  -v
+     verbose output
+USAGE
+  exit 0
+}
+
+while getopts "hlsvp:" OPTION ; do
   case "$OPTION" in
+    h) usage ;;
     s) save=1 ;;
     v) verbose=1 ;;
     p) pattern=$OPTARG ;;
-    l) ls "$testdir" ; exit 0 ;;
+    l) list=1;;
     ?) errWith "Unknown option; aborting" ;;
   esac
 done
 shift $(($OPTIND - 1))
+
+test -n "$list" && listandexit
 
 test -e "$exe" || errWith "Testing $program but $exe unavailable"
 test -f "$exe" || errWith "Testing $program but $exe is not a file"
@@ -111,20 +149,20 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
 test -z "$verbose" && oneline=1
 
-for afile in $testdir/$pattern ; do
+for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
   files+=( "$afile" )
 done
 test "${#files[@]}" -eq 0 && errWith "No files match the given pattern. Good-bye."
 
 for atest in "${files[@]}" ; do
-  current="$( basename "$atest" )"
+  setcurrent "$atest"
   len=`echo "$current" | wc -c`
   test $len -gt $maxlength && maxlength="$len"
 done
 maxlength=$(( maxlength + 5 ))
 
 for atest in "${files[@]}" ; do
-  current="$( basename "$atest" )"
+  setcurrent "$atest"
   results="test/$old/$current"
 
   testit "$atest"
