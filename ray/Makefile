@@ -5,10 +5,12 @@ all:
 	ocamlc -c -g parser.mli
 	ocamlc -c -g scanner.ml
 	ocamlc -c -g parser.ml
-	ocamlc -c inspect.ml
-	ocamlc -c streams.ml
+	ocamlc -c -g WhiteSpace.ml
+	ocamlc -c -g Tokens.ml
+	ocamlc -c -g inspect.ml
+	ocamlc -c -g streams.ml
 	ocamlc -o inspect scanner.cmo parser.cmo inspect.cmo
-	ocamlc -o streams scanner.cmo parser.cmo streams.cmo
+	ocamlc -o streams scanner.cmo parser.cmo Tokens.cmo WhiteSpace.cmo streams.cmo
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml

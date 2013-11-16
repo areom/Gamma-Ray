@@ -9,6 +9,21 @@
     | c :: l -> res.[i] <- c; imp (i + 1) l in
     imp 0 l
 
+  let explode s =
+    let rec exploder idx l =
+      if idx < 0
+        then l
+        else exploder (idx-1) (s.[idx] :: l) in
+    exploder (String.length s - 1) []
+
+  let spacecounter = function
+    | '\t' -> 8
+    | _    -> 1
+
+  let spacecount s =
+    let spaces = List.map spacecounter (explode s) in
+    List.fold_left (+) 0 spaces
+
   let lexfail msg =
     raise (Failure(msg))
 }
@@ -20,15 +35,18 @@ let alpha = lower | upper
 let ualphanum = '_' | alpha | digit
 
 (* horizontal spacing: space & tab *)
-let space = [' ' '\t']
+let hspace = [' ' '\t']
 
 (* vertical spaces: newline (line feed), carriage return, vertical tab, form feed *)
-let lines = ['\n' '\r' '\011' '\012']
+let vspace = ['\n' '\r' '\011' '\012']
 
 rule token = parse
+  (* Handling whitespace mode *)
+  | hspace+ as s               { SPACE(spacecount s) }
+  | ':' hspace* vspace+        { COLON }
+  | vspace+                    { NEWLINE }
 
-  (* Comments & White Space *)
-  | space|lines                { token lexbuf }
+  (* Comments *)
   | "/*"                       { comment 0 lexbuf }
 
   (* Boolean Tests & Values *)
@@ -131,11 +149,12 @@ and comment level = parse
   | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
   | eof    { lexfail("File ended inside comment.") }
   | _      { comment (0) lexbuf }
+
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'           { escapechar chars lexbuf }
   | eof            { lexfail("File ended inside string literal") }
-  | lines as char  { lexfail("Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
+  | vspace as char { lexfail("Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
   | '"'            { SLIT(implode(List.rev chars)) }
   | _ as char      { stringlit (char::chars) lexbuf }
 
@@ -146,3 +165,4 @@ and escapechar chars = parse
     }
   | eof       { lexfail("File ended while seeking escape character") }
   | _ as char { lexfail("illegal escape character:  \\" ^ Char.escaped(char)) }
+

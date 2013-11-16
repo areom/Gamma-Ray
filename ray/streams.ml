@@ -1,77 +1,24 @@
-open Parser
+let debug_print tokens =
+  Tokens.print_tokens "Input:      " tokens;
+  let tokens = WhiteSpace.indenting_space tokens in
+  Tokens.print_tokens "Indented:   " tokens;
+  let tokens = WhiteSpace.despace_brace tokens in
+  Tokens.print_tokens "In-Brace:   " tokens;
+  let tokens = WhiteSpace.trim_lines tokens in
+  Tokens.print_tokens "Trimmed:    " tokens;
+  let tokens = WhiteSpace.squeeze_lines tokens in
+  Tokens.print_tokens "Squeezed:   " tokens;
+  let lines = WhiteSpace.tokens_to_lines tokens in
+  Tokens.print_lines  "Lines:      " lines;
+  let lines = WhiteSpace.merge_lines lines in
+  Tokens.print_lines  "Merged:     " lines;
+  let lines = WhiteSpace.block_merge lines in
+  Tokens.print_lines  "Blocks:     " lines;
+  let tokens = WhiteSpace.space_to_brace lines in
+  Tokens.print_tokens "Converted:  " tokens
 
-let stoken tk = match tk with
-  | THIS -> "THIS"
-  | ARRAY -> "ARRAY"
-  | REFINABLE -> "REFINABLE"
-  | AND -> "AND"
-  | OR -> "OR"
-  | XOR -> "XOR"
-  | NAND -> "NAND"
-  | NOR -> "NOR"
-  | NOT -> "NOT"
-  | TRUE -> "TRUE"
-  | FALSE -> "FALSE"
-  | EQ -> "EQ"
-  | NEQ -> "NEQ"
-  | LT -> "LT"
-  | LEQ -> "LEQ"
-  | GT -> "GT"
-  | GEQ -> "GEQ"
-  | LBRACKET -> "LBRACKET"
-  | RBRACKET -> "RBRACKET"
-  | LPAREN -> "LPAREN"
-  | RPAREN -> "RPAREN"
-  | LBRACE -> "LBRACE"
-  | RBRACE -> "RBRACE"
-  | SEMI -> "SEMI"
-  | COMMA -> "COMMA"
-  | PLUS -> "PLUS"
-  | MINUS -> "MINUS"
-  | TIMES -> "TIMES"
-  | DIVIDE -> "DIVIDE"
-  | MOD -> "MOD"
-  | POWER -> "POWER"
-  | PLUSA -> "PLUSA"
-  | MINUSA -> "MINUSA"
-  | TIMESA -> "TIMESA"
-  | DIVIDEA -> "DIVIDEA"
-  | MODA -> "MODA"
-  | POWERA -> "POWERA"
-  | IF -> "IF"
-  | ELSE -> "ELSE"
-  | ELSIF -> "ELSIF"
-  | WHILE -> "WHILE"
-  | RETURN -> "RETURN"
-  | CLASS -> "CLASS"
-  | EXTEND -> "EXTEND"
-  | SUPER -> "SUPER"
-  | INIT -> "INIT"
-  | NULL -> "NULL"
-  | VOID -> "VOID"
-  | REFINE -> "REFINE"
-  | REFINES -> "REFINES"
-  | TO -> "TO"
-  | PRIVATE -> "PRIVATE"
-  | PUBLIC -> "PUBLIC"
-  | PROTECTED -> "PROTECTED"
-  | DOT -> "DOT"
-  | MAIN -> "MAIN"
-  | NEW -> "NEW"
-  | ASSIGN -> "ASSIGN"
-  | ID(vid) -> Printf.sprintf "ID(%s)" vid
-  | TYPE(tid) -> Printf.sprintf "TYPE(%s)" tid
-  | BLIT(bool) -> Printf.sprintf "BLIT(%B)" bool
-  | ILIT(inum) -> Printf.sprintf "ILIT(%d)" inum
-  | FLIT(fnum) -> Printf.sprintf "FLIT(%f)" fnum
-  | SLIT(str) -> Printf.sprintf "SLIT(%s)" (String.escaped str)
-  | EOF -> "EOF"
-
-let rec stream_printer (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
-  match (lexfun lexbuf) with
-    | EOF -> print_string "EOF" ; print_newline ()
-    | _ as tk -> print_string (stoken tk); print_string " "; stream_printer lexfun lexbuf
-
-let print_tokens source = stream_printer Scanner.token (Lexing.from_channel source)
-
-let _ = print_tokens stdin
+let _ =
+  let tokens = Tokens.from_channel stdin in
+  match Array.length Sys.argv with
+    | 1 -> Tokens.print_tokens "" (WhiteSpace.convert tokens)
+    | _ -> debug_print tokens
