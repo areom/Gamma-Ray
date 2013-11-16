@@ -171,16 +171,16 @@ for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
 done
 test "${#files[@]}" -eq 0 && errWith "No files match the given pattern. Good-bye."
 
-for atest in "${files[@]}" ; do
+for afile in "${files[@]}" ; do
   current=$( dropdirprefix "$afile" "$testdir" )
   len=`echo "$current" | wc -c`
   test $len -gt $maxlength && maxlength="$len"
 done
 maxlength=$(( maxlength + 5 ))
 
-for atest in "${files[@]}" ; do
+for afile in "${files[@]}" ; do
   current=$( dropdirprefix "$afile" "$testdir" )
   results="test/$old/$current"
 
-  testit "$atest"
+  testit "$afile"
 done
