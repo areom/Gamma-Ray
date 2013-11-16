@@ -8,14 +8,13 @@ let indenting_space program =
     | NEWLINE::SPACE(n)::rest -> space_indenting (SPACE(n)::NEWLINE::rtokens) rest
     | SPACE(n)::rest -> space_indenting rtokens rest
     | token::rest -> space_indenting (token::rtokens) rest
-    | [] -> List.rev(rtokens) in
+    | [] -> List.rev rtokens in
   match (space_indenting [] (NEWLINE::program)) with
     | NEWLINE::rest -> rest
     | _ -> wsfail "Indenting should have left a NEWLINE at the start of program; did not."
 
-(* Between LBRACE and RBRACE we ignore spaces and newlines; colons
- * are errors in this context, though. It's not necessary that this
- * be done after the above, but it is recommended.
+(* Between LBRACE and RBRACE we ignore spaces and newlines; colons are errors in this context.
+ * It's not necessary that this be done after the above, but it is recommended.
  *)
 let despace_brace program =
   let rec brace_despace depth tokens rtokens last =
