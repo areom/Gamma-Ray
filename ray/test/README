@@ -1,0 +1,4 @@
+tests/
+  Empty -- this should be genuinely empty things
+  Trivial -- this should be nonempty but still trivial
+
