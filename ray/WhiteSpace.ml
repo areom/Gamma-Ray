@@ -169,3 +169,11 @@ let convert program =
   let blocks = block_merge merged in
   let converted = space_to_brace blocks in
   append_eof converted
+
+(* A function to act like a lexfun *)
+let lextoks toks =
+  let tokens = ref (convert toks) in
+  function _ ->
+    match !tokens with
+      | [] -> raise(Failure("Not even EOF given."))
+      | tk::tks -> tokens := tks; tk
