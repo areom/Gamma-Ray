@@ -1,0 +1,6 @@
+class List extends Node:
+  public:
+    init() {
+      Int c;
+      c := 1234;
+    }

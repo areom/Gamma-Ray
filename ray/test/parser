@@ -23,6 +23,9 @@ testdir="test/tests"
 maxlength=0
 oneline=0
 files=()
+folders=()
+temp=()
+errored=0
 
 # Formatting values
 bold=`tput bold`
@@ -30,7 +33,7 @@ normal=`tput sgr0`
 uline=`tput smul`
 green=`tput setaf 2`
 red=`tput setaf 1`
-
+blue=`tput setaf 4`
 
 function errWith {
   echo "$1" >&2
@@ -39,6 +42,7 @@ function errWith {
 
 function execerror {
   echo "${bold}${uline}${red}ERROR${normal} $1"
+  errored=1
 }
 
 function dots {
@@ -47,6 +51,14 @@ function dots {
     echo -n '.'
   done
   echo -n ' '
+}
+
+function contains {
+  local elem
+  for elem in "${@:2}" ; do
+    test "$elem" = "$1" && return 0
+  done
+  return 1
 }
 
 function dropdirprefix {
@@ -166,21 +178,63 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
 test -z "$verbose" && oneline=1
 
-for afile in $( find "$testdir" -type f -name "$pattern" ) ; do
-  test "README" = $( basename "$afile" ) || files+=( "$afile" )
+for adir in $( ls "$testdir" ) ; do
+  folders+=( "$adir" )
+done
+test "${#folders[@]}" -eq 0 && errWith "No folders in test directory. Good-bye."
+
+for afolder in "${folders[@]}" ; do
+  test -d "$testdir/$afolder" || errWith "$afolder is not a directory ($testdir)"
+done
+
+for afile in $( find "$testdir/${folders[0]}/" -type f -name "$pattern" ) ; do
+  test "README" = $( basename "$afile" ) || files+=( $( dropdirprefix "$afile" "$testdir/${folders[0]}/" ) )
+done
+
+for afolder in "${folders[@]}" ; do
+  temp=()
+  for afile in $( find "$testdir/$afolder/" -type f -name "$pattern" ) ; do
+    test "README" = $( basename "$afile" ) || temp+=( $( dropdirprefix "$afile" "$testdir/$afolder/" ) )
+  done
+
+  for afile in "${files[@]}" ; do
+    contains "$afile" "${temp[@]}" || errWith "$afolder does not contain $afile but ${folders[0]} does"
+  done
+  for bfile in "${temp[@]}" ; do
+    contains "$bfile" "${files[@]}" || errWith "$afolder contains $bfile but ${folders[0]} does not"
+  done
 done
 test "${#files[@]}" -eq 0 && errWith "No files match the given pattern. Good-bye."
 
-for afile in "${files[@]}" ; do
-  current=$( dropdirprefix "$afile" "$testdir" )
+# All the test directories have the same structure.
+for current in "${files[@]}" ; do
   len=`echo "$current" | wc -c`
   test $len -gt $maxlength && maxlength="$len"
 done
 maxlength=$(( maxlength + 5 ))
 
-for afile in "${files[@]}" ; do
-  current=$( dropdirprefix "$afile" "$testdir" )
-  results="test/$old/$current"
+for afolder in "${folders[@]}" ; do
+  echo "${bold}${blue}Testing:${normal} $afolder"
+  for current in "${files[@]}" ; do
+    results="test/$old/$afolder/$current"
+    testit "$testdir/$afolder/$current"
+  done
+done
 
-  testit "$afile"
+test $errored -eq 1 && exit 1
+
+# Ensure that all the results are the same.
+for current in "${files[@]}" ; do
+  master="test/$old/${folders[0]}/$current"
+  matched=1
+
+  for afolder in "${folders[@]}" ; do
+    target="test/$old/$afolder/$current"
+    diff -q "$master" "$target" &> /dev/null
+    if [ $? -ne 0 ] ; then
+      echo "$current ${bold}${red}DIFFERS${normal} between ${folders[0]} (reference) and $afolder"
+      matched=0
+    fi
+  done
+  test $matched -eq 1 && echo "$current ${bold}${green}MATCHES${normal} across all folders"
 done
