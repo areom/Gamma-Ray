@@ -30,4 +30,6 @@ Gamma-LRM.pdf
 inspect
 streams
 parser.output
+expect-parser
+expect-scanner
 
