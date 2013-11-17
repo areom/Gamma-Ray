@@ -79,26 +79,22 @@ let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
       | EOF -> List.rev (EOF::rtokens)
       | tk -> list_tokens (tk::rtokens) in
   list_tokens []
-
-let rec token_printer = function
-  | [] -> ()
-  | tk::rest -> print_string (token_to_string tk); print_string " "; token_printer rest
-
-let line_printer = function
-  | (space, toks, colon) ->
-    print_string ("(" ^ string_of_int space ^ "," ^ string_of_bool colon ^ ") ");
-    token_printer toks
-
 let from_channel source = token_list Scanner.token (Lexing.from_channel source)
 
-let print_tokens header toks = print_string header ; token_printer toks ; print_newline ()
+let rec print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
 
-let print_lines header lines =
+let print_token_line = function
+  | (space, toks, colon) ->
+    print_string ("(" ^ string_of_int space ^ "," ^ string_of_bool colon ^ ") ");
+    print_token_list toks
+
+let pprint_token_list header toks = print_string header ; print_token_list toks ; print_newline ()
+let pprint_token_lines header lines =
   let spaces = String.make (String.length header) ' ' in
   let rec lines_printer prefix = function
     | line::rest ->
       print_string prefix;
-      line_printer line;
+      print_token_line line;
       print_newline ();
       lines_printer spaces rest
     | [] -> () in
