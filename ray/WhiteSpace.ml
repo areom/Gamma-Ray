@@ -99,7 +99,7 @@ let merge_lines program_lines =
     | [] -> List.rev rlines in
   lines_merge [] program_lines
 
-(* Check if a given line ends with a brace *)
+(* Check if a given line needs a semicolon at the end *)
 let rec needs_semi = function
   | [] -> true
   | RBRACE::[] -> false
