@@ -1,0 +1,10 @@
+test types:
+  * Brace  -- these should be with {, }, and ;
+  * Mixed1 -- these should be mixed (closer to Space for now)
+  * Space  -- these should be with :
+
+in each type there are test folders:
+  * Empty   -- structurally empty tests
+  * Trivial -- just above empty, should do something... trivial
+
+each test type requires the same tests. at the end, the outputs are compared
