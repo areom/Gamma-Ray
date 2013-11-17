@@ -34,6 +34,7 @@ uline=`tput smul`
 green=`tput setaf 2`
 red=`tput setaf 1`
 blue=`tput setaf 4`
+backblue=`tput setab 4`
 
 function errWith {
   echo "$1" >&2
@@ -95,6 +96,11 @@ function testit {
       echo "${bold}${green}PASS${normal}"
     else
       echo "${bold}${red}MISMATCH${normal}"
+      if [ -n $verbose ] ; then
+        echo "${red}Standard -- START${normal}"
+        cat "$results"
+        echo "${red}Stadard -- END${normal}"
+      fi
     fi
   fi
 
