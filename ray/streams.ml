@@ -1,5 +1,7 @@
 let debug_print tokens =
   Inspector.print_tokens "Input:      " tokens;
+  let tokens = WhiteSpace.drop_eof tokens in
+  Inspector.print_tokens "No EOF      " tokens;
   let tokens = WhiteSpace.indenting_space tokens in
   Inspector.print_tokens "Indented:   " tokens;
   let tokens = WhiteSpace.despace_brace tokens in
@@ -15,7 +17,9 @@ let debug_print tokens =
   let lines = WhiteSpace.block_merge lines in
   Inspector.print_lines  "Blocks:     " lines;
   let tokens = WhiteSpace.space_to_brace lines in
-  Inspector.print_tokens "Converted:  " tokens
+  Inspector.print_tokens "Converted:  " tokens;
+  let tokens = WhiteSpace.append_eof tokens in
+  Inspector.print_tokens "With EOF:   " tokens
 
 let _ =
   let tokens = Inspector.from_channel stdin in

@@ -6,6 +6,7 @@ let wsfail msg = raise(Failure(msg))
 let indenting_space program =
   let rec space_indenting rtokens = function
     | NEWLINE::SPACE(n)::rest -> space_indenting (SPACE(n)::NEWLINE::rtokens) rest
+    | COLON::SPACE(n)::rest -> space_indenting (SPACE(n)::COLON::rtokens) rest
     | SPACE(n)::rest -> space_indenting rtokens rest
     | token::rest -> space_indenting (token::rtokens) rest
     | [] -> List.rev rtokens in
@@ -44,6 +45,7 @@ let trim_lines program =
     match tokens with
       | [] -> List.rev rtokens
       | SPACE(_)::NEWLINE::rest -> lines_trim rest (NEWLINE::rtokens)
+      | SPACE(_)::COLON::rest -> lines_trim rest (COLON::rtokens)
       | token::rest -> lines_trim rest (token::rtokens) in
   lines_trim program []
 
@@ -98,10 +100,11 @@ let merge_lines program_lines =
   lines_merge [] program_lines
 
 (* Check if a given line ends with a brace *)
-let rec ends_brace = function
-  | [] -> false
-  | RBRACE::[] -> true
-  | _::rest -> ends_brace rest
+let rec needs_semi = function
+  | [] -> true
+  | RBRACE::[] -> false
+  | SEMI::[] -> false
+  | _::rest -> needs_semi rest
 
 (* Consecutive lines of the same indentation with only the last ending in a colon are a `block'
  * Blocks are just `lines' merged together but joined with a semi colon when necessary
@@ -109,7 +112,7 @@ let rec ends_brace = function
 let block_merge lines =
   let braced = function
     | (n, toks, true) -> (n, toks, true, false)
-    | (n, toks, false) -> (n, toks, false, not (ends_brace toks)) in
+    | (n, toks, false) -> (n, toks, false, needs_semi toks) in
   let lines = List.map braced lines in
   let rec merge_blocks rblocks = function
     | (n1, line1, false, s1)::(n2, line2, colon, s2)::rest when n1 = n2 ->
@@ -122,7 +125,7 @@ let block_merge lines =
 (* Pops the stack and adds rbraces when necessary *)
 let rec arrange n stack rtokens =
   match stack with
-    | top::rest when top > n -> arrange n rest (RBRACE::rtokens)
+    | top::rest when n <= top -> arrange n rest (RBRACE::rtokens)
     | _ -> (stack, rtokens)
 
 (* Take results of pipeline and finally adds braces. If blocks are merged
@@ -132,22 +135,37 @@ let rec arrange n stack rtokens =
 let space_to_brace = function
   | [] -> []
   | linelist -> let rec despace_enbrace stack rtokens = function
-    | (n, line, true)::[] -> despace_enbrace (n::stack) ((List.rev line)@rtokens) []
-    | (n, line, false)::[] -> despace_enbrace stack ((List.rev line)@rtokens) []
     | [] -> List.rev ((List.map (function _ -> RBRACE) stack) @ rtokens)
     | (n, line, colon)::rest ->
       let (stack, rtokens) = arrange n stack rtokens in
-      let (rbrace, stack) = if colon then ([RBRACE], n::stack) else ([], stack) in
-      despace_enbrace stack (rbrace@(List.rev line)@rtokens) rest
+      let (lbrace, stack) = if colon then ([LBRACE], n::stack) else ([], stack) in
+      despace_enbrace stack (lbrace@(List.rev line)@rtokens) rest
     in despace_enbrace [] [] linelist
+
+(* Drop the EOF from a stream of tokens, failing if not possible *)
+let drop_eof program =
+  let rec eof_drop rtokens = function
+    | EOF::[] -> List.rev rtokens
+    | EOF::rest -> raise(Failure("Misplaced EOF"))
+    | [] -> raise(Failure("No EOF available."))
+    | tk::tks -> eof_drop (tk::rtokens) tks in
+  eof_drop [] program
+
+let append_eof program =
+  let rec eof_add rtokens = function
+    | [] -> List.rev (EOF::rtokens)
+    | tk::tks -> eof_add (tk::rtokens) tks in
+  eof_add [] program
 
 (* Run the entire pipeline *)
 let convert program =
-  let indented = indenting_space program in
+  let noeof = drop_eof program in
+  let indented = indenting_space noeof in
   let despaced = despace_brace indented in
   let trimmed = trim_lines despaced in
   let squeezed = squeeze_lines trimmed in
   let lines = tokens_to_lines squeezed in
   let merged = merge_lines lines in
   let blocks = block_merge merged in
-  space_to_brace blocks
+  let converted = space_to_brace blocks in
+  append_eof converted
