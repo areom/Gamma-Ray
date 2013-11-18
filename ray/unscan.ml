@@ -23,7 +23,7 @@ let rec clean_unscan depth indent = function
     print_newline ();
     indenter (max (depth-1) 0) indent;
     print_string (descan RBRACE);
-    clean_unscan (max (depth-1) 0) indent rest
+    clean_unscan (max (depth-1) 0) indent (RBRACE::rest)
   | RBRACE::rest ->
     print_newline ();
     indenter (depth-1) indent;
@@ -36,6 +36,10 @@ let rec clean_unscan depth indent = function
     print_newline ();
     indenter depth indent;
     clean_unscan depth indent rest
+  | EOF::[] ->
+    print_newline ()
+  | EOF::_ ->
+    raise(Failure("Premature end of file."))
   | token::rest ->
     print_string (descan token);
     print_string " ";
