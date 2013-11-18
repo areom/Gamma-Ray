@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
 results = nil
-IO.popen("./unscan", "r+") {|unscan|
+IO.popen("./tools/unscan", "r+") {|unscan|
   unscan.write($stdin.read)
   unscan.close_write
   results = unscan.read
 }
 
-puts results.gsub(/\(\s+|\s+\)|\s+\.\s+|\s+;|\s+,/) {|s| s.strip}
+puts results.gsub(/\(\s+|\s+\)|\s+\.\s+|\s+;|\s+,/) {|s| s.strip}.gsub(/\n(\s*\n)+/, "\n")
