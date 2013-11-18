@@ -122,6 +122,17 @@ let block_merge lines =
     | [] -> List.rev rblocks in
   merge_blocks [] lines
 
+(* Make sure every line is terminated with a semi-colon *)
+let terminate_blocks blocks =
+  let rec block_terminate rblocks = function
+    | (n, toks, false)::rest ->
+      let terminated = if (needs_semi toks) then toks@[SEMI] else toks in
+      block_terminate ((n, terminated, false)::rblocks) rest
+    | other::rest ->
+      block_terminate (other::rblocks) rest
+    | [] -> List.rev rblocks in
+  block_terminate [] blocks
+
 (* Pops the stack and adds rbraces when necessary *)
 let rec arrange n stack rtokens =
   match stack with
@@ -167,7 +178,8 @@ let convert program =
   let lines = tokens_to_lines squeezed in
   let merged = merge_lines lines in
   let blocks = block_merge merged in
-  let converted = space_to_brace blocks in
+  let terminated = terminate_blocks blocks in
+  let converted = space_to_brace terminated in
   append_eof converted
 
 (* A function to act like a lexfun *)
