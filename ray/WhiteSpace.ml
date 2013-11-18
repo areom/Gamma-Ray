@@ -39,7 +39,7 @@ let despace_brace program =
         | [] -> List.rev rtokens in
   brace_despace 0 program [] 0
 
-(* Remove empty lines -- change SPACE NEWLINE to NEWLINE *)
+(* Remove empty indentation -- SPACE followed by COLON or NEWLINE *)
 let trim_lines program =
   let rec lines_trim tokens rtokens =
     match tokens with
