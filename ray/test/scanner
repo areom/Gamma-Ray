@@ -151,11 +151,11 @@ done
 
 case "$program" in
   scanner)
-        exe="./streams"
+        exe="./tools/streams"
         old="expect-scanner"
         ;;
   parser)
-        exe="./inspect"
+        exe="./tools/inspect"
         old="expect-parser"
         ;;
   *)
