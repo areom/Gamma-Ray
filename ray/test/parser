@@ -65,8 +65,7 @@ function contains {
 function dropdirprefix {
   word="$1"
   prefix="$2"
-  prefixlen=$(( `echo "$prefix" | wc -c` + 1 ))
-  echo "$word" | cut -c $prefixlen-
+  echo "$word" | cut -c $(( ${#prefix} + 1 ))-
 }
 
 function testit {
