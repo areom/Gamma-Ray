@@ -47,7 +47,7 @@ function execerror {
 }
 
 function dots {
-  len=`echo "$current" | wc -c`
+  local len=`echo "$current" | wc -c`
   for i in `seq $len $maxlength` ; do
     echo -n '.'
   done
@@ -63,13 +63,11 @@ function contains {
 }
 
 function dropdirprefix {
-  word="$1"
-  prefix="$2"
-  echo "$word" | cut -c $(( ${#prefix} + 1 ))-
+  echo "$1" | cut -c $(( ${#2} + 1 ))-
 }
 
 function testit {
-  testing="${bold}Testing:${normal} ${uline}${current}${normal}"
+  local testing="${bold}Testing:${normal} ${uline}${current}${normal}"
   test "$oneline" -eq 0 && echo "$testing"
   test "$oneline" -ne 0 && echo -n "$testing"
   test "$oneline" -ne 0 && dots
