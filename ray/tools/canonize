@@ -9,4 +9,4 @@ IO.popen("#{dir}/canonical", "r+") {|unscan|
   results = unscan.read
 }
 
-puts results.gsub(/\(\s+|\s+\)|\s+\.\s+|\s+;|\s+,/) {|s| s.strip}.gsub(/\n(\s*\n)+/, "\n")
+puts results.gsub(/\(\s+|\s+\)|\s+\.\s+|\s+;|\s+,/) {|s| s.strip}.gsub(/\n(\s*\n)+/, "\n").gsub(/\w\s+\(/) {|str| str.gsub(/\s+/, "")}
