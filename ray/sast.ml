@@ -7,14 +7,26 @@ let getopt value def =
 		None -> def
 		| Some str -> str
 
-let cnameMap = 
-    let classtree cnameMap cdef = 
+let base2subMap = 
+    let buildBase2Sub base2subMap cdef = 
 	let myparent = getopt cdef.parent "None"
 	in
-   	if StringMap.mem myparent cnameMap then
-		let cur = StringMap.find myparent cnameMap 
-		in StringMap.add myparent (cdef.klass::cur) cnameMap
+   	if StringMap.mem myparent base2subMap then
+		let cur = StringMap.find myparent base2subMap 
+		in StringMap.add myparent (cdef.klass::cur) base2subMap
    	else 
-        	StringMap.add myparent [cdef.klass] cnameMap
+        	StringMap.add myparent [cdef.klass] base2subMap
 
-   in List.fold_left classtree StringMap.empty program;;
+   in List.fold_left buildBase2Sub StringMap.empty program;;
+
+
+let s2bmap = 
+	let subtobase s2bmap cdef = 
+		if StringMap.mem cdef.klass s2bmap then
+		         (*how to raise exception*)
+			s2bmap	
+		else
+			StringMap.add cdef.klass cdef.parent s2bmap
+	in	
+	List.fold_left subtobase StringMap.empty program;;
+
