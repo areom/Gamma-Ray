@@ -64,7 +64,6 @@ function contains {
 }
 
 function dropdirprefix {
-  echo "dropdirprefix $1 $2" >&2
   echo "$1" | cut -c $(( ${#2} + $dropadj ))-
 }
 
