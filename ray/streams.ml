@@ -1,6 +1,11 @@
 let debug_print tokens =
-  let ptoken = Inspector.pprint_token_list in
-  let plines = Inspector.pprint_token_lines in begin
+  let ptoken header tokens =
+    Inspector.pprint_token_list header tokens;
+    print_newline () in
+  let plines header lines =
+    Inspector.pprint_token_lines header lines;
+    print_newline () in
+  begin
     ptoken "Input:      " tokens;
     let tokens = WhiteSpace.drop_eof tokens in
     ptoken "No EOF      " tokens;
