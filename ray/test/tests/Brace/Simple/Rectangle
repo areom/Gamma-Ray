@@ -1,0 +1,18 @@
+class Rectangle extends Shape {
+  public {
+    init(Int width, Int height) {
+      this.width := width;
+      this.height := height;
+    }
+    Int area() {
+      return width * height;
+    }
+    Int perimeter() {
+      return 2 * (width + height);
+    }
+  }
+  protected {
+    Int width;
+    Int height;
+  }
+}
