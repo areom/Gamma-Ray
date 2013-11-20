@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+dir=File.expand_path(File.dirname(__FILE__))
+
+results = nil
+IO.popen("#{dir}/canonical", "r+") {|unscan|
+  unscan.write($stdin.read)
+  unscan.close_write
+  results = unscan.read
+}
+
+puts results.gsub(/\(\s+|\s+\)|\s+\.\s+|\s+;|\s+,/) {|s| s.strip}.gsub(/\n(\s*\n)+/, "\n").gsub(/\w\s+\(/) {|str| str.gsub(/\s+/, "")}

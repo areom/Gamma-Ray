@@ -26,6 +26,7 @@ files=()
 folders=()
 temp=()
 errored=0
+dropadj=1
 
 # Formatting values
 bold=`tput bold`
@@ -47,7 +48,7 @@ function execerror {
 }
 
 function dots {
-  len=`echo "$current" | wc -c`
+  local len=`echo "$current" | wc -c`
   for i in `seq $len $maxlength` ; do
     echo -n '.'
   done
@@ -63,13 +64,17 @@ function contains {
 }
 
 function dropdirprefix {
-  word="$1"
-  prefix="$2"
-  echo "$word" | cut -c $(( ${#prefix} + 1 ))-
+  echo "$1" | cut -c $(( ${#2} + $dropadj ))-
+}
+
+function setdropadj {
+  local result=$( dropdirprefix "/dev/null" "/dev/" )
+  local null="null"
+  dropadj=$(( dropadj + (${#null} - ${#result}) ))
 }
 
 function testit {
-  testing="${bold}Testing:${normal} ${uline}${current}${normal}"
+  local testing="${bold}Testing:${normal} ${uline}${current}${normal}"
   test "$oneline" -eq 0 && echo "$testing"
   test "$oneline" -ne 0 && echo -n "$testing"
   test "$oneline" -ne 0 && dots
@@ -141,6 +146,8 @@ USAGE
   exit 0
 }
 
+setdropadj
+
 script="${scripts[0]}"
 for ascript in "${scripts[@]}" ; do
   scriptfile=$( dropdirprefix "$script" "$scriptdir" )
@@ -192,13 +199,13 @@ for afolder in "${folders[@]}" ; do
   test -d "$testdir/$afolder" || errWith "$afolder is not a directory ($testdir)"
 done
 
-for afile in $( find "$testdir/${folders[0]}/" -type f -name "$pattern" ) ; do
+for afile in $( find "$testdir/${folders[0]}" -type f -name "$pattern" ) ; do
   test "README" = $( basename "$afile" ) || files+=( $( dropdirprefix "$afile" "$testdir/${folders[0]}/" ) )
 done
 
 for afolder in "${folders[@]}" ; do
   temp=()
-  for afile in $( find "$testdir/$afolder/" -type f -name "$pattern" ) ; do
+  for afile in $( find "$testdir/$afolder" -type f -name "$pattern" ) ; do
     test "README" = $( basename "$afile" ) || temp+=( $( dropdirprefix "$afile" "$testdir/$afolder/" ) )
   done
 
