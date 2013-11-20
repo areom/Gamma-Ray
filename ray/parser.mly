@@ -48,7 +48,7 @@ cdecl:
         parent    = $3;
         sections  = $4  } }
 extend_opt:
-  | /* default */  { None }
+  | /* default */  { Some("Object") }
   | EXTEND TYPE    { Some($2) }
 
 /* Class sections */
