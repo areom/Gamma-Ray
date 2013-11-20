@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
+dir=File.expand_path(File.dirname(__FILE__))
+
 results = nil
-IO.popen("./tools/canonical", "r+") {|unscan|
+IO.popen("#{dir}/canonical", "r+") {|unscan|
   unscan.write($stdin.read)
   unscan.close_write
   results = unscan.read
