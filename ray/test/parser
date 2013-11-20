@@ -26,6 +26,7 @@ files=()
 folders=()
 temp=()
 errored=0
+dropadj=1
 
 # Formatting values
 bold=`tput bold`
@@ -63,7 +64,14 @@ function contains {
 }
 
 function dropdirprefix {
-  echo "$1" | cut -c $(( ${#2} + 1 ))-
+  echo "dropdirprefix $1 $2" >&2
+  echo "$1" | cut -c $(( ${#2} + $dropadj ))-
+}
+
+function setdropadj {
+  local result=$( dropdirprefix "/dev/null" "/dev/" )
+  local null="null"
+  dropadj=$(( dropadj + (${#null} - ${#result}) ))
 }
 
 function testit {
@@ -139,6 +147,8 @@ USAGE
   exit 0
 }
 
+setdropadj
+
 script="${scripts[0]}"
 for ascript in "${scripts[@]}" ; do
   scriptfile=$( dropdirprefix "$script" "$scriptdir" )
@@ -190,13 +200,13 @@ for afolder in "${folders[@]}" ; do
   test -d "$testdir/$afolder" || errWith "$afolder is not a directory ($testdir)"
 done
 
-for afile in $( find "$testdir/${folders[0]}/" -type f -name "$pattern" ) ; do
+for afile in $( find "$testdir/${folders[0]}" -type f -name "$pattern" ) ; do
   test "README" = $( basename "$afile" ) || files+=( $( dropdirprefix "$afile" "$testdir/${folders[0]}/" ) )
 done
 
 for afolder in "${folders[@]}" ; do
   temp=()
-  for afile in $( find "$testdir/$afolder/" -type f -name "$pattern" ) ; do
+  for afile in $( find "$testdir/$afolder" -type f -name "$pattern" ) ; do
     test "README" = $( basename "$afile" ) || temp+=( $( dropdirprefix "$afile" "$testdir/$afolder/" ) )
   done
 
