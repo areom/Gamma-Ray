@@ -29,7 +29,7 @@ scanner.ml
 Gamma-LRM.pdf
 inspect
 streams
-unscan
+canonical
 parser.output
 expect-parser
 expect-scanner
