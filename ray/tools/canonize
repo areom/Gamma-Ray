@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 results = nil
-IO.popen("./tools/unscan", "r+") {|unscan|
+IO.popen("./tools/canonical", "r+") {|unscan|
   unscan.write($stdin.read)
   unscan.close_write
   results = unscan.read
