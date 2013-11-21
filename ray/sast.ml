@@ -8,8 +8,12 @@ let getopt value def =
 		| Some str -> str
 
 let base2subMap = 
+
     let buildBase2Sub base2subMap cdef = 
-	let myparent = getopt cdef.parent "None"
+
+	let base2subMap = StringMap.add cdef.klass [] base2subMap 
+	in
+	let myparent = getopt cdef.parent "Object"
 	in
    	if StringMap.mem myparent base2subMap then
 		let cur = StringMap.find myparent base2subMap 
@@ -29,4 +33,10 @@ let s2bmap =
 			StringMap.add cdef.klass cdef.parent s2bmap
 	in	
 	List.fold_left subtobase StringMap.empty program;;
+
+
+let rec getclassdef cname clist = 
+	match clist with
+	[] -> None
+	| hd::tl -> if hd.klass = cname then Some(hd) else getclassdef cname tl;;
 
