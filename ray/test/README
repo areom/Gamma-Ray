@@ -6,5 +6,6 @@ test types:
 in each type there are test folders:
   * Empty   -- structurally empty tests
   * Trivial -- just above empty, should do something... trivial
+  * Simple  -- some basic programs, more than just trivial
 
 each test type requires the same tests. at the end, the outputs are compared

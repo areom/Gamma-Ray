@@ -73,6 +73,12 @@ function setdropadj {
   dropadj=$(( dropadj + (${#null} - ${#result}) ))
 }
 
+function show_standard {
+  echo "${red}Standard -- START${normal}"
+  cat "$results"
+  echo "${red}Stadard -- END${normal}"
+}
+
 function testit {
   local testing="${bold}Testing:${normal} ${uline}${current}${normal}"
   test "$oneline" -eq 0 && echo "$testing"
@@ -100,11 +106,7 @@ function testit {
       echo "${bold}${green}PASS${normal}"
     else
       echo "${bold}${red}MISMATCH${normal}"
-      if [ -n $verbose ] ; then
-        echo "${red}Standard -- START${normal}"
-        cat "$results"
-        echo "${red}Stadard -- END${normal}"
-      fi
+      test -n "$verbose" && show_standard
     fi
   fi
 
