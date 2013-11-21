@@ -19,7 +19,7 @@ let lstoffour (_,_,_,x) = x;;
 
 let klass_to_parent = function
   | { parent = None; _ } -> "Object"
-  | { parent = Some(klass); _ } -> klass
+  | { parent = Some(aklass); _ } -> aklass
 
 let build_children_map klasses =
   let map_builder map aklass =
@@ -48,66 +48,35 @@ let build_parent_map klasses =
   List.fold_left map_builder StringMap.empty klasses
 
 
-(*given class name and class_def list, get the matching class_def*)
+(* Build class name -> class def map *)
 
-let rec getclassdef cname clist = 
-	match clist with
-	[] -> None
-	| hd::tl -> if hd.klass = cname then Some(hd) else getclassdef cname tl;;
+let build_class_map klasses =
+  let map_builder map aklass = StringMap.add (aklass.klass) aklass map in
+  List.fold_left map_builder StringMap.empty klasses
 
+(* For a given class, build a map of variable names to variable information
+ *   var name -> (access mode, type)
+ *)
+let klass_to_sections aklass =
+  let s = aklass.sections in [(Public, s.publics), (Protected, s.protects), (Private, s.privates)]
 
+let build_var_map aklass =
+  let add_var access map = function
+    | VarDef((typeId, varId)) -> StringMap.add varId (access, typeId) map
+    | _ -> map in
+  let map_builder (access, section) map = List.fold_left (add_var access) map section in
+  List.fold_left map_builder StringMap.empty (klass_to_sections aklass)
 
+(* Build up a map from class to variable map (i.e. to the above)
+ *   class name -> (var name -> (access mode, type)) map
+ *)
+let build_class_var_map klasses =
+  let map_builder map aklass = StringMap.add (aklass.klass) (build_var_map aklass) map in
+  List.fold_left map_builder StringMap.empty klasses
 
-
-(*Given a class definition and variable name, the lookupfield
-looksup for the field in the privates, publics and protects list of the class_def sections.
-If found returns a (classname, accessspecifier, typeid, variablename) tuple
-If not found returns a None*)
-let lookupfield cdef vname = 
-    let pmem = getmemdef vname cdef.sections.privates 
-    in
-    match pmem with 
-	Some def -> Some(cdef.klass, "private", vname, def)
-     |  None     -> 
-		let pubmem = getmemdef vname cdef.sections.publics
-		in
-		match pubmem with 
-			Some def -> Some(cdef.klass, "public", vname, def)
-		     |  None     ->  
-				let promem = getmemdef vname cdef.sections.protects 
-				in
-				match promem with 
-					Some def -> Some(cdef.klass, "protect", vname, def)
-				   |    None  -> None
-;;
-
-(*getfield takes classname and variablename;
-  looks for the class with the classname;
-  If classname found, looksup the variable in the class;
-  Else returns None
-*)
-
-let rec getfield cname vname cdeflist =
-	let classdef = getclassdef cname cdeflist
-	in
-	match classdef with 
-             None -> 
-		if cname = "Object" then
-			None
-		else
-			let basename = match(StringMap.find cname s2bmap) with Some b -> b | None -> "Object"
-			in 
-			getfield basename vname cdeflist
-	|    Some (cdef) -> lookupfield cdef vname;;
-
-(*
-USAGE:
-let field = getfield "myname" "e" class_def_list
-in 
-match field with
-None -> print_string "field not found\n";
-| Some tup -> print_string (fstoffour(tup));;
-
-*)
-
-	
+(* Given a class -> var map table as above, do a lookup -- returns option *)
+let class_var_lookup map klassName varName =
+  if StringMap.mem klassName map then
+    let varTable = StringMap.find klassName map in
+    if StringMap.mem varName varTable then Some(StringMap.find varName varTable) else None
+  else None
