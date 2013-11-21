@@ -1,46 +1,7 @@
 open Parser
 open Ast
 
-(* TOKEN stuff *)
-let token_to_string = Inspector.token_to_string
-
-let descan = Inspector.descan 
-
-let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
-  let rec list_tokens rtokens =
-    match (lexfun lexbuf) with
-      | EOF -> List.rev (EOF::rtokens)
-      | tk -> list_tokens (tk::rtokens) in
-  list_tokens []
-let from_channel source = token_list Scanner.token (Lexing.from_channel source)
-
-let rec print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
-
-let print_token_line = function
-  | (space, toks, colon) ->
-    print_string ("(" ^ string_of_int space ^ "," ^ string_of_bool colon ^ ") ");
-    print_token_list toks
-
-let pprint_token_list header toks = print_string header ; print_token_list toks ; print_newline ()
-let pprint_token_lines header lines =
-  let spaces = String.make (String.length header) ' ' in
-  let rec lines_printer prefix = function
-    | line::rest ->
-      print_string prefix;
-      print_token_line line;
-      print_newline ();
-      lines_printer spaces rest
-    | [] -> () in
-  lines_printer header lines
-
-
-(* AST Parser Stuff *)
-let indent level = let space = String.create(level * 2) in
-	for i = 0 to level - 1 do
-		String.blit "  " 0 space (i * 2) 2;
-	done;
-	space
-
+let indent level = String.make (level * 2) ' '
 let _id x = x
 
 let pp_lit = function
@@ -110,46 +71,46 @@ and pp_stmt depth = function
   | Super(args) -> Printf.sprintf "\n%sSuper(%s)" (indent depth) (pp_str_list (pp_expr depth) args depth)
 and inspect_clause depth (opt_expr, body) = Printf.sprintf "(%s, %s)" (pp_opt (pp_expr depth) opt_expr) (pp_str_list (pp_stmt (depth+1)) body depth)
 and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s\n%s}"
-	(indent (depth-1))
-	(indent depth)
+  (indent (depth-1))
+  (indent depth)
   (pp_opt _id func.returns)
-	(indent depth)
+  (indent depth)
   (pp_opt _id func.host)
-	(indent depth)
+  (indent depth)
   func.name
-	(indent depth)
+  (indent depth)
   func.static
-	(indent depth)
+  (indent depth)
   (pp_str_list (pp_var_def (depth+1)) func.formals depth)
-	(indent depth)
+  (indent depth)
   (pp_str_list (pp_stmt (depth+1)) func.body depth)
-	(indent (depth-1))
+  (indent (depth-1))
 
 let pp_member_def depth = function
-  | VarMem(vmem) -> Printf.sprintf "\n%sVarMem(%s)" (indent depth) (pp_var_def (depth+1) vmem) 
-  | MethodMem(mmem) -> Printf.sprintf "\n%sMethodMem(%s)" (indent depth) (pp_func_def (depth+1) mmem)  
-  | InitMem(imem) -> Printf.sprintf "\n%sInitMem(%s)" (indent depth) (pp_func_def (depth+1) imem) 
+  | VarMem(vmem) -> Printf.sprintf "\n%sVarMem(%s)" (indent depth) (pp_var_def (depth+1) vmem)
+  | MethodMem(mmem) -> Printf.sprintf "\n%sMethodMem(%s)" (indent depth) (pp_func_def (depth+1) mmem)
+  | InitMem(imem) -> Printf.sprintf "\n%sInitMem(%s)" (indent depth) (pp_func_def (depth+1) imem)
 
-let pp_class_sections sections depth = 
-	Printf.sprintf "\n%s{\n%sprivates = %s,\n%sprotects = %s,\n%spublics = %s,\n%srefines = %s,\n%smains = %s\n%s}"
-	(indent (depth-1))
-	(indent depth)
+let pp_class_sections sections depth =
+  Printf.sprintf "\n%s{\n%sprivates = %s,\n%sprotects = %s,\n%spublics = %s,\n%srefines = %s,\n%smains = %s\n%s}"
+  (indent (depth-1))
+  (indent depth)
   (pp_str_list (pp_member_def (depth+1)) sections.privates depth)
-	(indent depth)
+  (indent depth)
   (pp_str_list (pp_member_def (depth+1)) sections.protects depth)
-	(indent depth)
+  (indent depth)
   (pp_str_list (pp_member_def (depth+1)) sections.publics depth)
-	(indent depth)
-  (pp_str_list (pp_func_def (depth+1)) sections.refines depth) 
-	(indent depth)
+  (indent depth)
+  (pp_str_list (pp_func_def (depth+1)) sections.refines depth)
+  (indent depth)
   (pp_str_list (pp_func_def (depth+1)) sections.mains depth)
-	(indent (depth-1))
+  (indent (depth-1))
 
-let pp_class_def the_klass = 
-	Printf.sprintf "\n{\n%sklass = %s,\n%sparent = %s,\n%ssections = %s\n}"
-	(indent 1)
-	the_klass.klass
+let pp_class_def the_klass =
+  Printf.sprintf "\n{\n%sklass = %s,\n%sparent = %s,\n%ssections = %s\n}"
   (indent 1)
-	(pp_opt _id the_klass.parent)
-	(indent 1)
-	(pp_class_sections the_klass.sections 2)
+  the_klass.klass
+  (indent 1)
+  (pp_opt _id the_klass.parent)
+  (indent 1)
+  (pp_class_sections the_klass.sections 2)
