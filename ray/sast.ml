@@ -97,16 +97,22 @@ let lookupfield cdef vname =
   Else returns None
 *)
 
-let getfield cname vname =
-	let classdef = getclassdef cname [d1;d2;d3;d4]
+let rec getfield cname vname cdeflist =
+	let classdef = getclassdef cname cdeflist
 	in
 	match classdef with 
-             None -> None
+             None -> 
+		if cname = "Object" then
+			None
+		else
+			let basename = match(StringMap.find cname s2bmap) with Some b -> b | None -> "Object"
+			in 
+			getfield basename vname cdeflist
 	|    Some (cdef) -> lookupfield cdef vname;;
 
 (*
 USAGE:
-let field = getfield "myname" "e"
+let field = getfield "myname" "e" class_def_list
 in 
 match field with
 None -> print_string "field not found\n";
