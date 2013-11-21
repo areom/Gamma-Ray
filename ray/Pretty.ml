@@ -2,145 +2,9 @@ open Parser
 open Ast
 
 (* TOKEN stuff *)
-let token_to_string = function
-  | SPACE(n) -> "SPACE(" ^ string_of_int n ^ ")"
-  | COLON -> "COLON"
-  | NEWLINE -> "NEWLINE"
-  | THIS -> "THIS"
-  | ARRAY -> "ARRAY"
-  | REFINABLE -> "REFINABLE"
-  | AND -> "AND"
-  | OR -> "OR"
-  | XOR -> "XOR"
-  | NAND -> "NAND"
-  | NOR -> "NOR"
-  | NOT -> "NOT"
-  | TRUE -> "TRUE"
-  | FALSE -> "FALSE"
-  | EQ -> "EQ"
-  | NEQ -> "NEQ"
-  | LT -> "LT"
-  | LEQ -> "LEQ"
-  | GT -> "GT"
-  | GEQ -> "GEQ"
-  | LBRACKET -> "LBRACKET"
-  | RBRACKET -> "RBRACKET"
-  | LPAREN -> "LPAREN"
-  | RPAREN -> "RPAREN"
-  | LBRACE -> "LBRACE"
-  | RBRACE -> "RBRACE"
-  | SEMI -> "SEMI"
-  | COMMA -> "COMMA"
-  | PLUS -> "PLUS"
-  | MINUS -> "MINUS"
-  | TIMES -> "TIMES"
-  | DIVIDE -> "DIVIDE"
-  | MOD -> "MOD"
-  | POWER -> "POWER"
-  | PLUSA -> "PLUSA"
-  | MINUSA -> "MINUSA"
-  | TIMESA -> "TIMESA"
-  | DIVIDEA -> "DIVIDEA"
-  | MODA -> "MODA"
-  | POWERA -> "POWERA"
-  | IF -> "IF"
-  | ELSE -> "ELSE"
-  | ELSIF -> "ELSIF"
-  | WHILE -> "WHILE"
-  | RETURN -> "RETURN"
-  | CLASS -> "CLASS"
-  | EXTEND -> "EXTEND"
-  | SUPER -> "SUPER"
-  | INIT -> "INIT"
-  | NULL -> "NULL"
-  | VOID -> "VOID"
-  | REFINE -> "REFINE"
-  | REFINES -> "REFINES"
-  | TO -> "TO"
-  | PRIVATE -> "PRIVATE"
-  | PUBLIC -> "PUBLIC"
-  | PROTECTED -> "PROTECTED"
-  | DOT -> "DOT"
-  | MAIN -> "MAIN"
-  | NEW -> "NEW"
-  | ASSIGN -> "ASSIGN"
-  | ID(vid) -> Printf.sprintf "ID(%s)" vid
-  | TYPE(tid) -> Printf.sprintf "TYPE(%s)" tid
-  | BLIT(bool) -> Printf.sprintf "BLIT(%B)" bool
-  | ILIT(inum) -> Printf.sprintf "ILIT(%d)" inum
-  | FLIT(fnum) -> Printf.sprintf "FLIT(%f)" fnum
-  | SLIT(str) -> Printf.sprintf "SLIT(%s)" (String.escaped str)
-  | EOF -> "EOF"
+let token_to_string = Inspector.token_to_string
 
-let descan = function
-  | COLON -> ":"
-  | NEWLINE -> "\n"
-  | SPACE(n) -> String.make n ' '
-  | REFINABLE -> "refinable"
-  | AND -> "and"
-  | OR -> "or"
-  | XOR -> "xor"
-  | NAND -> "nand"
-  | NOR -> "nor"
-  | NOT -> "not"
-  | TRUE -> "true"
-  | FALSE -> "false"
-  | EQ -> "="
-  | NEQ -> "=/="
-  | LT -> "<"
-  | LEQ -> "<="
-  | GT -> ">"
-  | GEQ -> ">="
-  | ARRAY -> "[]"
-  | LBRACKET -> "["
-  | RBRACKET -> "]"
-  | LPAREN -> "("
-  | RPAREN -> ")"
-  | LBRACE -> "{"
-  | RBRACE -> "}"
-  | SEMI -> ";"
-  | COMMA -> ","
-  | PLUS -> "+"
-  | MINUS -> "-"
-  | TIMES -> "*"
-  | DIVIDE -> "/"
-  | MOD -> "%"
-  | POWER -> "^"
-  | PLUSA -> "+="
-  | MINUSA -> "-="
-  | TIMESA -> "*="
-  | DIVIDEA -> "/="
-  | MODA -> "%="
-  | POWERA -> "^="
-  | IF -> "if"
-  | ELSE -> "else"
-  | ELSIF -> "elsif"
-  | WHILE -> "while"
-  | RETURN -> "return"
-  | CLASS -> "class"
-  | EXTEND -> "extends"
-  | SUPER -> "super"
-  | INIT -> "init"
-  | NULL -> "null"
-  | VOID -> "void"
-  | THIS -> "this"
-  | REFINE -> "refine"
-  | REFINES -> "refinement"
-  | TO -> "to"
-  | PRIVATE -> "private"
-  | PUBLIC -> "public"
-  | PROTECTED -> "protected"
-  | DOT -> "."
-  | MAIN -> "main"
-  | NEW -> "new"
-  | ASSIGN -> ":="
-  | ID(var) -> var
-  | TYPE(typ) -> typ
-  | BLIT(b) -> if b then "true" else "false"
-  | ILIT(i) -> string_of_int(i)
-  | FLIT(f) -> string_of_float(f)
-  | SLIT(s) -> s
-  | EOF -> "eof"
+let descan = Inspector.descan 
 
 let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
   let rec list_tokens rtokens =
@@ -233,7 +97,7 @@ let rec pp_expr depth = function
   | Deref(var, index) -> Printf.sprintf "\n%sDeref(%s, %s)" (indent depth) ((pp_expr depth) var) ((pp_expr depth) var)
   | Unop(an_op, exp) -> Printf.sprintf "\n%sUnop(%s,%s)" (indent depth) (pp_op an_op) ((pp_expr depth) exp)
   | Binop(left, an_op, right) -> Printf.sprintf "\n%sBinop(%s,%s,%s)" (indent depth) (pp_op an_op) ((pp_expr depth) left) ((pp_expr depth) right)
-  | Refine(fname, args, totype) -> Printf.sprintf "\n%sRefine(%s,%s,%s)" (indent depth) fname (pp_str_list (pp_expr depth) args depth) totype
+  | Refine(fname, args, totype) -> Printf.sprintf "\n%sRefine(%s,%s,%s)" (indent depth) fname (pp_str_list (pp_expr depth) args depth) (pp_opt _id  totype)
   | Assign(the_var, the_expr) -> Printf.sprintf "\n%sAssign(%s,%s)" (indent depth) ((pp_expr (depth+1)) the_var) ((pp_expr (depth+1)) the_expr)
   | Refinable(the_var) -> Printf.sprintf "\n%sRefinable(%s)" (indent depth) the_var
 and pp_var_def depth (the_type, the_var) = Printf.sprintf "\n%s(%s, %s)" (indent depth) the_type the_var
