@@ -30,6 +30,7 @@ Gamma-LRM.pdf
 inspect
 streams
 canonical
+prettify
 parser.output
 expect-parser
 expect-scanner
