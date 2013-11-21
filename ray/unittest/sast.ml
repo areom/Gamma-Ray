@@ -48,9 +48,9 @@ let sdef4 = {
  publics = [VarMem("int","v"); VarMem("int","u");];
 };;
 let d1 = { klass = "myname"; parent = Some("Object"); sections = sdef1 };;
-let d3 = { klass = "myname2"; parent = Some("Object1");  sections = sdef3; };;
-let d4 = { klass = "myname3"; parent = Some("Object2");  sections = sdef4; };;
-let d2 = { klass = "myname1"; parent = Some("Object"); sections = sdef2; };;
+let d3 = { klass = "myname2"; parent = Some("myname1");  sections = sdef3; };;
+let d4 = { klass = "myname3"; parent = Some("myname2");  sections = sdef4; };;
+let d2 = { klass = "myname1"; parent = Some("myname"); sections = sdef2; };;
 (*
 let myfunc cnameMap cdef = 
    	if StringMap.mem cdef.parent cnameMap then
@@ -171,14 +171,20 @@ let sndoffour (_,x,_,_) = x;;
 let throffour (_,_,x,_) = x;;
 let lstoffour (_,_,_,x) = x;;
 
-let getfield cname vname =
-	let classdef = getclassdef cname [d1;d2;d3;d4]
+let rec getfield cname vname cdeflist =
+	let classdef = getclassdef cname cdeflist
 	in
 	match classdef with 
-             None -> None
+             None -> 
+		if cname = "Object" then
+			None
+		else
+			let basename = match(StringMap.find cname s2bmap) with Some b -> b | None -> "Object"
+			in 
+			getfield basename vname cdeflist
 	|    Some (cdef) -> lookupfield cdef vname;;
 
-let field = getfield "myname" "e"
+let field = getfield "myname3" "a" [d1;d2;d3;d4]
 in 
 match field with
 None -> print_string "field not found\n";
