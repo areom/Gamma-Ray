@@ -7,6 +7,7 @@ exe=
 old=
 
 # Arguments
+justrun=
 save=
 verbose=
 pattern=*
@@ -86,6 +87,10 @@ function testit {
   test "$oneline" -ne 0 && echo -n "$testing"
   test "$oneline" -ne 0 && dots
   test -n "$verbose" && cat "$1"
+  if [ -n "$justrun" ] ; then
+    cat "$1" | "$exe"
+    return 0
+  fi
   cat "$1" | "$exe" 1> "$tmpfile" 2> "$tmperr"
   if [ $? -ne 0 ] ; then
     execerror "Error testing $program with $current"
@@ -143,6 +148,9 @@ $program -[chlpsv]
   -p pattern
      Filter tests to be used based on pattern (as in find -name)
 
+  -R
+     merely run the driving exe and output the result to stdout (no checking anything)
+
   -s
      save results
 
@@ -175,11 +183,12 @@ case "$program" in
         ;;
 esac
 
-while getopts "cf:hlsvp:" OPTION ; do
+while getopts "cf:hlRsvp:" OPTION ; do
   case "$OPTION" in
     c) exit 0 ;;
     f) folderpattern=$OPTARG ;;
     h) usage ;;
+    R) justrun=1 ;;
     s) save=1 ;;
     v) verbose=1 ;;
     p) pattern=$OPTARG ;;
@@ -242,6 +251,7 @@ for afolder in "${folders[@]}" ; do
 done
 
 test $errored -eq 1 && exit 1
+test -n "$justrun" && exit 0
 
 # Ensure that all the results are the same.
 for current in "${files[@]}" ; do
