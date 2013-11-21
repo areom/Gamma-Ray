@@ -214,7 +214,8 @@ instantiate:
   | NEW vartype actuals LBRACE refinements RBRACE  { Anonymous($2, $3, $5) }
 
 refineexpr:
-  | REFINE ID actuals TO vartype  { Refine($2, $3, $5) }
+  | REFINE ID actuals TO vartype  { Refine($2, $3, Some($5)) }
+  | REFINE ID actuals TO VOID     { Refine($2, $3, None) }
 
 literal:
   | lit  { Literal($1) }
