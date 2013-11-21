@@ -2,60 +2,50 @@ open Ast
 
 module StringMap = Map.Make (String);;
 
-let getopt value def = 
-		match value with
-		None -> def
-		| Some str -> str
-
-
 let fstoffour (x,_,_,_) = x;;
 let sndoffour (_,x,_,_) = x;;
 let throffour (_,_,x,_) = x;;
 let lstoffour (_,_,_,x) = x;;
 
 
-(* base2subMap is a map of classname to subclassnames
-   Add classname as key with empty list;
-   Add classname to parent's list;
+(* build_children_map
+   make a map of classname to direct subclassnames
  
-   key = classname      val = list of subclassnames
+   key = classname val = list of subclassnames
    "SuperClass" -> ["A";"B";]
     "A" -> []
     "B" -> []
 *)
-let base2subMap = 
 
-    let buildBase2Sub base2subMap cdef = 
+let klass_to_parent = function
+  | { parent = None; _ } -> "Object"
+  | { parent = Some(klass); _ } -> klass
 
-	let base2subMap = StringMap.add cdef.klass [] base2subMap 
-	in
-	let myparent = getopt cdef.parent "Object"
-	in
-   	if StringMap.mem myparent base2subMap then
-		let cur = StringMap.find myparent base2subMap 
-		in StringMap.add myparent (cdef.klass::cur) base2subMap
-   	else 
-        	StringMap.add myparent [cdef.klass] base2subMap
+let build_children_map klasses =
+  let map_builder map aklass =
+    let parent = klass_to_parent aklass in
+    let child  = aklass.klass in
+    if StringMap.mem parent map then
+      let children = StringMap.find parent map in
+      StringMap.add parent (child::children) map
+    else
+      StringMap.add parent [child] map in
+  List.fold_left map_builder StringMap.empty klasses
 
-   in List.fold_left buildBase2Sub StringMap.empty program;;
 
-
-(* s2bMap is a map of class names to immediate parent
-   by default all classes extend Object class - Ast
-   has this already set it so we simply create a mapping.
+(* build_parent_map
+   make a map of subclasses to superclasses
    
    key = class      val = parent
    A -> Object
 *)
-let s2bmap = 
-	let subtobase s2bmap cdef = 
-		if StringMap.mem cdef.klass s2bmap then
-		         (*how to raise exception*)
-			s2bmap	
-		else
-			StringMap.add cdef.klass cdef.parent s2bmap
-	in	
-	List.fold_left subtobase StringMap.empty program;;
+
+let build_parent_map klasses =
+  let map_builder map aklass =
+    let parent = klass_to_parent aklass in
+    let child  = aklass.klass in
+    StringMap.add parent child map in
+  List.fold_left map_builder StringMap.empty klasses
 
 
 (*given class name and class_def list, get the matching class_def*)
