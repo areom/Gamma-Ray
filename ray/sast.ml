@@ -1,8 +1,8 @@
 open Ast
-module StringMap = Map.Make (String);;
+module StringMap = Map.Make (String)
 
 (* Types *)
-type AccessMode = Public | Protected | Private
+type access_mode = Public | Protected | Private
 type ('a, 'b) either = Left of 'a | Right of 'b
 
 (* Updating a string map that has list of possible values *)
@@ -20,13 +20,13 @@ let klass_to_parent = function
   | { parent = Some(aklass); _ } -> aklass
 
 let klass_to_sections aklass =
-  let s = aklass.sections in [(Public, s.publics), (Protected, s.protects), (Private, s.privates)]
+  let s = aklass.sections in [(Public, s.publics); (Protected, s.protects); (Private, s.privates)]
 
 (* make a map children map
  *   parent (name -- string) -> children (names -- string) list
  *)
 let build_children_map klasses =
-  let map_builder map aklass = add_map_list (klass_to_parent aklass) (aklass.klass) map
+  let map_builder map aklass = add_map_list (klass_to_parent aklass) (aklass.klass) map in
   List.fold_left map_builder StringMap.empty klasses
 
 (* make a map of subclasses to superclasses
@@ -51,9 +51,9 @@ let build_class_map klasses =
  *)
 let build_var_map aklass =
   let add_var access map = function
-    | VarDef((typeId, varId)) -> add_map_unique varId (access, typeId) map
+    | VarMem((typeId, varId)) -> add_map_unique varId (access, typeId) map
     | _ -> map in
-  let map_builder (access, section) map = List.fold_left (add_var access) map section in
+  let map_builder map (access, section) = List.fold_left (add_var access) map section in
   let built = List.fold_left map_builder (StringMap.empty, []) (klass_to_sections aklass) in
   match built with
     | (map, []) -> Left(map)
@@ -67,8 +67,8 @@ let build_var_map aklass =
 let build_class_var_map klasses =
   let map_builder (klass_map, collision_list) aklass =
     match (build_var_map aklass) with
-      | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collisions_list)
-      | Right(collisions) -> (klass_map, (aklass, collisions)::collisions_list)
+      | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
+      | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
   let built = List.fold_left map_builder (StringMap.empty, []) klasses in
   match (built) with
     | (map, []) -> Left(map)
