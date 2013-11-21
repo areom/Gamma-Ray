@@ -10,6 +10,7 @@ old=
 save=
 verbose=
 pattern=*
+folderpattern=*
 
 # Calculated values change in each iteration
 current=
@@ -130,6 +131,9 @@ $program -[chlpsv]
   -c
      Merely validate that all test scripts are identical and exit
 
+  -f pattern
+     Filter meta-folders by pattern
+
   -h
      Display this help
 
@@ -171,9 +175,10 @@ case "$program" in
         ;;
 esac
 
-while getopts "chlsvp:" OPTION ; do
+while getopts "cf:hlsvp:" OPTION ; do
   case "$OPTION" in
     c) exit 0 ;;
+    f) folderpattern=$OPTARG ;;
     h) usage ;;
     s) save=1 ;;
     v) verbose=1 ;;
@@ -192,7 +197,8 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
 test -z "$verbose" && oneline=1
 
-for adir in $( ls "$testdir" ) ; do
+for adir in $( find "$testdir" -type d -depth 1 -name "$folderpattern" ) ; do
+  adir=$( dropdirprefix "$adir" "$testdir/" )
   folders+=( "$adir" )
 done
 test "${#folders[@]}" -eq 0 && errWith "No folders in test directory. Good-bye."
