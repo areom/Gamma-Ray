@@ -22,7 +22,7 @@ type expr =
   | Invoc of expr * string * expr list (* receiver.method(args) *)
   | Unop of op * expr (* !x *)
   | Binop of expr * op * expr (* x + y *)
-  | Refine of string * expr list * string
+  | Refine of string * expr list * string option
   | Refinable of string (* refinable *)
 and var_def = string * string  (* Oh typing, you pain in the ass, add a int for array *)
 and stmt =

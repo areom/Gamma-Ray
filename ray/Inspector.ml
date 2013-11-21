@@ -15,8 +15,6 @@ let token_to_string = function
   | NAND -> "NAND"
   | NOR -> "NOR"
   | NOT -> "NOT"
-  | TRUE -> "TRUE"
-  | FALSE -> "FALSE"
   | EQ -> "EQ"
   | NEQ -> "NEQ"
   | LT -> "LT"
@@ -83,8 +81,6 @@ let descan = function
   | NAND -> "nand"
   | NOR -> "nor"
   | NOT -> "not"
-  | TRUE -> "true"
-  | FALSE -> "false"
   | EQ -> "="
   | NEQ -> "=/="
   | LT -> "<"
@@ -227,7 +223,7 @@ let rec inspect_expr = function
   | Deref(var, index) -> Printf.sprintf "Deref(%s, %s)" (inspect_expr var) (inspect_expr var)
   | Unop(an_op, exp) -> Printf.sprintf "Unop(%s, %s)" (inspect_op an_op) (inspect_expr exp)
   | Binop(left, an_op, right) -> Printf.sprintf "Binop(%s, %s, %s)" (inspect_op an_op) (inspect_expr left) (inspect_expr right)
-  | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) totype
+  | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s,%s,%s)" fname (inspect_str_list inspect_expr args) (inspect_opt _id totype)
   | Assign(the_var, the_expr) -> Printf.sprintf "Assign(%s, %s)" (inspect_expr the_var) (inspect_expr the_expr)
   | Refinable(the_var) -> Printf.sprintf "Refinable(%s)" the_var
 and inspect_var_def (the_type, the_var) = Printf.sprintf "(%s, %s)" the_type the_var
