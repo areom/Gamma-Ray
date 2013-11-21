@@ -1,6 +1,9 @@
 open Ast
 module StringMap = Map.Make (String);;
 
+(* Types *)
+type AccessMode = Public | Protected | Private
+
 (* Class inspection functions *)
 let klass_to_parent = function
   | { parent = None; _ } -> "Object"
