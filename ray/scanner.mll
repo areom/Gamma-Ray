@@ -57,8 +57,8 @@ rule token = parse
   | "nand"                     { NAND }
   | "nor"                      { NOR }
   | "not"                      { NOT }
-  | "true"                     { TRUE }
-  | "false"                    { FALSE }
+  | "true"                     { BLIT(true) }
+  | "false"                    { BLIT(false) }
   | "="                        { EQ }
   | "<>"                       { NEQ }
   | "=/="                      { NEQ }
