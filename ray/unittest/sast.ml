@@ -1,11 +1,56 @@
 module StringMap = Map.Make (String);;
 
-type class_def = { klass : string; parent : string option};;
 
-let d1 = { klass = "myname"; parent = Some("Object") };;
-let d3 = { klass = "myname2"; parent = Some("Object1") };;
-let d4 = { klass = "myname3"; parent = Some("Object2") };;
-let d2 = { klass = "myname1"; parent = Some("Object") };;
+
+type var_def = string * string;;
+type func_def = {
+  returns : string option;
+  host    : string option;
+  name    : string;
+  static  : bool;
+  formals : var_def list;
+  (*body    : stmt list;*)
+};;
+type member_def = VarMem of var_def | MethodMem of func_def | InitMem of func_def;;
+
+(* Things that can go in a class *)
+type class_sections_def = {
+  privates : member_def list;
+  protects : member_def list;
+  publics  : member_def list;
+(*  refines  : func_def list;
+  mains    : func_def list;*)
+};;
+	
+type class_def = { klass : string; parent : string option; sections : class_sections_def; };;
+
+let sdef1 = { 
+ privates = [VarMem("int","a"); VarMem("int","b");];
+ protects = [VarMem("int","c"); VarMem("int","d");];
+ publics  = [VarMem("int","e"); VarMem("int","f");];
+};;
+
+let sdef2 = { 
+ privates = [ VarMem("int","g"); VarMem("int","h");];
+ protects = [ VarMem("int","j"); VarMem("int","i");];
+ publics = [ VarMem("int","k"); VarMem("int","l");];
+};;
+
+let sdef3 = { 
+ privates = [ VarMem("int","m"); VarMem("int","n");];
+ protects = [ VarMem("int","p"); VarMem("int","o");];
+ publics = [ VarMem("int","q"); VarMem("int","r");];
+};;
+
+let sdef4 = { 
+ privates = [VarMem("int","x"); VarMem("int","s");];
+ protects = [VarMem("int","w"); VarMem("int","t");];
+ publics = [VarMem("int","v"); VarMem("int","u");];
+};;
+let d1 = { klass = "myname"; parent = Some("Object"); sections = sdef1 };;
+let d3 = { klass = "myname2"; parent = Some("Object1");  sections = sdef3; };;
+let d4 = { klass = "myname3"; parent = Some("Object2");  sections = sdef4; };;
+let d2 = { klass = "myname1"; parent = Some("Object"); sections = sdef2; };;
 (*
 let myfunc cnameMap cdef = 
    	if StringMap.mem cdef.parent cnameMap then
@@ -85,61 +130,60 @@ print_string(print_pdef def1);;
 print_string "\n\ngetmethoddef test\n";;
 
 
-type var_def = string * string;;
-type func_def = {
-  returns : string option;
-  host    : string option;
-  name    : string;
-  static  : bool;
-  formals : var_def list;
-  (*body    : stmt list;*)
-};;
-type member_def = VarMem of var_def | MethodMem of func_def | InitMem of func_def;;
-
-(* Things that can go in a class *)
-type class_sections_def = {
-  privates : member_def list;
-  protects : member_def list;
-  publics  : member_def list;
-  refines  : func_def list;
-  mains    : func_def list;
-};;
-	
-
-type methodenv = {
-
-	cname : string option; (*class it belongs to*)
-	access: string option;(*access specifier*)
-	astrec: func_def option; (*ast record*)
-
-};;
 
 let rec getmemdef mname mlist = 
 	match mlist with
 	[] -> None
-	| hd::tl -> if hd.(*hd = member_def - > we need the var_def's first*) = mname then Some(hd) else getclassdef mname tl;;
+	| hd::tl -> match hd with
+			VarMem(typeid, varname) -> if varname = mname then Some(typeid) else getmemdef mname tl
+			| _ -> None
+;;
 
-(*
+(*Given a class definition and variable name, the lookupfield
+looksup for the field in the privates, publics and protects list.
+If found returns a (classname, accessspecifier, typeid, variablename) tuple
+If not found returns a None*)
 let lookupfield cdef vname = 
-    let pmem = getmemdef vname cdef.class_sections_def.privates;
+    let pmem = getmemdef vname cdef.sections.privates 
+    in
     match pmem with 
-	Some def -> (cdef.klass, "private", def)
+	Some def -> Some(cdef.klass, "private", vname, def)
      |  None     -> 
-		let pubmem = getmemdef vname cdef.class_sections_def.publics;
+		let pubmem = getmemdef vname cdef.sections.publics
+		in
 		match pubmem with 
-			Some def -> (cdef.klass, "public", def)
+			Some def -> Some(cdef.klass, "public", vname, def)
 		     |  None     ->  
-				let promem = getmemdef vname cdef.class_sections_def.protects;
+				let promem = getmemdef vname cdef.sections.protects 
+				in
 				match promem with 
-					Some def -> (cdef.klass, "protect", def)
+					Some def -> Some(cdef.klass, "protect", vname, def)
 				   |    None  -> None
+;;
 
+(*getfield takes classname and variablename;
+  looks for the class with the classname;
+  If classname found, looksup the variable in the class;
+  Else returns None
+*)
+let fstoffour (x,_,_,_) = x;;
+let sndoffour (_,x,_,_) = x;;
+let throffour (_,_,x,_) = x;;
+let lstoffour (_,_,_,x) = x;;
 
 let getfield cname vname =
-	let classdef = getclassdef cname
+	let classdef = getclassdef cname [d1;d2;d3;d4]
+	in
 	match classdef with 
              None -> None
-	|    Some (cdef) -> lookup_field cdef.class_sections_def vname
+	|    Some (cdef) -> lookupfield cdef vname;;
+
+let field = getfield "myname" "e"
+in 
+match field with
+None -> print_string "field not found\n";
+| Some tup -> print_string (fstoffour(tup));;
 
 
-*)	
+
+	

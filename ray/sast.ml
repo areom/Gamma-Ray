@@ -7,6 +7,22 @@ let getopt value def =
 		None -> def
 		| Some str -> str
 
+
+let fstoffour (x,_,_,_) = x;;
+let sndoffour (_,x,_,_) = x;;
+let throffour (_,_,x,_) = x;;
+let lstoffour (_,_,_,x) = x;;
+
+
+(* base2subMap is a map of classname to subclassnames
+   Add classname as key with empty list;
+   Add classname to parent's list;
+ 
+   key = classname      val = list of subclassnames
+   "SuperClass" -> ["A";"B";]
+    "A" -> []
+    "B" -> []
+*)
 let base2subMap = 
 
     let buildBase2Sub base2subMap cdef = 
@@ -24,6 +40,13 @@ let base2subMap =
    in List.fold_left buildBase2Sub StringMap.empty program;;
 
 
+(* s2bMap is a map of class names to immediate parent
+   by default all classes extend Object class - Ast
+   has this already set it so we simply create a mapping.
+   
+   key = class      val = parent
+   A -> Object
+*)
 let s2bmap = 
 	let subtobase s2bmap cdef = 
 		if StringMap.mem cdef.klass s2bmap then
@@ -35,8 +58,60 @@ let s2bmap =
 	List.fold_left subtobase StringMap.empty program;;
 
 
+(*given class name and class_def list, get the matching class_def*)
+
 let rec getclassdef cname clist = 
 	match clist with
 	[] -> None
 	| hd::tl -> if hd.klass = cname then Some(hd) else getclassdef cname tl;;
 
+
+
+
+
+(*Given a class definition and variable name, the lookupfield
+looksup for the field in the privates, publics and protects list of the class_def sections.
+If found returns a (classname, accessspecifier, typeid, variablename) tuple
+If not found returns a None*)
+let lookupfield cdef vname = 
+    let pmem = getmemdef vname cdef.sections.privates 
+    in
+    match pmem with 
+	Some def -> Some(cdef.klass, "private", vname, def)
+     |  None     -> 
+		let pubmem = getmemdef vname cdef.sections.publics
+		in
+		match pubmem with 
+			Some def -> Some(cdef.klass, "public", vname, def)
+		     |  None     ->  
+				let promem = getmemdef vname cdef.sections.protects 
+				in
+				match promem with 
+					Some def -> Some(cdef.klass, "protect", vname, def)
+				   |    None  -> None
+;;
+
+(*getfield takes classname and variablename;
+  looks for the class with the classname;
+  If classname found, looksup the variable in the class;
+  Else returns None
+*)
+
+let getfield cname vname =
+	let classdef = getclassdef cname [d1;d2;d3;d4]
+	in
+	match classdef with 
+             None -> None
+	|    Some (cdef) -> lookupfield cdef vname;;
+
+(*
+USAGE:
+let field = getfield "myname" "e"
+in 
+match field with
+None -> print_string "field not found\n";
+| Some tup -> print_string (fstoffour(tup));;
+
+*)
+
+	
