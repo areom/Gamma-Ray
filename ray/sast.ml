@@ -1,26 +1,17 @@
 open Ast
-
 module StringMap = Map.Make (String);;
 
-let fstoffour (x,_,_,_) = x;;
-let sndoffour (_,x,_,_) = x;;
-let throffour (_,_,x,_) = x;;
-let lstoffour (_,_,_,x) = x;;
-
-
-(* build_children_map
-   make a map of classname to direct subclassnames
- 
-   key = classname val = list of subclassnames
-   "SuperClass" -> ["A";"B";]
-    "A" -> []
-    "B" -> []
-*)
-
+(* Class inspection functions *)
 let klass_to_parent = function
   | { parent = None; _ } -> "Object"
   | { parent = Some(aklass); _ } -> aklass
 
+let klass_to_sections aklass =
+  let s = aklass.sections in [(Public, s.publics), (Protected, s.protects), (Private, s.privates)]
+
+(* make a map children map
+ *   parent (name -- string) -> children (names -- string) list
+ *)
 let build_children_map klasses =
   let map_builder map aklass =
     let parent = klass_to_parent aklass in
@@ -32,14 +23,9 @@ let build_children_map klasses =
       StringMap.add parent [child] map in
   List.fold_left map_builder StringMap.empty klasses
 
-
-(* build_parent_map
-   make a map of subclasses to superclasses
-   
-   key = class      val = parent
-   A -> Object
-*)
-
+(* make a map of subclasses to superclasses
+ *   class (string) -> parent (string)
+ *)
 let build_parent_map klasses =
   let map_builder map aklass =
     let parent = klass_to_parent aklass in
@@ -47,9 +33,7 @@ let build_parent_map klasses =
     StringMap.add parent child map in
   List.fold_left map_builder StringMap.empty klasses
 
-
 (* Build class name -> class def map *)
-
 let build_class_map klasses =
   let map_builder map aklass = StringMap.add (aklass.klass) aklass map in
   List.fold_left map_builder StringMap.empty klasses
@@ -57,9 +41,6 @@ let build_class_map klasses =
 (* For a given class, build a map of variable names to variable information
  *   var name -> (access mode, type)
  *)
-let klass_to_sections aklass =
-  let s = aklass.sections in [(Public, s.publics), (Protected, s.protects), (Private, s.privates)]
-
 let build_var_map aklass =
   let add_var access map = function
     | VarDef((typeId, varId)) -> StringMap.add varId (access, typeId) map
