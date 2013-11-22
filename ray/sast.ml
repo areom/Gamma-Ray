@@ -5,6 +5,17 @@ module StringMap = Map.Make (String)
 type access_mode = Public | Protected | Private
 type ('a, 'b) either = Left of 'a | Right of 'b
 
+(* Consider a pair ('a, 'b list) -- if the second item is an empty list, return
+ * Left of the first item, else Right of the second. So we look at the right as
+ * collected errors and left as a good value
+ *)
+let possibly_erred = function
+  | (value, []) -> Left(value)
+  | (_, errors) -> Right(errors)
+
+(* Look a value up in a map -- if it is there, return Some(value) else None *)
+let map_lookup key map = if StringMap.mem key map then Some(StringMap.find key map) else None
+
 (* Updating a string map that has list of possible values *)
 let add_map_list key value map =
   if StringMap.mem key map then StringMap.add key (value::(StringMap.find key map)) map
@@ -54,10 +65,7 @@ let build_var_map aklass =
     | VarMem((typeId, varId)) -> add_map_unique varId (access, typeId) map
     | _ -> map in
   let map_builder map (access, section) = List.fold_left (add_var access) map section in
-  let built = List.fold_left map_builder (StringMap.empty, []) (klass_to_sections aklass) in
-  match built with
-    | (map, []) -> Left(map)
-    | (_, cols) -> Right(cols)
+  possibly_erred (List.fold_left map_builder (StringMap.empty, []) (klass_to_sections aklass))
 
 (* Build up a map from class to variable map (i.e. to the above).  Returns
  * Left (map) where map is  class -> (var -> (access mode, type))  if all the
@@ -69,14 +77,10 @@ let build_class_var_map klasses =
     match (build_var_map aklass) with
       | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
-  let built = List.fold_left map_builder (StringMap.empty, []) klasses in
-  match (built) with
-    | (map, []) -> Left(map)
-    | (_, cols) -> Right(cols)
+  possibly_erred (List.fold_left map_builder (StringMap.empty, []) klasses)
 
 (* Given a class -> var map table as above, do a lookup -- returns option *)
 let class_var_lookup map klassName varName =
-  if StringMap.mem klassName map then
-    let varTable = StringMap.find klassName map in
-    if StringMap.mem varName varTable then Some(StringMap.find varName varTable) else None
-  else None
+  match (map_lookup klassName map) with
+    | Some(varTable) -> map_lookup varName varTable
+    | None -> None
