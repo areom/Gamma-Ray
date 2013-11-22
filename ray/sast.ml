@@ -5,13 +5,15 @@ module StringMap = Map.Make (String)
 type access_mode = Public | Protected | Private
 type ('a, 'b) either = Left of 'a | Right of 'b
 
-(* Consider a pair ('a, 'b list) -- if the second item is an empty list, return
- * Left of the first item, else Right of the second. So we look at the right as
- * collected errors and left as a good value
+(* Builder should accept a StringMap, errors list pair and either return an updated
+ * map or an updated error list in the new pair (but hopefully not both). The list
+ * is the list of data to build the map out of. So, to put it into types, we have
+ *   builder : (StringMap, errorList) -> (StringMap', errorList')
  *)
-let possibly_erred = function
-  | (value, []) -> Left(value)
-  | (_, errors) -> Right(errors)
+let build_map_track_errors builder list =
+  match (List.fold_left builder (StringMap.empty, []) list) with
+    | (value, []) -> Left(value)
+    | (_, errors) -> Right(errors)
 
 (* Look a value up in a map -- if it is there, return Some(value) else None *)
 let map_lookup key map = if StringMap.mem key map then Some(StringMap.find key map) else None
@@ -65,7 +67,7 @@ let build_var_map aklass =
     | VarMem((typeId, varId)) -> add_map_unique varId (access, typeId) map
     | _ -> map in
   let map_builder map (access, section) = List.fold_left (add_var access) map section in
-  possibly_erred (List.fold_left map_builder (StringMap.empty, []) (klass_to_sections aklass))
+  build_map_track_errors map_builder (klass_to_sections aklass)
 
 (* Build up a map from class to variable map (i.e. to the above).  Returns
  * Left (map) where map is  class -> (var -> (access mode, type))  if all the
@@ -77,7 +79,7 @@ let build_class_var_map klasses =
     match (build_var_map aklass) with
       | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
-  possibly_erred (List.fold_left map_builder (StringMap.empty, []) klasses)
+  build_map_track_errors map_builder klasses
 
 (* Given a class -> var map table as above, do a lookup -- returns option *)
 let class_var_lookup map klassName varName =
