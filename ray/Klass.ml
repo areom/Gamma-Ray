@@ -11,8 +11,8 @@ type ('a, 'b) either = Left of 'a | Right of 'b
  * is the list of data to build the map out of. So, to put it into types, we have
  *   builder : (StringMap, errorList) -> (StringMap', errorList')
  *)
-let build_map_track_errors builder list =
-  match (List.fold_left builder (StringMap.empty, []) list) with
+let build_map_track_errors builder alist =
+  match (List.fold_left builder (StringMap.empty, []) alist) with
     | (value, []) -> Left(value)
     | (_, errors) -> Right(errors)
 
@@ -85,6 +85,38 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 
+let same_type (typ1,_) (typ2,_) =
+	if typ1 = typ2 then true
+	else false
+	
+let rec match_formals  list1 list2 =
+	match list1,list2 with
+	|[],[] -> true
+	|[],_ 
+        |_,[] -> false
+	|h::t,x::y -> (same_type h x) && (match_formals t y)
+	
+		
+ 
+let build_method_map aklass =
+   let match_args _fdef (_,fdef) = match_formals _fdef.formals fdef.formals
+   in
+   let add_method access (map,collisions) fdef =
+	if(StringMap.mem fdef.name map) then
+		if(match_args fdef (StringMap.find fdef.name map)) then
+			(map, (access,fdef)::collisions)
+		else
+			((StringMap.add fdef.name ((access, fdef)::(StringMap.find fdef.name map)) map), collisions)
+	else
+		((StringMap.add fdef.name [(access, fdef)] map)::collisions)
+			
+   in	
+   let map_builder map_pair (access, fdeflist) = 
+	List.fold_left (add_method access) map_pair fdeflist
+   in
+   build_map_track_errors map_builder (klass_to_methods aklass)
+
+
 
 (* Build up a map from class to variable map (i.e. to the above).  Returns
  * Left (map) where map is  class -> (var -> (access mode, type))  if all the
@@ -100,9 +132,10 @@ let build_class_var_map klasses =
 
 (*
 let build_class_method_map klasses = 
-   let map_builder ( ) aklass =
+   let map_builder (klass_map, collision_list) aklass =
 	match(build_method_map aklass) with
-
+        | Left(method_map) -> (StringMap. (aklass.klass) method_map klass_map, collision_list)
+        | Right(colissions) -> (klass_map, (aklass, collisions)::collision_list) in
 	build_map_track_errors map_builder klasses
 *)
 
