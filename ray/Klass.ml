@@ -86,13 +86,9 @@ let build_var_map aklass =
 
 (*Checks if two variables are of same type*)
 let exactsame_type typ1 typ2  =
-	if typ1 = typ2 then true
+	if typ1 = typ2 then true 
 	else false
 
-let similar_type typ1 typ2 =
-	if ( exactsame_type typ1 typ2) then true
-	else false
-          
 (*Checks if the formal arguments are ambiguous.
  *Pass the appropriate check_ambiguous function.
  *)	
@@ -106,11 +102,71 @@ let rec match_formals check_ambiguous list1 list2 =
 
 let rec match_args check_ambiguous arglist fdeflist = 
 		match fdeflist with 
-			[] -> (None,false)
+			[] ->  None
 		| (access,fn)::tl -> if (match_formals check_ambiguous arglist fn.formals) then
-				(Some(access,fn),true)
+				 Some(access,fn)
 			      else 
 				  match_args check_ambiguous arglist tl
+
+
+(*Will build a list of fdefs with same number of formal arguments*)	
+let rec get_fdefs_samelen fdef fdeflist =
+	let is_samelen x y = 
+		 List.length x = List.length y
+ 	in
+	match fdeflist with
+		[] -> [None]
+	      | (access,fn)::tl -> if (is_samelen fdef.formals fn.formals) then
+				            Some(access,fn)::(get_fdefs_samelen fdef tl)
+				   else
+				      	    get_fdefs_samelen fdef tl
+
+(** we have a classname -> subclassname map check if typ1 is a subtype of typ2
+i.e typ1 is same as typ2 or typ1 is same as typ2's child and so on
+                or typ2 is typ1's parent
+  If the typ1 is a subtyp of typ2, we return a pair (true, level)
+  else we return (false, -1)
+  If typ1 and typ2 are both same level will be 0
+  else it will be the number of levels by which they are apart
+**)	
+
+let rec isSubtype typ1 typ2 level sub_to_super_map  =
+         if typ1 = typ2  then (true, level)
+	 else if typ1 = "Object" then (false, -1)
+         else
+		isSubtype (StringMap.find typ1 sub_to_super_map) typ2 (level + 1) sub_to_super_map
+		
+		
+
+(* Given two argument list, score them on how closely they match with each other
+   The first list is the actual arguments, the second list is the formal arguments
+ *)
+let getscore list1 list2 = 
+     match list1, list2 with
+     | [], [] ->  0
+     | _, _ -> 1
+ 
+
+(*Given a list of samelength fdefs check if they are compatible
+ *Add the fdefs with the compatibility score and build the list.
+ *Later we ll ignore fdefs with poor compatibility score.
+ *)
+
+let rec get_compatible_fdefs fdef fdeflist =
+	let isempty l1 l2 = 
+		match l1, l2 with
+	        | [], [] -> true
+		| _, _ -> false
+	in
+	match fdeflist with
+		[] -> [None]
+            |(access,fn)::tl ->  let score = getscore fdef.formals fn.formals 
+				 in
+				 if ((isempty fdef.formals fn.formals) || (score = 0)) then
+					[Some(score,access,fn)]  (*If they exactly match look no further*)
+				 else
+				        Some(score,access,fn) :: get_compatible_fdefs fdef tl
+
 	
 (*Builds a map of all the methods within a class
  *Key = function name
@@ -125,23 +181,16 @@ let rec match_args check_ambiguous arglist fdeflist =
  *)
  
 let build_method_map aklass =
-(*
-   let rec match_args fdef fdeflist = 
-		match fdeflist with 
-			[] -> false
-		| (access,fn)::tl -> if (match_formals fdef.formals fn.formals) then
-				true
-			      else 
-				  match_args fdef tl
-   in*)
    let add_method access (map,collisions) fdef =
-	let second_of (_,x) = x 
+	let found x =
+	        match x with
+		| Some y -> true
+		| None      -> false
 	in
 	let get_match_args = 
 		match_args exactsame_type fdef.formals (StringMap.find fdef.name map) 
 	in
-	if((StringMap.mem fdef.name map) && (second_of get_match_args) 
-		  (*match_args exactsame_type fdef.formals (StringMap.find fdef.name map)*)) then
+	if((StringMap.mem fdef.name map) && (found get_match_args)) then
 			(map, (access,fdef)::collisions)
 	  	 else
 			((add_map_list fdef.name (access,fdef) map), collisions)
@@ -186,15 +235,17 @@ let class_var_lookup map klassName varName =
     | Some(varTable) -> map_lookup varName varTable
     | None -> None
 
+(*Looks up list of function definitions matching the given function name*)
+(*
 let method_lookup funcName argList methodmap =
 	if (StringMap.mem funcName methodmap)  then
 		match_args similar_type argList (StringMap.find funcName methodmap)
 	else
-		(None,false)
+		(false, None)
 
 (*Given a class -> method map table , do a fn lookup -- returns option *)
 let class_method_lookup map className funcName argtype_list =
   match (map_lookup className map) with 
 	|Some(method_map) -> method_lookup funcName argtype_list method_map
-	|None  -> (None,false)
-
+	|None  -> None
+*)
