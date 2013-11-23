@@ -67,6 +67,28 @@ let build_parent_map klasses =
     StringMap.add parent child map in
   List.fold_left map_builder StringMap.empty klasses
 
+(* Validate that the klass map represents a tree -- everything should go
+ * back to object eventually. Returns string option reporting an issue when
+ * there is an issue to report.
+ *)
+let is_tree_hierarchy parent_map =
+  let rec from_object klass checked =
+    match map_lookup klass checked with
+      | Some(true) -> Left(checked)
+      | Some(false) -> Right("Cycle detected.")
+      | _ -> match map_lookup klass parent_map with
+        | None -> Right("Cannot find parent after building parent map: " ^ klass)
+        | Some(parent) -> match from_object parent (StringMap.add klass false checked) with
+          | Left(updated) -> Left(StringMap.add klass true updated)
+          | issue -> issue in
+  let folder klass _ = function
+    | Left(checked) -> from_object klass checked
+    | issue -> issue in
+  let checked = StringMap.add "Object" true StringMap.empty in
+  match StringMap.fold folder parent_map (Left(checked)) with
+    | Right(issue) -> Some(issue)
+    | _ -> None
+
 (* Build class name -> class def map *)
 let build_class_map klasses =
   let map_builder map aklass = StringMap.add (aklass.klass) aklass map in
