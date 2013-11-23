@@ -89,20 +89,22 @@ let same_type a b  = true
 (*	if typ1 = typ2 then true
 	else false*)
 	
-let rec match_formals  list1 list2 = true 
-(*
+let rec match_formals  list1 list2  =
 	match list1,list2 with
 	|[],[] -> true
 	|[],_ 
         |_,[] -> false
 	|h::t,x::y -> (same_type h x) && (match_formals t y)
 	
-*)		
  
 let build_method_map aklass =
-   let match_args fdef1 (access, fdef2) = true
-		(*let second_of (_,x) = x in ignore(second_of fdef_pair);*)
- 		(*match_formals _fdef.formals (second_of fdef_pair) *)
+   let rec match_args fdef fdeflist = 
+		match fdeflist with 
+			[] -> false
+		| (access,fn)::tl -> if (match_formals fdef.formals fn.formals) then
+				true
+			      else 
+				  match_args fdef tl
    in
    let add_method access (map,collisions) fdef =
 	if((StringMap.mem fdef.name map) &&
