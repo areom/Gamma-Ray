@@ -85,31 +85,32 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 
-let same_type (typ1,_) (typ2,_) =
-	if typ1 = typ2 then true
-	else false
+let same_type a b  = true
+(*	if typ1 = typ2 then true
+	else false*)
 	
-let rec match_formals  list1 list2 =
+let rec match_formals  list1 list2 = true 
+(*
 	match list1,list2 with
 	|[],[] -> true
 	|[],_ 
         |_,[] -> false
 	|h::t,x::y -> (same_type h x) && (match_formals t y)
 	
-		
+*)		
  
 let build_method_map aklass =
-   let match_args _fdef (_,fdef) = match_formals _fdef.formals fdef.formals
+   let match_args fdef1 (access, fdef2) = true
+		(*let second_of (_,x) = x in ignore(second_of fdef_pair);*)
+ 		(*match_formals _fdef.formals (second_of fdef_pair) *)
    in
    let add_method access (map,collisions) fdef =
-	if(StringMap.mem fdef.name map) then
-		if(match_args fdef (StringMap.find fdef.name map)) then
+	if((StringMap.mem fdef.name map) &&
+		  ((match_args fdef) (StringMap.find fdef.name map))) then
 			(map, (access,fdef)::collisions)
-		else
-			((StringMap.add fdef.name ((access, fdef)::(StringMap.find fdef.name map)) map), collisions)
-	else
-		((StringMap.add fdef.name [(access, fdef)] map)::collisions)
-			
+	  	 else
+			((add_map_list fdef.name (access,fdef) map), collisions)
+
    in	
    let map_builder map_pair (access, fdeflist) = 
 	List.fold_left (add_method access) map_pair fdeflist
