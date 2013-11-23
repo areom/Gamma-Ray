@@ -84,18 +84,32 @@ let build_var_map aklass =
   let map_builder map (access, section) = List.fold_left (add_var access) map section in
   build_map_track_errors map_builder (klass_to_sections aklass)
 
-
-let exactsame_type (_, typ1) (_,typ2)  =
+(*Checks if two variables are of same type*)
+let exactsame_type (typ1,_) (typ2,_)  =
 	if typ1 = typ2 then true
 	else false
-	
-let rec match_formals  list1 list2  =
+
+(*Checks if the formal arguments are ambiguous.
+ *Pass the appropriate check_ambiguous function.
+ *)	
+let rec match_formals  list1 list2 =
 	match list1,list2 with
 	|[],[] -> true
 	|[],_ 
         |_,[] -> false
 	|h::t,x::y -> (exactsame_type h x) && (match_formals t y)
 	
+(*Builds a map of all the methods within a class
+ *Key = function name
+ *value = list of accessmethod,fdef pairs
+
+ * match_args checks if there is an fdef already in the map,
+ * irrespective of its accessmethod, which matches the given
+ * method of the class. If no collisions, add the (function def,
+ * accessmethod) pair to the list of fdef with the same function
+ * name or make a new entry. If the fdef is ambiguous, add the 
+ * fdef to the collision list
+ *)
  
 let build_method_map aklass =
    let rec match_args fdef fdeflist = 
@@ -119,8 +133,6 @@ let build_method_map aklass =
    in
    build_map_track_errors map_builder (klass_to_methods aklass)
 
-
-
 (* Build up a map from class to variable map (i.e. to the above).  Returns
  * Left (map) where map is  class -> (var -> (access mode, type))  if all the
  * instance variables in all the classes are okay. Otherwise returns Right
@@ -133,24 +145,35 @@ let build_class_var_map klasses =
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
   build_map_track_errors map_builder klasses
 
-(*
+(* Builds a map from classname to map of list of function definition, accessmode pair
+ * Key = classname, value = method_map ( from build_method_map function) , 
+ * destination map = klass_map.
+ * If the method_map construction found collisions, i.e there were function
+ * definitions with same name and exactly same argument types, then this method
+ * will return the collision list of pairs of (classname , list colliding function def 
+ * and access mode pair)
+ *)
 let build_class_method_map klasses = 
    let map_builder (klass_map, collision_list) aklass =
 	match(build_method_map aklass) with
-        | Left(method_map) -> (StringMap. (aklass.klass) method_map klass_map, collision_list)
-        | Right(colissions) -> (klass_map, (aklass, collisions)::collision_list) in
+        | Left(method_map) -> (StringMap.add (aklass.klass) method_map klass_map, collision_list)
+        | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
 	build_map_track_errors map_builder klasses
-*)
+
 
 (* Given a class -> var map table as above, do a lookup -- returns option *)
 let class_var_lookup map klassName varName =
   match (map_lookup klassName map) with
     | Some(varTable) -> map_lookup varName varTable
     | None -> None
-
 (*
+let method_lookup funcName argList methodmap
+	if(StringMap.mem funcName
+
+(*Given a class -> method map table , do a fn lookup -- returns option *)
 let class_method_lookup map className funcName argtype_list =
   match (map_lookup className map) with 
-	|Some
+	|Some(method_map) -> method_lookup funcName argtype_list method_map
+	|None  -> None
 
 *)
