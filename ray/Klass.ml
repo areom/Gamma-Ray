@@ -85,14 +85,14 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 (*Checks if two variables are of same type*)
-let exactsame_type (typ1,_) (typ2,_)  =
+let exactsame_type typ1 typ2  =
 	if typ1 = typ2 then true
 	else false
 
-let similar_type decl1 decl2 =
-	if ( exactsame_type decl1 decl2) then true
+let similar_type typ1 typ2 =
+	if ( exactsame_type typ1 typ2) then true
 	else false
-
+          
 (*Checks if the formal arguments are ambiguous.
  *Pass the appropriate check_ambiguous function.
  *)	
@@ -101,7 +101,7 @@ let rec match_formals check_ambiguous list1 list2 =
 	|[],[] -> true
 	|[],_ 
         |_,[] -> false
-	|h::t,x::y -> (check_ambiguous h x) && (match_formals check_ambiguous t y)
+	|(h,_)::t,(x,_)::y -> (check_ambiguous h x) && (match_formals check_ambiguous t y)
 
 
 let rec match_args check_ambiguous arglist fdeflist = 
