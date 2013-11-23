@@ -3,6 +3,7 @@ module StringMap = Map.Make (String)
 
 (* Types *)
 type access_mode = Public | Protected | Private
+type method_access_mode = Public | Protected | Private | Refines | Mains
 type ('a, 'b) either = Left of 'a | Right of 'b
 
 (* Builder should accept a StringMap, errors list pair and either return an updated
@@ -34,6 +35,20 @@ let klass_to_parent = function
 
 let klass_to_sections aklass =
   let s = aklass.sections in [(Public, s.publics); (Protected, s.protects); (Private, s.privates)]
+
+
+let klass_to_methods aklass =
+    let rec build_mfuncdef memberdeflist = 
+           match memberdeflist with
+	   | [] -> [] 
+           | h::t -> match h with 
+                       MethodMem(h) -> h::build_mfuncdef t
+                      |InitMem(h)   -> h::build_mfuncdef t
+                      |VarMem(h)     -> build_mfuncdef t
+    in
+    let s = aklass.sections in
+	[(Public,(build_mfuncdef s.publics)); (Protected, (build_mfuncdef s.protects)); (Private, (build_mfuncdef s.privates));
+          (Refines, s.refines); (Mains,  s.mains)]
 
 (* make a map children map
  *   parent (name -- string) -> children (names -- string) list
@@ -69,6 +84,8 @@ let build_var_map aklass =
   let map_builder map (access, section) = List.fold_left (add_var access) map section in
   build_map_track_errors map_builder (klass_to_sections aklass)
 
+
+
 (* Build up a map from class to variable map (i.e. to the above).  Returns
  * Left (map) where map is  class -> (var -> (access mode, type))  if all the
  * instance variables in all the classes are okay. Otherwise returns Right
@@ -81,14 +98,23 @@ let build_class_var_map klasses =
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
   build_map_track_errors map_builder klasses
 
+(*
+let build_class_method_map klasses = 
+   let map_builder ( ) aklass =
+	match(build_method_map aklass) with
+
+	build_map_track_errors map_builder klasses
+*)
+
 (* Given a class -> var map table as above, do a lookup -- returns option *)
 let class_var_lookup map klassName varName =
   match (map_lookup klassName map) with
     | Some(varTable) -> map_lookup varName varTable
     | None -> None
 
+(*
 let class_method_lookup map className funcName argtype_list =
   match (map_lookup className map) with 
 	|Some
 
-
+*)
