@@ -6,6 +6,17 @@ type access_mode = Public | Protected | Private
 type method_access_mode = Public | Protected | Private | Refines | Mains
 type ('a, 'b) either = Left of 'a | Right of 'b
 
+(* Generic helper functions *)
+
+(* Reduce a list of options to the values in the Some constructors *)
+let filter_option list =
+  let rec do_filter rlist = function
+    | [] -> List.rev rlist
+    | None::tl -> do_filter rlist tl
+    | (Some(v))::tl -> do_filter (v::rlist) tl in
+  do_filter [] list
+
+
 (* Builder should accept a StringMap, errors list pair and either return an updated
  * map or an updated error list in the new pair (but hopefully not both). The list
  * is the list of data to build the map out of. So, to put it into types, we have
@@ -28,27 +39,24 @@ let add_map_list key value map =
 let add_map_unique key value (map, collisions) =
   if StringMap.mem key map then (map, key::collisions) else (StringMap.add key value map, collisions)
 
-(* Class inspection functions *)
+(* From a class get the parent *)
 let klass_to_parent = function
   | { parent = None; _ } -> "Object"
   | { parent = Some(aklass); _ } -> aklass
 
+(* From a class get the sections of that class *)
 let klass_to_sections aklass =
   let s = aklass.sections in [(Public, s.publics); (Protected, s.protects); (Private, s.privates)]
 
-
+(* Go from a class to all of its sections *)
 let klass_to_methods aklass =
-    let rec build_mfuncdef memberdeflist = 
-           match memberdeflist with
-	   | [] -> [] 
-           | h::t -> match h with 
-                       MethodMem(h) -> h::build_mfuncdef t
-                      |InitMem(h)   -> h::build_mfuncdef t
-                      |VarMem(h)     -> build_mfuncdef t
-    in
-    let s = aklass.sections in
-	[(Public,(build_mfuncdef s.publics)); (Protected, (build_mfuncdef s.protects)); (Private, (build_mfuncdef s.privates));
-          (Refines, s.refines); (Mains,  s.mains)]
+  let to_function = function
+    | VarMem(_) -> None
+    | MethodMem(m) -> Some(m)
+    | InitMem(i) -> Some(i) in
+  let funcs members = filter_option (List.map to_function members) in
+  let s = aklass.sections in
+  [(Public, funcs s.publics); (Protected, funcs s.protects); (Private, funcs s.privates); (Refines, s.refines); (Mains, s.mains)]
 
 (* make a map children map
  *   parent (name -- string) -> children (names -- string) list
@@ -107,9 +115,7 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 (*Checks if two variables are of same type*)
-let exactsame_type typ1 typ2  =
-	if typ1 = typ2 then true 
-	else false
+let exactsame_type typ1 typ2 = (typ1 = typ2)
 
 (*Checks if the formal arguments are ambiguous.
  *Pass the appropriate check_ambiguous function.
