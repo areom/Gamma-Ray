@@ -89,15 +89,28 @@ let exactsame_type (typ1,_) (typ2,_)  =
 	if typ1 = typ2 then true
 	else false
 
+let similar_type decl1 decl2 =
+	if ( exactsame_type decl1 decl2) then true
+	else false
+
 (*Checks if the formal arguments are ambiguous.
  *Pass the appropriate check_ambiguous function.
  *)	
-let rec match_formals  list1 list2 =
+let rec match_formals check_ambiguous list1 list2 =
 	match list1,list2 with
 	|[],[] -> true
 	|[],_ 
         |_,[] -> false
-	|h::t,x::y -> (exactsame_type h x) && (match_formals t y)
+	|h::t,x::y -> (check_ambiguous h x) && (match_formals check_ambiguous t y)
+
+
+let rec match_args check_ambiguous arglist fdeflist = 
+		match fdeflist with 
+			[] -> (None,false)
+		| (access,fn)::tl -> if (match_formals check_ambiguous arglist fn.formals) then
+				(Some(access,fn),true)
+			      else 
+				  match_args check_ambiguous arglist tl
 	
 (*Builds a map of all the methods within a class
  *Key = function name
@@ -112,6 +125,7 @@ let rec match_formals  list1 list2 =
  *)
  
 let build_method_map aklass =
+(*
    let rec match_args fdef fdeflist = 
 		match fdeflist with 
 			[] -> false
@@ -119,10 +133,15 @@ let build_method_map aklass =
 				true
 			      else 
 				  match_args fdef tl
-   in
+   in*)
    let add_method access (map,collisions) fdef =
-	if((StringMap.mem fdef.name map) &&
-		  ((match_args fdef) (StringMap.find fdef.name map))) then
+	let second_of (_,x) = x 
+	in
+	let get_match_args = 
+		match_args exactsame_type fdef.formals (StringMap.find fdef.name map) 
+	in
+	if((StringMap.mem fdef.name map) && (second_of get_match_args) 
+		  (*match_args exactsame_type fdef.formals (StringMap.find fdef.name map)*)) then
 			(map, (access,fdef)::collisions)
 	  	 else
 			((add_map_list fdef.name (access,fdef) map), collisions)
@@ -166,14 +185,16 @@ let class_var_lookup map klassName varName =
   match (map_lookup klassName map) with
     | Some(varTable) -> map_lookup varName varTable
     | None -> None
-(*
-let method_lookup funcName argList methodmap
-	if(StringMap.mem funcName
+
+let method_lookup funcName argList methodmap =
+	if (StringMap.mem funcName methodmap)  then
+		match_args similar_type argList (StringMap.find funcName methodmap)
+	else
+		(None,false)
 
 (*Given a class -> method map table , do a fn lookup -- returns option *)
 let class_method_lookup map className funcName argtype_list =
   match (map_lookup className map) with 
 	|Some(method_map) -> method_lookup funcName argtype_list method_map
-	|None  -> None
+	|None  -> (None,false)
 
-*)
