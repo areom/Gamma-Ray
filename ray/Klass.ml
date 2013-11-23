@@ -85,16 +85,16 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 
-let same_type a b  = true
-(*	if typ1 = typ2 then true
-	else false*)
+let exactsame_type (_, typ1) (_,typ2)  =
+	if typ1 = typ2 then true
+	else false
 	
 let rec match_formals  list1 list2  =
 	match list1,list2 with
 	|[],[] -> true
 	|[],_ 
         |_,[] -> false
-	|h::t,x::y -> (same_type h x) && (match_formals t y)
+	|h::t,x::y -> (exactsame_type h x) && (match_formals t y)
 	
  
 let build_method_map aklass =
