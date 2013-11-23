@@ -131,7 +131,7 @@ let rec match_args check_ambiguous arglist fdeflist =
 				  match_args check_ambiguous arglist tl
 
 
-(*Will build a list of fdefs with same number of formal arguments*)	
+(*Will build a list of fdefs with same number of formal arguments
 let rec get_fdefs_samelen fdef fdeflist =
 	let is_samelen x y = 
 		 List.length x = List.length y
@@ -142,7 +142,7 @@ let rec get_fdefs_samelen fdef fdeflist =
 				            Some(access,fn)::(get_fdefs_samelen fdef tl)
 				   else
 				      	    get_fdefs_samelen fdef tl
-
+*)
 (** we have a classname -> subclassname map check if typ1 is a subtype of typ2
 i.e typ1 is same as typ2 or typ1 is same as typ2's child and so on
                 or typ2 is typ1's parent
@@ -153,20 +153,24 @@ i.e typ1 is same as typ2 or typ1 is same as typ2's child and so on
 **)	
 
 let rec isSubtype typ1 typ2 level sub_to_super_map  =
-         if typ1 = typ2  then (true, level)
-	 else if typ1 = "Object" then (false, -1)
+         if typ1 = typ2  then level
+	 else if typ1 = "Object" then -1
          else
-		isSubtype (StringMap.find typ1 sub_to_super_map) typ2 (level + 1) sub_to_super_map
+		if(StringMap.mem typ1 sub_to_super_map) then
+			isSubtype (StringMap.find typ1 sub_to_super_map) typ2 (level + 1) sub_to_super_map
+		else -1
 		
 		
 
 (* Given two argument list, score them on how closely they match with each other
    The first list is the actual arguments, the second list is the formal arguments
  *)
-let getscore list1 list2 = 
+let rec getscore list1 list2 map = 
      match list1, list2 with
-     | [], [] ->  0
-     | _, _ -> 1
+     | [], [] ->  [Some(0)]
+     | _,[] 
+     | [],_  -> [Some(-1)]
+     | (hd,_)::tl, (x,_)::y -> Some(isSubtype hd x 0 map)::(getscore tl y map)
  
 
 (*Given a list of samelength fdefs check if they are compatible
@@ -174,21 +178,41 @@ let getscore list1 list2 =
  *Later we ll ignore fdefs with poor compatibility score.
  *)
 
-let rec get_compatible_fdefs fdef fdeflist =
-	let isempty l1 l2 = 
-		match l1, l2 with
-	        | [], [] -> true
-		| _, _ -> false
-	in
+let rec get_compatible_fdefs fdef fdeflist map =
+	let rec valid alist = 
+		match alist with
+                |[] -> true
+		|[Some x] -> if x>=0 then true else false
+		|hd::tl -> match hd with
+		           Some x -> if (x < 0) then false
+				     else  valid tl
+			   | None -> valid tl
+        in
 	match fdeflist with
 		[] -> [None]
-            |(access,fn)::tl ->  let score = getscore fdef.formals fn.formals 
-				 in
-				 if ((isempty fdef.formals fn.formals) || (score = 0)) then
-					[Some(score,access,fn)]  (*If they exactly match look no further*)
-				 else
-				        Some(score,access,fn) :: get_compatible_fdefs fdef tl
+            |(access,fn)::tl ->   let score = getscore fdef.formals fn.formals map
+				  in
+				  if List.length fdef.formals <> List.length fn.formals then
+					get_compatible_fdefs fdef tl map
 
+				  else if valid score then
+				        Some(score,access,fn) :: get_compatible_fdefs fdef tl map
+
+				  else
+					get_compatible_fdefs fdef tl map
+
+
+let get_method fdef fdeflist map filtermap =
+	let fdef_of (_,x,y) = (x,y)
+	in
+	let score_of (x,_,_) i = x 
+	in
+	let compatiblelist = get_compatible_fdefs fdef fdeflist map
+	in
+	match compatiblelist with
+	| [] -> None
+        | hd::tl -> None (* (score_of hd current),(fdef_of hd)  *)
+				
 	
 (*Builds a map of all the methods within a class
  *Key = function name
