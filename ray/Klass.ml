@@ -16,6 +16,26 @@ let filter_option list =
     | (Some(v))::tl -> do_filter (v::rlist) tl in
   do_filter [] list
 
+(* Lexically compare two lists of comparable items *)
+let rec lexical_compare list1 list2 = match list1, list2 with
+  | [], [] -> 0
+  | [], _  -> -1
+  | _, []  -> 1
+  | (x::xs), (y::ys) -> if x < y then -1 else if x > y then 1 else lexical_compare xs ys
+
+(* Loop through a list and find all the items that are minimum with respect to the total
+ * ordering cmp. Note can return any size list.
+ *)
+let find_all_min cmp alist =
+  let rec min_find found items =
+    match found, items with
+      | _, [] -> List.rev found (* Return in the same order at least *)
+      | [], i::is -> min_find [i] is
+      | (f::fs), (i::is) -> let result = cmp i f in
+        if result = 0 then min_find (i::found) is
+        else if result < 0 then min_find [i] is
+        else min_find found is in
+  min_find [] alist
 
 (* Builder should accept a StringMap, errors list pair and either return an updated
  * map or an updated error list in the new pair (but hopefully not both). The list
@@ -254,37 +274,37 @@ let is_proper_subtype distance_map subtype supertype =
 (* Return whether a formals list is compatible with an actuals list
  * This includes checking that the number of arguments are the same, too.
  *)
-let compatible_arguments distance_map actuals formals =
+let compatible_formals distance_map actuals formals =
   let compatible formal actual = is_subtype distance_map actual formal in
   try List.for_all2 compatible formals actuals with
     | Invalid_argument(_) -> false
 
 (* A predicate for whether a func_def is compatible with an actuals list *)
-let is_compatible distance_map actuals func_def =
-  compatible_arguments distance_map actuals (List.map fst func_def.formals)
+let compatible_function distance_map actuals func_def =
+  compatible_formals distance_map actuals (List.map fst func_def.formals)
 
-(* Given a list of compatible methods, return Some(func_def) that is the `best' match
- * lexicographically given the distance map and the actuals
+(* Given a list of methods and a list of actuals, find the best matches
+ * Note that if there are ties for mest match, this returns multiple matches.
+ * Whether this is an error depends on the caller.
  *)
-(*
-let best_match distance_map actuals func_defs =
-  let funcs_formals = List.map (function func_def -> (func_def, func_def.formals)) func_defs in
-  let update_formals = function
-    | (func, []) -> raise(Failure("Compatible methods don't have enough parameters -- Compiler error!"))
-    | (func, _::formals) -> (func, formals) in
+let best_matching_signature distance_map actuals funcs =
+  let funcs = List.filter (compatible_function distance_map actuals) funcs in
+  let distance_of actual formal = match get_distance distance_map actual formal with
+    | Some(n) when n >= 0 -> n
+    | _ -> raise(Failure("Compatible methods somehow incompatible: " ^ actual ^ " vs. " ^ formal ^ ". Compiler error.")) in
+  let to_distance func = List.map2 distance_of actuals (List.map fst func.formals) in
+  let with_distances = List.map (function func -> (func, to_distance func)) funcs in
+  let lex_compare (_, lex1) (_, lex2) = lexical_compare lex1 lex2 in
+  List.map fst (find_all_min lex_compare with_distances)
 
-  let rec find_best_match remaining_actuals = function
+(* Given a class name, a method name, and a list of actuals, get the best matching
+ * method. Note that if there is more than one we raise an exception as this is a
+ * compiler error -- we should have already removed duplicate methods and so there
+ * must be a unique lexicographic minimum.
+ *)
+let best_method klass_method_map distance_map klass_name method_name actuals =
+  let methods = class_method_lookup klass_method_map klass_name method_name in
+  match best_matching_signature distance_map actuals methods with
     | [] -> None
     | [func] -> Some(func)
-    | funcs -> match remaining_actuals with
-      | [] -> raise(Failure("Compiler error -- lexicographic selection not unique, must have duplicate method signatures."))
-      | actual::rest ->
-        let actual_map = StringMap.find actual distance_map in
-        let distance (_, formal::_) = StringMap.find formal actual_map in
-        let min_dist = min (List.map distance funcs) in
-        let funcs = List.filter (function func -> (distance func) == min_dist) funcs in
-        find_best_match rest (List.map update_formals funcs) in
-
-  find_best_match actuals func_formals
-*)
-
+    | _ -> raise(Failure("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
