@@ -89,7 +89,11 @@ and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s
 let pp_member_def depth = function
   | VarMem(vmem) -> Printf.sprintf "\n%sVarMem(%s)" (indent depth) (pp_var_def (depth+1) vmem)
   | MethodMem(mmem) -> Printf.sprintf "\n%sMethodMem(%s)" (indent depth) (pp_func_def (depth+1) mmem)
-  | InitMem(imem) -> Printf.sprintf "\n%sInitMem(%s)" (indent depth) (pp_func_def (depth+1) imem)
+  | InitMem(imem) -> let fmt = "@[<v " ^ (string_of_int depth) ^ ">@,InitMem(%s)@]" in 
+			(*Format.sprintf "\n%sInitMem(%s)@]" 
+			(indent depth) (pp_func_def (depth+1) imem)*)
+			Format.sprintf fmt 
+			(pp_func_def (depth+1) imem)
 
 let pp_class_sections sections depth =
 	Format.sprintf "@[<v 2>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
