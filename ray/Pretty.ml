@@ -92,25 +92,15 @@ let pp_member_def depth = function
   | InitMem(imem) -> Printf.sprintf "\n%sInitMem(%s)" (indent depth) (pp_func_def (depth+1) imem)
 
 let pp_class_sections sections depth =
-  Printf.sprintf "\n%s{\n%sprivates = %s,\n%sprotects = %s,\n%spublics = %s,\n%srefines = %s,\n%smains = %s\n%s}"
-  (indent (depth-1))
-  (indent depth)
+	Format.sprintf "@[<v 2>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
   (pp_str_list (pp_member_def (depth+1)) sections.privates depth)
-  (indent depth)
   (pp_str_list (pp_member_def (depth+1)) sections.protects depth)
-  (indent depth)
   (pp_str_list (pp_member_def (depth+1)) sections.publics depth)
-  (indent depth)
   (pp_str_list (pp_func_def (depth+1)) sections.refines depth)
-  (indent depth)
   (pp_str_list (pp_func_def (depth+1)) sections.mains depth)
-  (indent (depth-1))
 
 let pp_class_def the_klass =
-  Printf.sprintf "\n{\n%sklass = %s,\n%sparent = %s,\n%ssections = %s\n}"
-  (indent 1)
+  Format.sprintf "@[<v>@,{@[<v 1>@,klass = %s,@,parent = %s,@,sections = %s@]@,}@]"
   the_klass.klass
-  (indent 1)
   (pp_opt _id the_klass.parent)
-  (indent 1)
   (pp_class_sections the_klass.sections 2)
