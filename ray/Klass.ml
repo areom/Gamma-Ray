@@ -32,12 +32,15 @@ let map_lookup key map = if StringMap.mem key map then Some(StringMap.find key m
 
 (* Updating a string map that has list of possible values *)
 let add_map_list key value map =
-  if StringMap.mem key map then StringMap.add key (value::(StringMap.find key map)) map
-  else StringMap.add key [value] map
+  if StringMap.mem key map
+    then StringMap.add key (value::(StringMap.find key map)) map
+    else StringMap.add key [value] map
 
 (* Update a map but keep track of collisions *)
 let add_map_unique key value (map, collisions) =
-  if StringMap.mem key map then (map, key::collisions) else (StringMap.add key value map, collisions)
+  if StringMap.mem key map
+    then (map, key::collisions)
+    else (StringMap.add key value map, collisions)
 
 (* From a class get the parent *)
 let klass_to_parent = function
@@ -115,40 +118,23 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 (*Checks if two variables are of same type*)
-let exactsame_type typ1 typ2 = (typ1 = typ2)
+let same_type typ1 typ2 = (typ1 = typ2)
 
 (*Checks if the formal arguments are ambiguous.
  *Pass the appropriate check_ambiguous function.
  *)	
-let rec match_formals check_ambiguous list1 list2 =
-	match list1,list2 with
-	|[],[] -> true
-	|[],_ 
-        |_,[] -> false
-	|(h,_)::t,(x,_)::y -> (check_ambiguous h x) && (match_formals check_ambiguous t y)
+let rec match_formals list1 list2 =
+  try List.for_all2 same_type list1 list2 with
+    | InvalidArgument -> false
+
+let rec match_args arglist fdeflist =  match fdeflist with 
+  | [] ->  None
+  | (access,fn)::tl ->
+    if (match_formals arglist fn.formals)
+      then Some(access, fn)
+      else match_args arglist tl
 
 
-let rec match_args check_ambiguous arglist fdeflist = 
-		match fdeflist with 
-			[] ->  None
-		| (access,fn)::tl -> if (match_formals check_ambiguous arglist fn.formals) then
-				 Some(access,fn)
-			      else 
-				  match_args check_ambiguous arglist tl
-
-
-(*Will build a list of fdefs with same number of formal arguments
-let rec get_fdefs_samelen fdef fdeflist =
-	let is_samelen x y = 
-		 List.length x = List.length y
- 	in
-	match fdeflist with
-		[] -> [None]
-	      | (access,fn)::tl -> if (is_samelen fdef.formals fn.formals) then
-				            Some(access,fn)::(get_fdefs_samelen fdef tl)
-				   else
-				      	    get_fdefs_samelen fdef tl
-*)
 (** we have a classname -> subclassname map check if typ1 is a subtype of typ2
 i.e typ1 is same as typ2 or typ1 is same as typ2's child and so on
                 or typ2 is typ1's parent
@@ -159,24 +145,21 @@ i.e typ1 is same as typ2 or typ1 is same as typ2's child and so on
 **)	
 
 let rec isSubtype typ1 typ2 level sub_to_super_map  =
-         if typ1 = typ2  then level
-	 else if typ1 = "Object" then -1
-         else
-		if(StringMap.mem typ1 sub_to_super_map) then
-			isSubtype (StringMap.find typ1 sub_to_super_map) typ2 (level + 1) sub_to_super_map
-		else -1
+  if typ1 = typ2  then level
+    else if typ1 = "Object" then -1
+    else if(StringMap.mem typ1 sub_to_super_map) then
+      isSubtype (StringMap.find typ1 sub_to_super_map) typ2 (level + 1) sub_to_super_map
+    else -1
 		
 		
 
 (* Given two argument list, score them on how closely they match with each other
    The first list is the actual arguments, the second list is the formal arguments
  *)
-let rec getscore list1 list2 map = 
-     match list1, list2 with
-     | [], [] ->  [Some(0)]
-     | _,[] 
-     | [],_  -> [Some(-1)]
-     | (hd,_)::tl, (x,_)::y -> Some(isSubtype hd x 0 map)::(getscore tl y map)
+let rec getscore list1 list2 map = match list1, list2 with
+  | [], [] ->  [Some(0)]
+  | (hd,_)::tl, (x,_)::y -> Some(isSubtype hd x 0 map)::(getscore tl y map)
+  | _, _ -> [Some(-1)]
  
 
 (*Given a list of samelength fdefs check if they are compatible
@@ -185,41 +168,31 @@ let rec getscore list1 list2 map =
  *)
 
 let rec get_compatible_fdefs fdef fdeflist map =
-	let rec valid alist = 
-		match alist with
-                |[] -> true
-		|[Some x] -> if x>=0 then true else false
-		|hd::tl -> match hd with
-		           Some x -> if (x < 0) then false
-				     else  valid tl
-			   | None -> valid tl
-        in
-	match fdeflist with
-		[] -> [None]
-            |(access,fn)::tl ->   let score = getscore fdef.formals fn.formals map
-				  in
-				  if List.length fdef.formals <> List.length fn.formals then
-					get_compatible_fdefs fdef tl map
-
-				  else if valid score then
-				        Some(score,access,fn) :: get_compatible_fdefs fdef tl map
-
-				  else
-					get_compatible_fdefs fdef tl map
-
+  let rec valid alist = match alist with
+    | [] -> true
+    | [Some x] -> x >= 0
+    | hd::tl -> (match hd with
+      | Some x -> (x >= 0) && (valid tl)
+      | None -> valid tl) in
+  match fdeflist with
+    | [] -> [None]
+    | (access,fn)::tl ->
+      let score = getscore fdef.formals fn.formals map in
+      if List.length fdef.formals <> List.length fn.formals
+        then get_compatible_fdefs fdef tl map
+        else if valid score
+          then Some(score,access,fn) :: get_compatible_fdefs fdef tl map
+          else get_compatible_fdefs fdef tl map
 
 let get_method fdef fdeflist map filtermap =
-	let fdef_of (_,x,y) = (x,y)
-	in
-	let score_of (x,_,_) i = x 
-	in
-	let compatiblelist = get_compatible_fdefs fdef fdeflist map
-	in
-	match compatiblelist with
-	| [] -> None
-        | hd::tl -> None (* (score_of hd current),(fdef_of hd)  *)
-				
-	
+  let fdef_of (_,x,y) = (x,y) in
+  let score_of (x,_,_) i = x in
+  let compatiblelist = get_compatible_fdefs fdef fdeflist map in
+    match compatiblelist with
+      | [] -> None
+      | hd::tl -> None (* (score_of hd current),(fdef_of hd)  *)
+
+
 (*Builds a map of all the methods within a class
  *Key = function name
  *value = list of accessmethod,fdef pairs
@@ -233,24 +206,15 @@ let get_method fdef fdeflist map filtermap =
  *)
  
 let build_method_map aklass =
-   let add_method access (map,collisions) fdef =
-	let found x =
-	        match x with
-		| Some y -> true
-		| None      -> false
-	in
-	let get_match_args = 
-		match_args exactsame_type fdef.formals (StringMap.find fdef.name map) 
-	in
-	if((StringMap.mem fdef.name map) && (found get_match_args)) then
-			(map, (access,fdef)::collisions)
-	  	 else
-			((add_map_list fdef.name (access,fdef) map), collisions)
-
-   in	
-   let map_builder map_pair (access, fdeflist) = 
-	List.fold_left (add_method access) map_pair fdeflist
-   in
+  let add_method access (map,collisions) fdef =
+    let found = function
+      | Some _ -> true
+      | None   -> false in
+    let get_match_args = match_args same_type fdef.formals (StringMap.find fdef.name map) in
+    if ((StringMap.mem fdef.name map) && (found get_match_args)) then
+      then (map, (access,fdef)::collisions)
+      else ((add_map_list fdef.name (access,fdef) map), collisions) in
+   let map_builder map_pair (access, fdeflist) = List.fold_left (add_method access) map_pair fdeflist in
    build_map_track_errors map_builder (klass_to_methods aklass)
 
 (* Build up a map from class to variable map (i.e. to the above).  Returns
@@ -274,11 +238,11 @@ let build_class_var_map klasses =
  * and access mode pair)
  *)
 let build_class_method_map klasses = 
-   let map_builder (klass_map, collision_list) aklass =
-	match(build_method_map aklass) with
-        | Left(method_map) -> (StringMap.add (aklass.klass) method_map klass_map, collision_list)
-        | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
-	build_map_track_errors map_builder klasses
+  let map_builder (klass_map, collision_list) aklass =
+    match(build_method_map aklass) with
+      | Left(method_map) -> (StringMap.add (aklass.klass) method_map klass_map, collision_list)
+      | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
+  build_map_track_errors map_builder klasses
 
 
 (* Given a class -> var map table as above, do a lookup -- returns option *)
