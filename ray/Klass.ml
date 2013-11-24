@@ -28,7 +28,14 @@ let build_map_track_errors builder alist =
     | (_, errors) -> Right(errors)
 
 (* Look a value up in a map -- if it is there, return Some(value) else None *)
-let map_lookup key map = if StringMap.mem key map then Some(StringMap.find key map) else None
+let map_lookup key map = if StringMap.mem key map
+  then Some(StringMap.find key map)
+  else None
+
+(* Look a value list up in a map -- if it is there, return the list else [] *)
+let map_lookup_list key map = if StringMap.mem key map
+  then StringMap.find key map
+  else []
 
 (* Updating a string map that has list of possible values *)
 let add_map_list key value map =
@@ -130,34 +137,31 @@ let build_class_var_map klasses =
   build_map_track_errors map_builder klasses
 
 (* Given a class -> var map table as above, do a lookup -- returns option *)
-let class_var_lookup map klassName varName =
-  match (map_lookup klassName map) with
-    | Some(varTable) -> map_lookup varName varTable
-    | None -> None
+let class_var_lookup map klass_name var_name =
+  match (map_lookup klass_name map) with
+    | Some(var_table) -> map_lookup var_name var_table
+    | _ -> None
 
-(* Builds a map of all the methods within a class
- * Key = function name
- * value = list of accessmethod,fdef pairs
+(* Return whether two function definitions have conflicting signatures *)
+let conflicting_signatures func1 func2 =
+  let same_type (t1, _) (t2, _) = (t1 = t2) in
+  let same_name = (func1.name = func2.name) in
+  let same_params = try List.for_all2 same_type func1.formals func2.formals with
+    | Invalid_argument(_) -> false in
+  same_name && same_params
 
- * match_args checks if there is an fdef already in the map,
- * irrespective of its accessmethod, which matches the given
- * method of the class. If no collisions, add the (function def,
- * accessmethod) pair to the list of fdef with the same function
- * name or make a new entry. If the fdef is ambiguous, add the
- * fdef to the collision list
+(* Builds a map of all the methods within a class, returning a list of collisions
+ * when there are conflicting signatures. Keys to the map are function names and
+ * the values are list of (access mode, func_def) pairs.
  *)
-
 let build_method_map aklass =
-  let add_method access (map,collisions) fdef =
-    let found = function
-      | Some _ -> true
-      | None   -> false in
-    let get_match_args = match_args fdef.formals (StringMap.find fdef.name map) in
-    if ((StringMap.mem fdef.name map) && (found get_match_args)) then
-      then (map, (access,fdef)::collisions)
-      else ((add_map_list fdef.name (access,fdef) map), collisions) in
-   let map_builder map_pair (access, fdeflist) = List.fold_left (add_method access) map_pair fdeflist in
-   build_map_track_errors map_builder (klass_to_methods aklass)
+  let add_method access (map, collisions) fdef =
+    let same_name = List.map (function (_, func) -> func) (map_lookup_list fdef.name map) in
+    if List.exists (conflicting_signatures fdef) same_name
+      then (map, fdef::collisions)
+      else (add_map_list fdef.name (access, fdef) map, collisions) in
+  let map_builder map (access, funcs) = List.fold_left (add_method access) map funcs in
+  build_map_track_errors map_builder (klass_to_methods aklass)
 
 (* Builds a map from classname to map of list of function definition, accessmode pair
  * Key = classname, value = method_map ( from build_method_map function) ,
@@ -174,93 +178,113 @@ let build_class_method_map klasses =
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
   build_map_track_errors map_builder klasses
 
-
-
-(* Checks if two variables are of same type *)
-let same_type typ1 typ2 = (typ1 = typ2)
-
-(*Checks if the formal arguments are ambiguous.
- *Pass the appropriate check_ambiguous function.
+(* Given a class -> method map table, look up all the methods in a given class with a given name
+ * Returns a list of func_defs. If no method can be found, returns the empty list
  *)
-let rec match_formals list1 list2 =
-  try List.for_all2 same_type list1 list2 with
-    | InvalidArgument -> false
+let class_method_lookup map klass_name func_name =
+  match (map_lookup klass_name map) with
+    | Some(method_map) -> map_lookup_list func_name method_map
+    | _ -> []
 
-let rec match_args arglist fdeflist =  match fdeflist with
-  | [] ->  None
-  | (access,fn)::tl ->
-    if (match_formals arglist fn.formals)
-      then Some(access, fn)
-      else match_args arglist tl
-
-
-(** we have a classname -> subclassname map check if typ1 is a subtype of typ2
-i.e typ1 is same as typ2 or typ1 is same as typ2's child and so on
-                or typ2 is typ1's parent
-  If the typ1 is a subtyp of typ2, we return a pair (true, level)
-  else we return (false, -1)
-  If typ1 and typ2 are both same level will be 0
-  else it will be the number of levels by which they are apart
-**)
-
-let rec isSubtype typ1 typ2 level sub_to_super_map  =
-  if typ1 = typ2  then level
-    else if typ1 = "Object" then -1
-    else if(StringMap.mem typ1 sub_to_super_map) then
-      isSubtype (StringMap.find typ1 sub_to_super_map) typ2 (level + 1) sub_to_super_map
-    else -1
-
-
-
-(* Given two argument list, score them on how closely they match with each other
-   The first list is the actual arguments, the second list is the formal arguments
+(* Recursively build the ancestor map for each class
+ * Builds a map such that for each class name a list of ancestors is returned. The first
+ * element is the 0th ancestor, the class itself. The last ancestor is Object -- in between
+ * the ancestors go from child to parent
  *)
-let rec getscore list1 list2 map = match list1, list2 with
-  | [], [] ->  [Some(0)]
-  | (hd,_)::tl, (x,_)::y -> Some(isSubtype hd x 0 map)::(getscore tl y map)
-  | _, _ -> [Some(-1)]
+let build_ancestor_map parent_map =
+  let rec ancestor_builder klass map =
+    if StringMap.mem klass map then map
+    else
+      let parent = StringMap.find klass parent_map in
+      let map = ancestor_builder parent map in
+      let ancestors = StringMap.find parent map in
+      StringMap.add klass (klass::ancestors) map in
+  let folder klass _ map = ancestor_builder klass map in
+  let map = StringMap.add "Object" ["Object"] StringMap.empty in
+  StringMap.fold folder parent_map map
 
-
-(*Given a list of samelength fdefs check if they are compatible
- *Add the fdefs with the compatibility score and build the list.
- *Later we ll ignore fdefs with poor compatibility score.
+(* Given a klass and its list of ancestors, build a distance map to those
+ * ancestors -- i.e. the number of hops back up the tree one must take to
+ * get to any of those ancestors (assumes they are given in order)
  *)
+let build_distance klass ancestors =
+  let map_builder (map, i) item = (StringMap.add item i map, i+1) in
+  fst (List.fold_left map_builder (StringMap.empty, 0) ancestors)
 
-let rec get_compatible_fdefs fdef fdeflist map =
-  let rec valid alist = match alist with
-    | [] -> true
-    | [Some x] -> x >= 0
-    | hd::tl -> (match hd with
-      | Some x -> (x >= 0) && (valid tl)
-      | None -> valid tl) in
-  match fdeflist with
-    | [] -> [None]
-    | (access,fn)::tl ->
-      let score = getscore fdef.formals fn.formals map in
-      if List.length fdef.formals <> List.length fn.formals
-        then get_compatible_fdefs fdef tl map
-        else if valid score
-          then Some(score,access,fn) :: get_compatible_fdefs fdef tl map
-          else get_compatible_fdefs fdef tl map
+(* Given an ancestor map (see build_ancestor_map), build a distance map
+ * out of the keys and values
+ *)
+let build_distance_map ancestor_map = StringMap.mapi build_distance ancestor_map
 
-let get_method fdef fdeflist map filtermap =
-  let fdef_of (_,x,y) = (x,y) in
-  let score_of (x,_,_) i = x in
-  let compatiblelist = get_compatible_fdefs fdef fdeflist map in
-    match compatiblelist with
-      | [] -> None
-      | hd::tl -> None (* (score_of hd current),(fdef_of hd)  *)
+(* Given a distance map and two classes, return the distance between the two classes.
+ * If one is a proper subtype of the other then either a Some(n) where n is non-zero
+ * is returned; if they are the same then Some(0) is returned. If incomparable, then
+ * None is returnd.
+ *
+ * Note that a non-negative is returned if klass1 derives transitively from klass2
+ * and a non-positive is returned if klass2 derives transitively from klass1
+ *)
+let get_distance distance_map klass1 klass2 =
+  (* We lt these pop exceptions because that means bad programming on the compiler
+   * writers part, not on the GAMMA programmer's part (when klass1, klass2 aren't found)
+   *)
+  let klass1_map = StringMap.find klass1 distance_map in
+  let klass2_map = StringMap.find klass2 distance_map in
+  match map_lookup klass2 klass1_map, map_lookup klass1 klass2_map with
+    | None, None -> None
+    | None, Some(n) -> Some(-n)
+    | res, _ ->  res
 
+(* Given a distance map, determine if one type is a subtype of the other. Note that
+ * this holds when the distance is zero and so when the two types are the same.
+ *)
+let is_subtype distance_map subtype supertype =
+  match get_distance distance_map subtype supertype with
+    | Some(n) when n >= 0 -> true
+    | _ -> false
 
-(*Looks up list of function definitions matching the given function name*)
+(* Given a distance map, determine if one type is a strict subtype of the other. Note
+ * that this means tha the two types are not the same.
+ *)
+let is_proper_subtype distance_map subtype supertype =
+  match get_distance distance_map subtype supertype with
+    | Some(n) when n > 0 -> true
+    | _ -> false
+
+(* Return whether a formals list is compatible with an actuals list
+ * This includes checking that the number of arguments are the same, too.
+ *)
+let compatible_arguments distance_map actuals formals =
+  let compatible formal actual = is_subtype distance_map actual formal in
+  try List.for_all2 compatible formals actuals with
+    | Invalid_argument(_) -> false
+
+(* A predicate for whether a func_def is compatible with an actuals list *)
+let is_compatible distance_map actuals func_def =
+  compatible_arguments distance_map actuals (List.map fst func_def.formals)
+
+(* Given a list of compatible methods, return Some(func_def) that is the `best' match
+ * lexicographically given the distance map and the actuals
+ *)
 (*
-let method_lookup funcName argList methodmap =
-  if (StringMap.mem funcName methodmap)
-    then match_args similar_type argList (StringMap.find funcName methodmap)
-    else (false, None)
+let best_match distance_map actuals func_defs =
+  let funcs_formals = List.map (function func_def -> (func_def, func_def.formals)) func_defs in
+  let update_formals = function
+    | (func, []) -> raise(Failure("Compatible methods don't have enough parameters -- Compiler error!"))
+    | (func, _::formals) -> (func, formals) in
 
-(*Given a class -> method map table , do a fn lookup -- returns option *)
-let class_method_lookup map className funcName argtype_list =
-  match (map_lookup className map) with
-    | Some(method_map) -> method_lookup funcName argtype_list method_map
-    | None  -> None
+  let rec find_best_match remaining_actuals = function
+    | [] -> None
+    | [func] -> Some(func)
+    | funcs -> match remaining_actuals with
+      | [] -> raise(Failure("Compiler error -- lexicographic selection not unique, must have duplicate method signatures."))
+      | actual::rest ->
+        let actual_map = StringMap.find actual distance_map in
+        let distance (_, formal::_) = StringMap.find formal actual_map in
+        let min_dist = min (List.map distance funcs) in
+        let funcs = List.filter (function func -> (distance func) == min_dist) funcs in
+        find_best_match rest (List.map update_formals funcs) in
+
+  find_best_match actuals func_formals
+*)
+
