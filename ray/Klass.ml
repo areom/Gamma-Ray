@@ -117,7 +117,19 @@ let build_var_map aklass =
   let map_builder map (access, section) = List.fold_left (add_var access) map section in
   build_map_track_errors map_builder (klass_to_sections aklass)
 
-(*Checks if two variables are of same type*)
+(* Build up a map from class to variable map (i.e. to the above).  Returns
+ * Left (map) where map is  class -> (var -> (access mode, type))  if all the
+ * instance variables in all the classes are okay. Otherwise returns Right
+ * (collisions) where collisions is a list of pairs (class, colliding vars)
+ *)
+let build_class_var_map klasses =
+  let map_builder (klass_map, collision_list) aklass =
+    match (build_var_map aklass) with
+      | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
+      | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
+  build_map_track_errors map_builder klasses
+
+(* Checks if two variables are of same type *)
 let same_type typ1 typ2 = (typ1 = typ2)
 
 (*Checks if the formal arguments are ambiguous.
@@ -192,10 +204,9 @@ let get_method fdef fdeflist map filtermap =
       | [] -> None
       | hd::tl -> None (* (score_of hd current),(fdef_of hd)  *)
 
-
-(*Builds a map of all the methods within a class
- *Key = function name
- *value = list of accessmethod,fdef pairs
+(* Builds a map of all the methods within a class
+ * Key = function name
+ * value = list of accessmethod,fdef pairs
 
  * match_args checks if there is an fdef already in the map,
  * irrespective of its accessmethod, which matches the given
@@ -210,24 +221,12 @@ let build_method_map aklass =
     let found = function
       | Some _ -> true
       | None   -> false in
-    let get_match_args = match_args same_type fdef.formals (StringMap.find fdef.name map) in
+    let get_match_args = match_args fdef.formals (StringMap.find fdef.name map) in
     if ((StringMap.mem fdef.name map) && (found get_match_args)) then
       then (map, (access,fdef)::collisions)
       else ((add_map_list fdef.name (access,fdef) map), collisions) in
    let map_builder map_pair (access, fdeflist) = List.fold_left (add_method access) map_pair fdeflist in
    build_map_track_errors map_builder (klass_to_methods aklass)
-
-(* Build up a map from class to variable map (i.e. to the above).  Returns
- * Left (map) where map is  class -> (var -> (access mode, type))  if all the
- * instance variables in all the classes are okay. Otherwise returns Right
- * (collisions) where collisions is a list of pairs (class, colliding vars)
- *)
-let build_class_var_map klasses =
-  let map_builder (klass_map, collision_list) aklass =
-    match (build_var_map aklass) with
-      | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
-      | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
-  build_map_track_errors map_builder klasses
 
 (* Builds a map from classname to map of list of function definition, accessmode pair
  * Key = classname, value = method_map ( from build_method_map function) , 
