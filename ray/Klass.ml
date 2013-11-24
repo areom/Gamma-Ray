@@ -3,7 +3,7 @@ module StringMap = Map.Make (String)
 
 (* Types *)
 type access_mode = Public | Protected | Private
-type method_access_mode = Public | Protected | Private | Refines | Mains
+type method_section = Public | Protected | Private | Refines | Mains
 type ('a, 'b) either = Left of 'a | Right of 'b
 
 (* Generic helper functions *)
@@ -43,7 +43,7 @@ let find_all_min cmp alist =
  *   builder : (StringMap, errorList) -> (StringMap', errorList')
  *)
 let build_map_track_errors builder alist =
-  match (List.fold_left builder (StringMap.empty, []) alist) with
+  match List.fold_left builder (StringMap.empty, []) alist with
     | (value, []) -> Left(value)
     | (_, errors) -> Right(errors)
 
@@ -151,16 +151,10 @@ let build_var_map aklass =
  *)
 let build_class_var_map klasses =
   let map_builder (klass_map, collision_list) aklass =
-    match (build_var_map aklass) with
+    match build_var_map aklass with
       | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
   build_map_track_errors map_builder klasses
-
-(* Given a class -> var map table as above, do a lookup -- returns option *)
-let class_var_lookup map klass_name var_name =
-  match (map_lookup klass_name map) with
-    | Some(var_table) -> map_lookup var_name var_table
-    | _ -> None
 
 (* Return whether two function definitions have conflicting signatures *)
 let conflicting_signatures func1 func2 =
@@ -170,41 +164,62 @@ let conflicting_signatures func1 func2 =
     | Invalid_argument(_) -> false in
   same_name && same_params
 
+let signature_string func_def =
+  Format.sprintf "%s(%s)" func_def.name (String.concat ", " (List.map fst func_def.formals))
+
 (* Builds a map of all the methods within a class, returning a list of collisions
  * when there are conflicting signatures. Keys to the map are function names and
- * the values are list of (access mode, func_def) pairs.
+ * the values are list of (section, func_def) pairs.
  *)
 let build_method_map aklass =
-  let add_method access (map, collisions) fdef =
+  let add_method section (map, collisions) fdef =
     let same_name = List.map (function (_, func) -> func) (map_lookup_list fdef.name map) in
     if List.exists (conflicting_signatures fdef) same_name
       then (map, fdef::collisions)
-      else (add_map_list fdef.name (access, fdef) map, collisions) in
-  let map_builder map (access, funcs) = List.fold_left (add_method access) map funcs in
+      else (add_map_list fdef.name (section, fdef) map, collisions) in
+  let map_builder map (section, funcs) = List.fold_left (add_method section) map funcs in
   build_map_track_errors map_builder (klass_to_methods aklass)
 
-(* Builds a map from classname to map of list of function definition, accessmode pair
- * Key = classname, value = method_map ( from build_method_map function) ,
- * destination map = klass_map.
- * If the method_map construction found collisions, i.e there were function
- * definitions with same name and exactly same argument types, then this method
- * will return the collision list of pairs of (classname , list colliding function def
- * and access mode pair)
+(* Builds up a map from class to method maps (i.e. from the above). Returns
+ * Left (map) where map is class -> (var -> (section, func_def))  if all the
+ * method signatures are okay. Otherwise returns Right (collisions) when the
+ * method signatures collide.  Collisions are (class, colliding methods) pairs.
  *)
 let build_class_method_map klasses =
   let map_builder (klass_map, collision_list) aklass =
-    match(build_method_map aklass) with
+    match build_method_map aklass with
       | Left(method_map) -> (StringMap.add (aklass.klass) method_map klass_map, collision_list)
       | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
   build_map_track_errors map_builder klasses
 
-(* Given a class -> method map table, look up all the methods in a given class with a given name
- * Returns a list of func_defs. If no method can be found, returns the empty list
+(* Given a class -> variable map table lookup the (access mode, type) for a variable in a class.
+ * Can return None if none found otherwise Some((access, type))
+ *)
+let class_var_lookup map klass_name var_name =
+  match map_lookup klass_name map with
+    | Some(var_map) -> map_lookup var_name var_map
+    | _ -> None
+
+(* Given a class -> method map table lookup the list of methods for a method name in a class.
+ * Returns a list of methods with that name in the class (possibly empty)
  *)
 let class_method_lookup map klass_name func_name =
-  match (map_lookup klass_name map) with
+  match map_lookup klass_name map with
     | Some(method_map) -> map_lookup_list func_name method_map
     | _ -> []
+
+(* Given a class -> method map table lookup the access mode in a klass of the given func_def
+ * Throws Invalid_argument if there is no such func in the klass
+ *)
+let class_method_section_lookup klass_method_map klass_name func_def =
+  let err_msg = "Section lookup on nonexistant method: " ^ (signature_string func_def) ^ " of " ^ klass_name ^ ". Should not have happened -- compiler error." in
+  let same_func (_, a_func) = conflicting_signatures a_func func_def in
+  match class_method_lookup klass_method_map klass_name func_def.name with
+    | [] -> raise(Invalid_argument(err_msg ^ " [Class method lookup fail]"))
+    | methods -> match List.filter same_func methods with
+      | [] -> raise(Invalid_argument(err_msg ^ " [Signature search fail]"))
+      | [(section, _)] -> section
+      | _ -> raise(Invalid_argument("Multiple methods of the signature " ^ (signature_string func_def) ^ " found in " ^ klass_name ^ ". Should not have happened -- Compiler error."))
 
 (* Recursively build the ancestor map for each class
  * Builds a map such that for each class name a list of ancestors is returned. The first
@@ -304,7 +319,8 @@ let best_matching_signature distance_map actuals funcs =
  *)
 let best_method klass_method_map distance_map klass_name method_name actuals =
   let methods = class_method_lookup klass_method_map klass_name method_name in
-  match best_matching_signature distance_map actuals methods with
+  let no_sections = List.map snd methods in
+  match best_matching_signature distance_map actuals no_sections with
     | [] -> None
-    | [func] -> Some(func)
+    | [func] -> Some((class_method_section_lookup klass_method_map klass_name func, func))
     | _ -> raise(Failure("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
