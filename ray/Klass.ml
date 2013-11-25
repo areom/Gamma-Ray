@@ -306,7 +306,7 @@ let best_matching_signature distance_map actuals funcs =
   let funcs = List.filter (compatible_function distance_map actuals) funcs in
   let distance_of actual formal = match get_distance distance_map actual formal with
     | Some(n) when n >= 0 -> n
-    | _ -> raise(Failure("Compatible methods somehow incompatible: " ^ actual ^ " vs. " ^ formal ^ ". Compiler error.")) in
+    | _ -> raise(Invalid_argument("Compatible methods somehow incompatible: " ^ actual ^ " vs. " ^ formal ^ ". Compiler error.")) in
   let to_distance func = List.map2 distance_of actuals (List.map fst func.formals) in
   let with_distances = List.map (function func -> (func, to_distance func)) funcs in
   let lex_compare (_, lex1) (_, lex2) = lexical_compare lex1 lex2 in
@@ -323,4 +323,4 @@ let best_method klass_method_map distance_map klass_name method_name actuals =
   match best_matching_signature distance_map actuals no_sections with
     | [] -> None
     | [func] -> Some((class_method_section_lookup klass_method_map klass_name func, func))
-    | _ -> raise(Failure("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
+    | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
