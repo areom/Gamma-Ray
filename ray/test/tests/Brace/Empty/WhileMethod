@@ -1,0 +1,8 @@
+class List {
+  public {
+    void noop() {
+      while(true) {
+      }
+    }
+  }
+}
