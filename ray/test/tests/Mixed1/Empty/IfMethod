@@ -1,0 +1,6 @@
+class List:
+  public:
+    void noop(){
+      if(true){}
+    }
+
