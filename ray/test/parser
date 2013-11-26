@@ -206,7 +206,7 @@ test -x "$exe" || errWith "Testing $program but $exe unexecutable"
 
 test -z "$verbose" && oneline=1
 
-for adir in $( find "$testdir" -type d -mindepth 1 -maxdepth 1 -name "$folderpattern" ) ; do
+for adir in $( find "$testdir" -mindepth 1 -maxdepth 1 -type d -name "$folderpattern" ) ; do
   adir=$( dropdirprefix "$adir" "$testdir/" )
   folders+=( "$adir" )
 done
