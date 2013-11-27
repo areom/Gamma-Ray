@@ -3,4 +3,4 @@
 testdir="$( dirname "$0" )"
 testprogram=".testdrive"
 
-"$testdir/$testprogram" "$0" "inspect" "expect-parser" "$@"
+"$testdir/$testprogram" "$0" "prettify" "expect-ast-pretty" "$@"

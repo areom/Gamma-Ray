@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# These are things that are just program dependent (Scanner v Parser, etc)
-program="$( basename "$0" )"
-scriptdir="$( dirname "$0" )"
-exe=
-old=
+program="$( basename "$1" )"
+scriptdir="$( dirname "$1" )"
+exe="./tools/$2"
+old="$3"
+shift 3
 
 # Arguments
 justrun=
@@ -18,7 +18,6 @@ current=
 results=
 
 # Don't change per iteration
-scripts=( $scriptdir/scanner $scriptdir/parser $scriptdir/pretty-ast )  ## ADD NEW SCRIPTS HERE
 tmpfile="test/check"
 tmperr="test/err"
 testdir="test/tests"
@@ -133,9 +132,6 @@ function listandexit {
 function usage {
 cat <<USAGE
 $program -[chlpsv]
-  -c
-     Merely validate that all test scripts are identical and exit
-
   -f pattern
      Filter meta-folders by pattern
 
@@ -162,34 +158,8 @@ USAGE
 
 setdropadj
 
-script="${scripts[0]}"
-for ascript in "${scripts[@]}" ; do
-  scriptfile=$( dropdirprefix "$script" "$scriptdir" )
-  ascriptfile=$( dropdirprefix "$ascript" "$scriptdir" )
-  diff -q "$script" "$ascript" &> /dev/null || errWith "Test scripts $scriptfile and $ascriptfile differ; they should match."
-done
-
-case "$program" in
-  scanner)
-        exe="./tools/streams"
-        old="expect-scanner"
-        ;;
-  parser)
-        exe="./tools/inspect"
-        old="expect-parser"
-        ;;
-  pretty-ast)
-        exe="./tools/prettify"
-        old="expect-pretty"
-        ;;
-  *)
-        errWith "Unknown test program $program"
-        ;;
-esac
-
-while getopts "cf:hlRsvp:" OPTION ; do
+while getopts "f:hlRsvp:" OPTION ; do
   case "$OPTION" in
-    c) exit 0 ;;
     f) folderpattern=$OPTARG ;;
     h) usage ;;
     R) justrun=1 ;;
