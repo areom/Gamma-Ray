@@ -18,7 +18,7 @@ current=
 results=
 
 # Don't change per iteration
-scripts=( $scriptdir/scanner $scriptdir/parser )  ## ADD NEW SCRIPTS HERE
+scripts=( $scriptdir/scanner $scriptdir/parser $scriptdir/pretty-ast )  ## ADD NEW SCRIPTS HERE
 tmpfile="test/check"
 tmperr="test/err"
 testdir="test/tests"
@@ -177,6 +177,10 @@ case "$program" in
   parser)
         exe="./tools/inspect"
         old="expect-parser"
+        ;;
+  pretty-ast)
+        exe="./tools/prettify"
+        old="expect-pretty"
         ;;
   *)
         errWith "Unknown test program $program"
