@@ -1,7 +1,7 @@
 open Parser
 open Ast
 
-let indent level = String.make (level * 2) ' '
+let indent level = String.make (level*2) ' '  
 let _id x = x
 
 let pp_lit = function
@@ -70,7 +70,13 @@ and pp_stmt depth = function
   | Return(the_expr) -> Printf.sprintf "\n%sReturn(%s)" (indent depth) (pp_opt (pp_expr depth) the_expr)
   | Super(args) -> Printf.sprintf "\n%sSuper(%s)" (indent depth) (pp_str_list (pp_expr depth) args depth)
 and inspect_clause depth (opt_expr, body) = Printf.sprintf "(%s, %s)" (pp_opt (pp_expr depth) opt_expr) (pp_str_list (pp_stmt (depth+1)) body depth)
-and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s\n%s}"
+and class_section = function
+	| Publics		-> Printf.sprintf "Publics"
+	| Protects	-> Printf.sprintf "Protects" 
+	| Privates	-> Printf.sprintf "Privates" 
+	| Refines		-> Printf.sprintf "Refines"	
+	| Mains			-> Printf.sprintf "Maines" 
+and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s\n%s}"
   (indent (depth-1))
   (indent depth)
   (pp_opt _id func.returns)
@@ -84,6 +90,8 @@ and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s
   (pp_str_list (pp_var_def (depth+1)) func.formals depth)
   (indent depth)
   (pp_str_list (pp_stmt (depth+1)) func.body depth)
+	(indent depth)
+	(class_section func.section)
   (indent (depth-1))
 
 let pp_member_def depth = function
@@ -96,7 +104,7 @@ let pp_member_def depth = function
 			(pp_func_def (depth+1) imem)*)
 
 let pp_class_sections sections depth =
-	Format.sprintf "@[<v 2>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
+	Format.sprintf "@[<v 3>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
   (pp_str_list (pp_member_def (depth+1)) sections.privates depth)
   (pp_str_list (pp_member_def (depth+1)) sections.protects depth)
   (pp_str_list (pp_member_def (depth+1)) sections.publics depth)
@@ -104,7 +112,7 @@ let pp_class_sections sections depth =
   (pp_str_list (pp_func_def (depth+1)) sections.mains depth)
 
 let pp_class_def the_klass =
-  Format.sprintf "@[<v>@,{@[<v 1>@,klass = %s,@,parent = %s,@,sections = %s@]@,}@]"
+  Format.sprintf "@[<v>@,{@[<v 2>@,klass = %s,@,parent = %s,@,sections = %s@]@,}@]"
   the_klass.klass
   (pp_opt _id the_klass.parent)
-  (pp_class_sections the_klass.sections 2)
+  (pp_class_sections the_klass.sections 3)
