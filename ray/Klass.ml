@@ -70,9 +70,9 @@ let klass_to_sections aklass =
 (* Go from a class to all of its sections *)
 let klass_to_methods aklass =
   let to_function = function
-    | VarMem(_) -> None
     | MethodMem(m) -> Some(m)
-    | InitMem(i) -> Some(i) in
+    | InitMem(i) -> Some(i)
+    | _ -> None in
   let funcs members = filter_option (List.map to_function members) in
   let s = aklass.sections in
   [(Publics, funcs s.publics); (Protects, funcs s.protects); (Privates, funcs s.privates); (Refines, s.refines); (Mains, s.mains)]
