@@ -4,7 +4,6 @@ module StringMap = Map.Make (String)
 
 (* Types *)
 type access_mode = Public | Protected | Private
-type method_section = Publics | Protects | Privates | Refines | Mains
 
 (* Just for convenient reading *)
 type 'a lookup_table = 'a StringMap.t StringMap.t
@@ -15,7 +14,7 @@ type class_data = {
   parents : string lookup_map;
   children : (string list) lookup_map;
   variables : (access_mode * string) lookup_table;
-  methods : ((method_section * func_def) list) lookup_table;
+  methods : ((class_section * func_def) list) lookup_table;
   ancestors : (string list) lookup_map;
   distance : int lookup_table;
 }
