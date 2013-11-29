@@ -30,3 +30,9 @@ let find_all_min cmp alist =
         else min_find found is in
   min_find [] alist
 
+(* Either monad stuffage *)
+let (|>) value func =
+  match value with
+    | Left(v) -> func(v)
+    | Right(problem) -> Right(problem)
+
