@@ -63,7 +63,7 @@ let klass_to_parent = function
   | { parent = None; _ } -> "Object"
   | { parent = Some(aklass); _ } -> aklass
 
-(* From a class get the sections of that class *)
+(* Go from a class to a list of instance variables in that class, separated by section *)
 let klass_to_variables aklass =
   let to_variable = function
     | VarMem(v) -> Some(v)
@@ -72,7 +72,7 @@ let klass_to_variables aklass =
   let s = aklass.sections in
   [(Publics, vars s.publics); (Protects, vars s.protects); (Privates, vars s.privates)]
 
-(* Go from a class to all of its sections *)
+(* Go from a class to a list of instance methods in that class, separated by section *)
 let klass_to_methods aklass =
   let to_function = function
     | MethodMem(m) -> Some(m)
