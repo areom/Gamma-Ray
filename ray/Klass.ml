@@ -81,15 +81,19 @@ let klass_to_methods aklass =
   let s = aklass.sections in
   [(Publics, funcs s.publics); (Protects, funcs s.protects); (Privates, funcs s.privates); (Refines, s.refines); (Mains, s.mains)]
 
-(* make a map children map
- *   parent (name -- string) -> children (names -- string) list
+(* Add the children map
+ *   ( parent name (string) -> children names (string list) )
+ * to a class_data record
  *)
 let build_children_map data klasses =
   let map_builder map aklass = add_map_list (klass_to_parent aklass) (aklass.klass) map in
   let children_map = List.fold_left map_builder StringMap.empty klasses in
   { data with children = children_map }
 
-(* lookup_map that yields parents *)
+(* Add the parent map
+ *   ( child name (string) -> parent name (string) )
+ * to a class_data record
+ *)
 let build_parent_map data klasses =
   let map_builder map aklass =
     let parent = klass_to_parent aklass in
@@ -98,9 +102,8 @@ let build_parent_map data klasses =
   let parent_map = List.fold_left map_builder StringMap.empty klasses in
   { data with parents = parent_map }
 
-(* Validate that the klass map represents a tree -- everything should go
- * back to object eventually. Returns string option reporting an issue when
- * there is an issue to report.
+(* Validate that the parent map in a class_data record represents a tree rooted at object. *
+ * Returns an optional string (Some(string)) when there is an issue.
  *)
 let is_tree_hierarchy data =
   let rec from_object klass checked =
@@ -120,7 +123,10 @@ let is_tree_hierarchy data =
     | Right(issue) -> Some(issue)
     | _ -> None
 
-(* Build class name -> class def map *)
+(* Add the class map
+ *   ( class name (string) -> class (class_def) )
+ * to a class_data record
+ *)
 let build_class_map data klasses =
   let map_builder map aklass = StringMap.add (aklass.klass) aklass map in
   let class_map = List.fold_left map_builder StringMap.empty klasses in
@@ -138,10 +144,11 @@ let build_var_map aklass =
   let map_builder map (access, section) = List.fold_left (add_var access) map section in
   build_map_track_errors map_builder (klass_to_sections aklass)
 
-(* Build up a map from class to variable map (i.e. to the above).  Returns
- * Left (map) where map is  class -> (var -> (access mode, type))  if all the
- * instance variables in all the classes are okay. Otherwise returns Right
- * (collisions) where collisions is a list of pairs (class, colliding vars)
+(* Add the variable map
+ *   ( class name (string) -> variable name (string) -> variable info (access, type) )
+ * to a class_data record
+ * Returns either a list of collisions (in Right) or the updated record (in Left).
+ * Collisions are pairs (class name, collisions (var names) for that class)
  *)
 let build_class_var_map data klasses =
   let map_builder (klass_map, collision_list) aklass =
@@ -176,10 +183,12 @@ let build_method_map aklass =
   let map_builder map (section, funcs) = List.fold_left (add_method section) map funcs in
   build_map_track_errors map_builder (klass_to_methods aklass)
 
-(* Builds up a map from class to method maps (i.e. from the above). Returns
- * Left (map) where map is class -> (var -> (section, func_def))  if all the
- * method signatures are okay. Otherwise returns Right (collisions) when the
- * method signatures collide.  Collisions are (class, colliding methods) pairs.
+(* Add the method map
+ *   ( class name (string) -> method name (string) -> methods (func_def list) )
+ * to the class_data record.
+ * Returns either a list of collisions (in Right) or the updated record (in Left).
+ * Collisions are pairs (class name, colliding methods for that class). Methods collide
+ * if they have conflicting signatures (ignoring return type).
  *)
 let build_class_method_map data klasses =
   let map_builder (klass_map, collision_list) aklass =
@@ -190,39 +199,25 @@ let build_class_method_map data klasses =
     | Left(method_map) -> Left({ data with methods = method_map })
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
-(* Given a class -> variable map table lookup the (access mode, type) for a variable in a class.
- * Can return None if none found otherwise Some((access, type))
+(* Given a class_data record, a class name, and a variable name, return the information for
+ * that instance variable in that class if it exists.
  *)
 let class_var_lookup data klass_name var_name =
   match map_lookup klass_name data.variables with
     | Some(var_map) -> map_lookup var_name var_map
     | _ -> None
 
-(* Given a class -> method map table lookup the list of methods for a method name in a class.
- * Returns a list of methods with that name in the class (possibly empty)
+(* Given a class_data record, a class name, and a method name, return a list of methods
+ * in that class with that name. Returns the empty list if no such method exists.
  *)
 let class_method_lookup data klass_name func_name =
   match map_lookup klass_name data.methods with
     | Some(method_map) -> map_lookup_list func_name method_map
     | _ -> []
 
-(* Given a class -> method map table lookup the access mode in a klass of the given func_def
- * Throws Invalid_argument if there is no such func in the klass
- *)
-let class_method_section_lookup data klass_name func_def =
-  let err_msg = "Section lookup on nonexistant method: " ^ (signature_string func_def) ^ " of " ^ klass_name ^ ". Should not have happened -- compiler error." in
-  let same_func (_, a_func) = conflicting_signatures a_func func_def in
-  match class_method_lookup data klass_name func_def.name with
-    | [] -> raise(Invalid_argument(err_msg ^ " [Class method lookup fail]"))
-    | methods -> match List.filter same_func methods with
-      | [] -> raise(Invalid_argument(err_msg ^ " [Signature search fail]"))
-      | [(section, _)] -> section
-      | _ -> raise(Invalid_argument("Multiple methods of the signature " ^ (signature_string func_def) ^ " found in " ^ klass_name ^ ". Should not have happened -- Compiler error."))
-
-(* Recursively build the ancestor map for each class
- * Builds a map such that for each class name a list of ancestors is returned. The first
- * element is the 0th ancestor, the class itself. The last ancestor is Object -- in between
- * the ancestors go from child to parent
+(* Given a class_data record, add the ancestor map ( class name (string) -> ancestors (string list) )
+ * to the record; note that the ancestors start with the given class and end with Object (or should).
+ * The ancestors should be given in order.
  *)
 let build_ancestor_map data =
   let rec ancestor_builder klass map =
@@ -245,20 +240,19 @@ let build_distance klass ancestors =
   let map_builder (map, i) item = (StringMap.add item i map, i+1) in
   fst (List.fold_left map_builder (StringMap.empty, 0) ancestors)
 
-(* Given an ancestor map (see build_ancestor_map), build a distance map
- * out of the keys and values
+(* Given a class_data record, add the distance map for the record. The distance map takes a sub class
+ * and then an ancestor class and tells you the distance between the two. (requires ancestor map built)
  *)
 let build_distance_map data = 
   let distance_map = StringMap.mapi build_distance data.ancestors in
   { data with distance = distance_map }
 
-(* Given a distance map and two classes, return the distance between the two classes.
- * If one is a proper subtype of the other then either a Some(n) where n is non-zero
- * is returned; if they are the same then Some(0) is returned. If incomparable, then
- * None is returnd.
+(* Given a class_data record and two classes, returns the distance between them. If one is a proper
+ * subtype of the other then Some(n) is returned where n is non-zero -- zero is returned when the
+ * two are the same class. If incomparable then None is returned.
  *
- * Note that a non-negative is returned if klass1 derives transitively from klass2
- * and a non-positive is returned if klass2 derives transitively from klass1
+ * A non-negative value is returned if the first class is a subtype of the second; otherwise a
+ * non-positive value is returned if the second is a subtype of the first.
  *)
 let get_distance data klass1 klass2 =
   (* We lt these pop exceptions because that means bad programming on the compiler
@@ -271,16 +265,16 @@ let get_distance data klass1 klass2 =
     | None, Some(n) -> Some(-n)
     | res, _ ->  res
 
-(* Given a distance map, determine if one type is a subtype of the other. Note that
- * this holds when the distance is zero and so when the two types are the same.
+(* Given a class_data record return whether the first type is a subtype of the second
+ * Note that this holds when the two types are identical
  *)
 let is_subtype data subtype supertype =
   match get_distance data subtype supertype with
     | Some(n) when n >= 0 -> true
     | _ -> false
 
-(* Given a distance map, determine if one type is a strict subtype of the other. Note
- * that this means tha the two types are not the same.
+(* Given a class_data record return whether the first type is a subtype of the second
+ * and they are not the same type.
  *)
 let is_proper_subtype data subtype supertype =
   match get_distance data subtype supertype with
@@ -299,9 +293,12 @@ let compatible_formals data actuals formals =
 let compatible_function data actuals func_def =
   compatible_formals data actuals (List.map fst func_def.formals)
 
-(* Given a list of methods and a list of actuals, find the best matches
- * Note that if there are ties for mest match, this returns multiple matches.
- * Whether this is an error depends on the caller.
+(* Given a class_data record, a list of actual arguments, and a list of methods,
+ * find the best matches for the actuals. Note that if there are multiple best
+ * matches (i.e. ties) then a non-empty non-singleton list is returned.
+ *
+ * Raises an error if somehow our list of compatible methods becomes incompatible
+ * [i.e. there is a logic error in the compiler].
  *)
 let best_matching_signature data actuals funcs =
   let funcs = List.filter (compatible_function data actuals) funcs in
@@ -313,15 +310,14 @@ let best_matching_signature data actuals funcs =
   let lex_compare (_, lex1) (_, lex2) = lexical_compare lex1 lex2 in
   List.map fst (find_all_min lex_compare with_distances)
 
-(* Given a class name, a method name, and a list of actuals, get the best matching
- * method. Note that if there is more than one we raise an exception as this is a
- * compiler error -- we should have already removed duplicate methods and so there
- * must be a unique lexicographic minimum.
+(* Given a class_data record, method name, and list of actuals, get the best matching
+ * method. Note that if there is more than one then an exception is raised as this should
+ * have been reported during collision detection [compiler error].
  *)
 let best_method data klass_name method_name actuals =
   let methods = class_method_lookup data klass_name method_name in
   let no_sections = List.map snd methods in
   match best_matching_signature data actuals no_sections with
     | [] -> None
-    | [func] -> Some((class_method_section_lookup data klass_name func, func))
+    | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
