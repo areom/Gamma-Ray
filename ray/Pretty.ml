@@ -1,7 +1,7 @@
 open Parser
 open Ast
 
-let indent level = String.make (level * 2) ' '
+let indent level = String.make (level*2) ' '  
 let _id x = x
 
 let pp_lit = function
@@ -47,19 +47,19 @@ let pp_opt stringer = function
   | Some(v) -> Printf.sprintf "Some(%s)" (stringer v)
 
 let rec pp_expr depth = function
-  | Id(id) -> Printf.sprintf "\n%sId(%s)" (indent depth) id
+  | Id(id) -> Printf.sprintf "Id(%s)"  id
   | This -> "This"
   | Null -> "Null"
   | NewObj(the_type, args) -> Printf.sprintf("\n%sNewObj(%s, %s)") (indent depth) the_type (pp_str_list (pp_expr depth) args depth)
   | Anonymous(the_type, args, body) -> Printf.sprintf("\n%sAnonymous(%s, %s, %s)") (indent depth) the_type (pp_str_list (pp_expr depth) args depth) (pp_str_list (pp_func_def depth) body depth)
   | Literal(l) -> Printf.sprintf "\n%sLiteral(%s)" (indent depth) (pp_lit l)
-  | Invoc(receiver, meth, args) -> Printf.sprintf "\n%sInvocation(%s, %s, %s)" (indent depth) ((pp_expr depth) receiver) meth (pp_str_list (pp_expr depth) args depth)
+  | Invoc(receiver, meth, args) -> Printf.sprintf "\n%sInvocation(%s, %s, %s)" (indent depth) ((pp_expr (depth+1)) receiver) meth (pp_str_list (pp_expr (depth+1)) args depth)
   | Field(receiver, field) -> Printf.sprintf "\n%sField(%s, %s)" (indent depth) ((pp_expr depth) receiver) field
   | Deref(var, index) -> Printf.sprintf "\n%sDeref(%s, %s)" (indent depth) ((pp_expr depth) var) ((pp_expr depth) var)
-  | Unop(an_op, exp) -> Printf.sprintf "\n%sUnop(%s,%s)" (indent depth) (pp_op an_op) ((pp_expr depth) exp)
-  | Binop(left, an_op, right) -> Printf.sprintf "\n%sBinop(%s,%s,%s)" (indent depth) (pp_op an_op) ((pp_expr depth) left) ((pp_expr depth) right)
-  | Refine(fname, args, totype) -> Printf.sprintf "\n%sRefine(%s,%s,%s)" (indent depth) fname (pp_str_list (pp_expr depth) args depth) (pp_opt _id  totype)
-  | Assign(the_var, the_expr) -> Printf.sprintf "\n%sAssign(%s,%s)" (indent depth) ((pp_expr (depth+1)) the_var) ((pp_expr (depth+1)) the_expr)
+  | Unop(an_op, exp) -> Printf.sprintf "\n%sUnop(%s, %s)" (indent depth) (pp_op an_op) ((pp_expr depth) exp)
+  | Binop(left, an_op, right) -> Printf.sprintf "\n%sBinop(%s, %s, %s)" (indent depth) (pp_op an_op) ((pp_expr depth) left) ((pp_expr depth) right)
+  | Refine(fname, args, totype) -> Printf.sprintf "Refine(%s, %s, %s)" fname (pp_str_list (pp_expr (depth+1)) args (depth+1)) (pp_opt _id  totype)
+  | Assign(the_var, the_expr) -> Printf.sprintf "\n%sAssign(%s, %s)" (indent depth) ((pp_expr (depth+1)) the_var) ((pp_expr (depth+1)) the_expr)
   | Refinable(the_var) -> Printf.sprintf "\n%sRefinable(%s)" (indent depth) the_var
 and pp_var_def depth (the_type, the_var) = Printf.sprintf "\n%s(%s, %s)" (indent depth) the_type the_var
 and pp_stmt depth = function
@@ -70,7 +70,13 @@ and pp_stmt depth = function
   | Return(the_expr) -> Printf.sprintf "\n%sReturn(%s)" (indent depth) (pp_opt (pp_expr depth) the_expr)
   | Super(args) -> Printf.sprintf "\n%sSuper(%s)" (indent depth) (pp_str_list (pp_expr depth) args depth)
 and inspect_clause depth (opt_expr, body) = Printf.sprintf "(%s, %s)" (pp_opt (pp_expr depth) opt_expr) (pp_str_list (pp_stmt (depth+1)) body depth)
-and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s\n%s}"
+and class_section = function
+	| Publics		-> Printf.sprintf "Publics"
+	| Protects	-> Printf.sprintf "Protects" 
+	| Privates	-> Printf.sprintf "Privates" 
+	| Refines		-> Printf.sprintf "Refines"	
+	| Mains			-> Printf.sprintf "Mains" 
+and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s\n%s}"
   (indent (depth-1))
   (indent depth)
   (pp_opt _id func.returns)
@@ -84,6 +90,8 @@ and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s
   (pp_str_list (pp_var_def (depth+1)) func.formals depth)
   (indent depth)
   (pp_str_list (pp_stmt (depth+1)) func.body depth)
+	(indent depth)
+	(class_section func.section)
   (indent (depth-1))
 
 let pp_member_def depth = function
@@ -96,7 +104,7 @@ let pp_member_def depth = function
 			(pp_func_def (depth+1) imem)*)
 
 let pp_class_sections sections depth =
-	Format.sprintf "@[<v 2>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
+	Format.sprintf "@[<v 3>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
   (pp_str_list (pp_member_def (depth+1)) sections.privates depth)
   (pp_str_list (pp_member_def (depth+1)) sections.protects depth)
   (pp_str_list (pp_member_def (depth+1)) sections.publics depth)
@@ -104,7 +112,7 @@ let pp_class_sections sections depth =
   (pp_str_list (pp_func_def (depth+1)) sections.mains depth)
 
 let pp_class_def the_klass =
-  Format.sprintf "@[<v>@,{@[<v 1>@,klass = %s,@,parent = %s,@,sections = %s@]@,}@]"
+  Format.sprintf "@[<v>@,{@[<v 2>@,klass = %s,@,parent = %s,@,sections = %s@]@,}@]"
   the_klass.klass
   (pp_opt _id the_klass.parent)
-  (pp_class_sections the_klass.sections 2)
+  (pp_class_sections the_klass.sections 3)
