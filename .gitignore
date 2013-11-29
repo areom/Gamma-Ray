@@ -33,3 +33,5 @@ canonical
 prettify
 parser.output
 expect-*
+*.cmi
+*.cmo
