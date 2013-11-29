@@ -20,14 +20,13 @@ let rec lexical_compare list1 list2 = match list1, list2 with
  * ordering cmp. Note can return any size list.
  *)
 let find_all_min cmp alist =
-  let rec min_find found items =
-    match found, items with
-      | _, [] -> List.rev found (* Return in the same order at least *)
-      | [], i::is -> min_find [i] is
-      | (f::fs), (i::is) -> let result = cmp i f in
-        if result = 0 then min_find (i::found) is
-        else if result < 0 then min_find [i] is
-        else min_find found is in
+  let rec min_find found items = match found, items with
+    | _, [] -> List.rev found (* Return in the same order at least *)
+    | [], i::is -> min_find [i] is
+    | (f::fs), (i::is) -> let result = cmp i f in
+      if result = 0 then min_find (i::found) is
+      else if result < 0 then min_find [i] is
+      else min_find found is in
   min_find [] alist
 
 (* Either monad stuffage *)
