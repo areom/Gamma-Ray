@@ -66,7 +66,7 @@ let klass_to_parent = function
 (* From a class get the sections of that class *)
 let klass_to_variables aklass =
   let to_variable = function
-    | VarMem(_) as v -> Some(v)
+    | VarMem(v) -> Some(v)
     | _ -> None in
   let vars members = filter_option (List.map to_variable members) in
   let s = aklass.sections in
@@ -139,9 +139,7 @@ let build_class_map data klasses =
  * where collisions are the names of variables that are multiply declared.
  *)
 let build_var_map aklass =
-  let add_var section map = function
-    | VarMem((typeId, varId)) -> add_map_unique varId (section, typeId) map
-    | _ -> map in
+  let add_var section map (typeId, varId) = add_map_unique varId (section, typeId) map in
   let map_builder map (section, members) = List.fold_left (add_var section) map members in
   build_map_track_errors map_builder (klass_to_variables aklass)
 
