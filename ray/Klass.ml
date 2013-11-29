@@ -64,8 +64,13 @@ let klass_to_parent = function
   | { parent = Some(aklass); _ } -> aklass
 
 (* From a class get the sections of that class *)
-let klass_to_sections aklass =
-  let s = aklass.sections in [(Publics, s.publics); (Protects, s.protects); (Privates, s.privates)]
+let klass_to_variables aklass =
+  let to_variable = function
+    | VarMem(_) as v -> Some(v)
+    | _ -> None in
+  let vars members = filter_option (List.map to_variable members) in
+  let s = aklass.sections in
+  [(Publics, vars s.publics); (Protects, vars s.protects); (Privates, vars s.privates)]
 
 (* Go from a class to all of its sections *)
 let klass_to_methods aklass =
@@ -138,7 +143,7 @@ let build_var_map aklass =
     | VarMem((typeId, varId)) -> add_map_unique varId (section, typeId) map
     | _ -> map in
   let map_builder map (section, members) = List.fold_left (add_var section) map members in
-  build_map_track_errors map_builder (klass_to_sections aklass)
+  build_map_track_errors map_builder (klass_to_variables aklass)
 
 (* Add the variable map
  *   ( class name (string) -> variable name (string) -> variable info (class_section, type) )
