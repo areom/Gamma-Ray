@@ -2,9 +2,6 @@ open Ast
 open Util
 module StringMap = Map.Make (String)
 
-(* Types *)
-type access_mode = Public | Protected | Private
-
 (* Just for convenient reading *)
 type 'a lookup_table = 'a StringMap.t StringMap.t
 type 'a lookup_map = 'a StringMap.t
@@ -13,7 +10,7 @@ type class_data = {
   classes : class_def lookup_map;
   parents : string lookup_map;
   children : (string list) lookup_map;
-  variables : (access_mode * string) lookup_table;
+  variables : (class_section * string) lookup_table;
   methods : ((class_section * func_def) list) lookup_table;
   ancestors : (string list) lookup_map;
   distance : int lookup_table;
@@ -68,7 +65,7 @@ let klass_to_parent = function
 
 (* From a class get the sections of that class *)
 let klass_to_sections aklass =
-  let s = aklass.sections in [(Public, s.publics); (Protected, s.protects); (Private, s.privates)]
+  let s = aklass.sections in [(Publics, s.publics); (Protects, s.protects); (Privates, s.privates)]
 
 (* Go from a class to all of its sections *)
 let klass_to_methods aklass =
@@ -133,18 +130,18 @@ let build_class_map data klasses =
 
 (* For a given class, build a map of variable names to variable information.
  * If all instance variables are uniquely named, returns Left (map) where map
- * is  var name -> (access mode, type)  otherwise returns Right (collisions)
+ * is  var name -> (class_section, type)  otherwise returns Right (collisions)
  * where collisions are the names of variables that are multiply declared.
  *)
 let build_var_map aklass =
-  let add_var access map = function
-    | VarMem((typeId, varId)) -> add_map_unique varId (access, typeId) map
+  let add_var section map = function
+    | VarMem((typeId, varId)) -> add_map_unique varId (section, typeId) map
     | _ -> map in
-  let map_builder map (access, section) = List.fold_left (add_var access) map section in
+  let map_builder map (section, members) = List.fold_left (add_var section) map members in
   build_map_track_errors map_builder (klass_to_sections aklass)
 
 (* Add the variable map
- *   ( class name (string) -> variable name (string) -> variable info (access, type) )
+ *   ( class name (string) -> variable name (string) -> variable info (class_section, type) )
  * to a class_data record
  * Returns either a list of collisions (in Right) or the updated record (in Left).
  * Collisions are pairs (class name, collisions (var names) for that class)
