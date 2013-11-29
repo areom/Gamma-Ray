@@ -26,10 +26,10 @@ let empty_data : class_data = {
   distance = StringMap.empty;
 }
 
-(* Builder should accept a StringMap, errors list pair and either return an updated
- * map or an updated error list in the new pair (but hopefully not both). The list
- * is the list of data to build the map out of. So, to put it into types, we have
- *   builder : (StringMap, errorList) -> (StringMap', errorList')
+(* Builder should accept a StringMap, errors list pair, a new item, and either return an
+ * updated map or an updated error list in the new pair (but hopefully not both). alist
+ * is the list of data to build the map out of. So, to put it into symbols, we have
+ *   builder : (StringMap, errorList) -> item -> (StringMap', errorList')
  *)
 let build_map_track_errors builder alist =
   match List.fold_left builder (StringMap.empty, []) alist with
@@ -129,9 +129,10 @@ let is_tree_hierarchy data =
  * to a class_data record
  *)
 let build_class_map data klasses =
-  let map_builder map aklass = StringMap.add (aklass.klass) aklass map in
-  let class_map = List.fold_left map_builder StringMap.empty klasses in
-  { data with classes = class_map }
+  let map_builder map aklass = add_map_unique (aklass.klass) aklass map in
+  match build_map_track_errors map_builder klasses with
+    | Left(class_map) -> Left({ data with classes = class_map })
+    | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
 (* For a given class, build a map of variable names to variable information.
  * If all instance variables are uniquely named, returns Left (map) where map
@@ -153,7 +154,7 @@ let build_class_var_map data klasses =
   let map_builder (klass_map, collision_list) aklass =
     match build_var_map aklass with
       | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
-      | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
+      | Right(collisions) -> (klass_map, (aklass.klass, collisions)::collision_list) in
   match build_map_track_errors map_builder klasses with
     | Left(variable_map) -> Left({ data with variables = variable_map })
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
@@ -190,10 +191,12 @@ let build_method_map aklass =
  * if they have conflicting signatures (ignoring return type).
  *)
 let build_class_method_map data klasses =
+  let to_collision func = (func.name, List.map fst func.formals) in
+  let to_collisions funcs = List.map to_collision funcs in
   let map_builder (klass_map, collision_list) aklass =
     match build_method_map aklass with
       | Left(method_map) -> (StringMap.add (aklass.klass) method_map klass_map, collision_list)
-      | Right(collisions) -> (klass_map, (aklass, collisions)::collision_list) in
+      | Right(collisions) -> (klass_map, (aklass.klass, to_collisions collisions)::collision_list) in
   match build_map_track_errors map_builder klasses with
     | Left(method_map) -> Left({ data with methods = method_map })
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
@@ -320,3 +323,39 @@ let best_method data klass_name method_name actuals =
     | [] -> None
     | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
+
+
+
+type class_data_error
+  = HierarchyIssue of string
+  | DuplicateClasses of string list
+  | DuplicateVariables of (string * string list) list
+  | ConflictingMethods of (string * (string * string list) list) list
+
+let append_children klasses data = Left(build_children_map data klasses)
+let append_parent klasses data = Left(build_parent_map data klasses)
+let test_tree data = match is_tree_hierarchy data with
+  | None -> Left(data)
+  | Some(problem) -> Right(HierarchyIssue(problem))
+let append_classes klasses data = match build_class_map data klasses with
+  | Left(data) -> Left(data)
+  | Right(collisions) -> Right(DuplicateClasses(collisions))
+let append_variables klasses data = match build_class_var_map data klasses with
+  | Left(data) -> Left(data)
+  | Right(collisions) -> Right(DuplicateVariables(collisions))
+let append_methods klasses data = match build_class_method_map data klasses with
+  | Left(data) -> Left(data)
+  | Right(collisions) -> Right(ConflictingMethods(collisions))
+let append_ancestor data = Left(build_ancestor_map data)
+let append_distance data = Left(build_distance_map data)
+
+let build_class_data klasses
+  =  Left(empty_data)
+  |> append_children klasses
+  |> append_parent klasses
+  |> test_tree
+  |> append_classes klasses
+  |> append_variables klasses
+  |> append_methods klasses
+  |> append_ancestor
+  |> append_distance
