@@ -1,0 +1,21 @@
+
+dir="$1"
+file="$2"
+shift 2
+
+type="Brace"
+if [ ${#@} -ne 0 ] ; then
+  case "$1" in
+    -b) type="Brace"
+        ;;
+    -s) type="Space"
+        ;;
+    -m1) type="Mixed1"
+        ;;
+    *)  echo "Unknown meta-directory $1" >&2
+        exit 1
+        ;;
+  esac
+fi
+
+cat "test/tests/${type}/${dir}/${file}"
