@@ -235,13 +235,20 @@ and inspect_stmt = function
   | Return(the_expr) -> Printf.sprintf "Return(%s)" (inspect_opt inspect_expr the_expr)
   | Super(args) -> Printf.sprintf "Super(%s)" (inspect_str_list inspect_expr args)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
-and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s }"
+and inspect_class_section = function
+	| Publics -> Printf.sprintf "Publics"
+	| Protects -> Printf.sprintf "Protects"
+	| Privates -> Printf.sprintf "Privates"
+	| Refines -> Printf.sprintf "Refines"
+	| Mains -> Printf.sprintf "Mains"
+and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s, section = %s }"
   (inspect_opt _id func.returns)
   (inspect_opt _id func.host)
   func.name
   func.static
   (inspect_str_list inspect_var_def func.formals)
   (inspect_str_list inspect_stmt func.body)
+	(inspect_class_section func.section)
 
 let inspect_member_def = function
   | VarMem(vmem) -> Printf.sprintf "VarMem(%s)" (inspect_var_def vmem)

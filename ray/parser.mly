@@ -1,4 +1,16 @@
-%{ open Ast %}
+%{
+open Ast
+
+let set_func_section_to sect f = { f with section = sect }
+let set_func_section sect = List.map (set_func_section_to sect)
+
+let set_mem_section_to sect = function
+  | VarMem(v) -> VarMem(v)
+  | InitMem(func) -> InitMem({ func with section = sect })
+  | MethodMem(func) -> MethodMem({ func with section = sect })
+let set_mem_section sect = List.map (set_mem_section_to sect)
+
+%}
 
 %token <int> SPACE
 %token COLON NEWLINE
@@ -61,11 +73,11 @@ class_sections:
         publics  = [];
         refines  = [];
         mains    = [] } }
-  | class_sections private_list  { { $1 with privates = $2 @  $1.privates } }
-  | class_sections protect_list  { { $1 with protects = $2 @  $1.protects } }
-  | class_sections public_list   { { $1 with publics  = $2 @  $1.publics  } }
-  | class_sections refine_list   { { $1 with refines  = $2 @  $1.refines  } }
-  | class_sections main_method   { { $1 with mains    = $2 :: $1.mains    } }
+  | class_sections private_list  { { $1 with privates = (set_mem_section Privates $2)  @  $1.privates } }
+  | class_sections protect_list  { { $1 with protects = (set_mem_section Protects $2)  @  $1.protects } }
+  | class_sections public_list   { { $1 with publics  = (set_mem_section Publics $2)   @  $1.publics  } }
+  | class_sections refine_list   { { $1 with refines  = (set_func_section Refines $2)  @  $1.refines  } }
+  | class_sections main_method   { { $1 with mains    = (set_func_section_to Mains $2) :: $1.mains    } }
 
 /* Refinements */
 refine_list:
@@ -119,7 +131,8 @@ callable:
         name    = "";
         static  = false;
         formals = $1;
-        body    = $2 } }
+        body    = $2;
+        section = Privates } }
 
 /* Statements */
 stmt_block:

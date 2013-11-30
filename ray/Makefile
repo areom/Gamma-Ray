@@ -7,8 +7,10 @@ all:
 	ocamlc -c -g parser.ml
 	ocamlc -c -g WhiteSpace.ml
 	ocamlc -c -g Inspector.ml
-	ocamlc -c -g inspect.ml
 	ocamlc -c -g Pretty.ml
+	ocamlc -c -g Util.ml
+	ocamlc -c -g Klass.ml
+	ocamlc -c -g inspect.ml
 	ocamlc -c -g prettify.ml
 	ocamlc -c -g streams.ml
 	ocamlc -c -g canonical.ml

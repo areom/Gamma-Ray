@@ -32,7 +32,8 @@ and stmt =
   | Expr of expr
   | Return of expr option
   | Super of expr list
-
+(* where an item is defined *)
+and class_section = Publics | Protects | Privates | Refines | Mains
 (* we have four different kinds of callable code blocks:
  *  main: only has formals, body (name / static / host known)
  *  init: only has formals, body (name / static / host known)
@@ -46,6 +47,7 @@ and func_def = {
   static  : bool;
   formals : var_def list;
   body    : stmt list;
+  section : class_section;  (* Makes things easier later *)
 }
 
 (* A member is either a variable or some sort of function *)
