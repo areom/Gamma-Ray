@@ -12,7 +12,7 @@ let get_example_parse dir example =
   let tokens = get_example_scan dir example in
   Parser.cdecls (WhiteSpace.lextoks tokens) (Lexing.from_string "")
 
-let get_example_longest_block dir example =
+let get_example_longest_body dir example =
   let klasses = get_example_parse dir example in
   let methods aklass = List.flatten (List.map snd (Klass.klass_to_methods aklass)) in
   let all_methods = List.flatten (List.map methods klasses) in
