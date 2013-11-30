@@ -1,3 +1,5 @@
+open Ast
+
 (* Types *)
 type ('a, 'b) either = Left of 'a | Right of 'b
 
@@ -34,4 +36,21 @@ let (|>) value func =
   match value with
     | Left(v) -> func(v)
     | Right(problem) -> Right(problem)
+
+(* Return the length of a block -- i.e. the total number of statements (recursively) in it *)
+let get_statement_count stmt_list =
+  let rec do_count stmts blocks counts = match stmts, blocks with
+    | [], [] -> counts
+    | [], _  -> do_count blocks [] counts
+    | (stmt::rest), _ -> match stmt with
+      | Decl(_) -> do_count rest blocks (counts + 1)
+      | Expr(_) -> do_count rest blocks (counts + 1)
+      | Return(_) -> do_count rest blocks (counts + 1)
+      | Super(_) -> do_count rest blocks (counts + 1)
+      | While(_, block) -> do_count rest (block @ blocks) (counts + 1)
+      | If(parts) ->
+        let ifblocks = List.map snd parts in
+        let ifstmts = List.flatten ifblocks in
+        do_count rest (ifstmts @ blocks) (counts + 1) in
+  do_count stmt_list [] 0
 
