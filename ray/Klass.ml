@@ -324,8 +324,6 @@ let best_method data klass_name method_name actuals =
     | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
 
-
-
 type class_data_error
   = HierarchyIssue of string
   | DuplicateClasses of string list
