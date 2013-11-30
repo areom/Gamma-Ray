@@ -11,7 +11,7 @@ type class_data = {
   parents : string lookup_map;
   children : (string list) lookup_map;
   variables : (class_section * string) lookup_table;
-  methods : ((class_section * func_def) list) lookup_table;
+  methods : (func_def list) lookup_table;
   ancestors : (string list) lookup_map;
   distance : int lookup_table;
 }
@@ -172,16 +172,15 @@ let signature_string func_def =
 
 (* Builds a map of all the methods within a class, returning a list of collisions
  * when there are conflicting signatures. Keys to the map are function names and
- * the values are list of (section, func_def) pairs.
+ * the values are list of func_def pairs.
  *)
 let build_method_map aklass =
-  let add_method section (map, collisions) fdef =
-    let same_name = List.map (function (_, func) -> func) (map_lookup_list fdef.name map) in
-    if List.exists (conflicting_signatures fdef) same_name
+  let add_method (map, collisions) fdef =
+    if List.exists (conflicting_signatures fdef) (map_lookup_list fdef.name map)
       then (map, fdef::collisions)
-      else (add_map_list fdef.name (section, fdef) map, collisions) in
-  let map_builder map (section, funcs) = List.fold_left (add_method section) map funcs in
-  build_map_track_errors map_builder (klass_to_methods aklass)
+      else (add_map_list fdef.name fdef map, collisions) in
+  let map_builder map funcs = List.fold_left add_method map funcs in
+  build_map_track_errors map_builder (List.map snd (klass_to_methods aklass))
 
 (* Add the method map
  *   ( class name (string) -> method name (string) -> methods (func_def list) )
@@ -318,8 +317,7 @@ let best_matching_signature data actuals funcs =
  *)
 let best_method data klass_name method_name actuals =
   let methods = class_method_lookup data klass_name method_name in
-  let no_sections = List.map snd methods in
-  match best_matching_signature data actuals no_sections with
+  match best_matching_signature data actuals methods with
     | [] -> None
     | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
