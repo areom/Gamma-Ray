@@ -14,6 +14,7 @@ all:
 	ocamlc -c -g prettify.ml
 	ocamlc -c -g streams.ml
 	ocamlc -c -g canonical.ml
+	ocamlc -c -g Debug.ml
 	ocamlc -g -o tools/prettify scanner.cmo parser.cmo Inspector.cmo Pretty.cmo WhiteSpace.cmo prettify.cmo
 	ocamlc -g -o tools/inspect scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
 	ocamlc -g -o tools/streams scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo streams.cmo
