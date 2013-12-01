@@ -31,6 +31,7 @@ inspect
 streams
 canonical
 prettify
+freevars
 parser.output
 expect-*
 *.cmi
