@@ -37,11 +37,6 @@ and get_vars_func_def func = List.concat [(_id func.returns);(List.concat (List.
 module StringSet = Set.Make(String)
 
 (*convert a StringSet list to a StringSet*)
-let rec flatten = function
-	| [] -> StringSet.empty
-	| [s] -> s
-	| hd::tl -> StringSet.union hd (flatten tl)
-
 let free_vars stmts prebound =
  let rec free_in_expr bound expression = 
 	 let referenced_vars = get_vars_expr expression in
@@ -49,7 +44,7 @@ let free_vars stmts prebound =
 		   List.fold_left filter StringSet.empty referenced_vars in
  let rec free_in_exprs exprlist bound = 
 	 let var_list = (List.map (free_in_expr bound) exprlist) in
-		flatten var_list in
+		List.fold_left StringSet.union StringSet.empty var_list in
  let update_stmt = function
    | Decl((var, e))  -> ((_id e), [], Some(var))
    | Expr(e)         -> ([e], [], None)
