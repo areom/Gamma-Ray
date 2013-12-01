@@ -7,7 +7,7 @@ let rec list_to_ss = function
 	| hd::tl -> StringSet.add hd (list_to_ss tl)
 
 let _ =  
-	let func = List.hd (Debug.get_example_longest_body "Multi" "FreeVarTest") in
+	let func = List.hd (Debug.get_example_longest_body "Multi" "Collection") in
 	let stmts = func.body in
 	let prebound = let var_list = List.concat (List.map get_vars_var_def func.formals) in
 		list_to_ss var_list in		
