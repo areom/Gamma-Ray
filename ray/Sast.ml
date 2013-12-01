@@ -4,10 +4,9 @@ type t= Int | Float | String |Bool
 module StringMap = Map.Make(String)
 
 
-type 'a lookup_map = 'a StringMap.t
 
 (*type sexpr = expr * t*)
-type sstmt = Ast.stmt * ((string * string option)) lookup_map
+type sstmt = Ast.stmt * ((string * string option)) StringMap.t
 
 
 let env = StringMap.empty
