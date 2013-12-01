@@ -1,12 +1,13 @@
 type t= Int | Float | String |Bool 
 
+type varkind = Instance | Local
 
 module StringMap = Map.Make(String)
 
-
+type environment = (t * varkind) StringMap.t
 
 (*type sexpr = expr * t*)
-type sstmt = Ast.stmt * ((string * string option)) StringMap.t
+type sstmt = Ast.stmt * environment
 
 
 let env = StringMap.empty
@@ -36,4 +37,4 @@ let rec attach_bindings stmts env =
 		| Ast.Decl((vname,vtype), _) ->  ((stmt, env)::output, (StringMap.add vname(vtype,None) env))
 		| _  -> ((stmt,env)::output, env)
 
-    in List.rev (first_of(List.fold_left build_env ([],env) stmts))
+    in List.rev (fst(List.fold_left build_env ([],env) stmts))
