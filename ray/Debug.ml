@@ -14,7 +14,7 @@ let get_example_parse dir example =
 
 let get_example_longest_body dir example =
   let klasses = get_example_parse dir example in
-  let methods aklass = List.flatten (List.map snd (Klass.klass_to_methods aklass)) in
+  let methods aklass = List.flatten (List.map snd (Klass.klass_to_functions aklass)) in
   let all_methods = List.flatten (List.map methods klasses) in
   let with_counts = List.map (function func -> (Util.get_statement_count func.body, func)) all_methods in
   let maximum = List.fold_left max 0 (List.map fst with_counts) in
