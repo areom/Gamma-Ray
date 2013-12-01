@@ -27,17 +27,22 @@ and get_vars_var_def (the_type, the_var) = [the_var]
 and get_vars_stmt = function
 	|	Decl(the_def, the_expr) -> (get_vars_var_def the_def) @ (apply_opt get_vars_expr the_expr)
 	| If(clauses) -> List.concat (List.map apply_clause clauses)
-	| While(pred, body) -> (get_vars_expr pred) @ (List.concat (List.map get_vars_stmt body)) 
+	| While(pred, body) -> (get_vars_expr pred) (*@ (List.concat (List.map get_vars_stmt body))*) 
 	| Expr(the_expr) -> get_vars_expr the_expr
 	| Return(the_expr) -> apply_opt get_vars_expr the_expr
 	| Super(args) -> List.concat (List.map get_vars_expr args)
-and apply_clause (opt_expr, body) = (apply_opt get_vars_expr opt_expr) @ (List.concat (List.map get_vars_stmt body))
+and apply_clause (opt_expr, body) = (apply_opt get_vars_expr opt_expr) (*@ (List.concat (List.map get_vars_stmt body))*)
 and get_vars_func_def func = List.concat [(_id func.returns);(List.concat (List.map get_vars_var_def func.formals));(List.concat(List.map get_vars_stmt func.body))]
 
-let rec referenced_variables stmt =	get_vars_stmt stmt 
-
+let rec referenced_variables stmt =	get_vars_stmt stmt
+(*
+let rec update_env (e,v) = function
+	| Decl(the_def, the_expr) -> let new_e = (get_vars_var_def the_def) @ e in
+															 let new_v = 
+*)
 let rec free_variables = function
 	| [] -> []
-	| [stmt] -> get_vars_stmt stmt
-	| hd::tl -> (referenced_variables hd) @ (free_variables tl)
-	
+	| [stmt] -> referenced_variables stmt
+	| hd::tl ->uniq( (referenced_variables hd) @ (free_variables tl))
+
+
