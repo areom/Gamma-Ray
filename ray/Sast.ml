@@ -1,5 +1,3 @@
-type t= Int | Float | String |Bool 
-
 type varkind = Instance | Local
 
 module StringMap = Map.Make(String)
@@ -34,7 +32,7 @@ let rec attach_bindings stmts env =
 	match stmt with
 		| Ast.While(expr, slist)     ->  ((Ast.While(expr, attach_bindings slist env), env)::output, env)
  		| Ast.If (iflist)            ->  ((build_ifstmt iflist env)::output, env)
-		| Ast.Decl((vname,vtype), _) ->  ((stmt, env)::output, (StringMap.add vname(vtype,None) env))
+		| Ast.Decl((vname,vtype), _) ->  ((stmt, env)::output, (StringMap.add vname(vtype,Local) env))
 		| _  -> ((stmt,env)::output, env)
 
     in List.rev (fst(List.fold_left build_env ([],env) stmts))
