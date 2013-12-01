@@ -38,9 +38,10 @@ module StringSet = Set.Make(String)
 
 let free_vars stmts prebound =
   let free_in_expr bound expression = 
-    let referenced_vars = get_vars_expr expression in
-    let filter fv x = if StringSet.mem x bound then fv  else StringSet.add x fv in
-    List.fold_left filter StringSet.empty referenced_vars in
+    let referenced = get_vars_expr expression in
+    let unbound = List.filter (function x -> not (StringSet.mem x bound)) referenced in
+    let additem set item = StringSet.add item set in
+    List.fold_left additem StringSet.empty unbound in
 
   let free_in_exprs exprlist bound = 
     let var_list = (List.map (free_in_expr bound) exprlist) in
