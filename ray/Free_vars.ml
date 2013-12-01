@@ -43,6 +43,6 @@ let rec update_env (e,v) = function
 let rec free_variables = function
 	| [] -> []
 	| [stmt] -> referenced_variables stmt
-	| hd::tl ->uniq( (referenced_variables hd) @ (free_variables tl))
+	| hd::tl -> (referenced_variables hd) @ (free_variables tl)
 
 
