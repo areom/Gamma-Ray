@@ -26,6 +26,8 @@
 
   let lexfail msg =
     raise (Failure(msg))
+
+  let line_num lexbuf = ("Line " ^ string_of_int lexbuf.Lexing.lex_curr_pos ^ ": ")
 }
 
 let digit = ['0'-'9']
@@ -39,6 +41,7 @@ let hspace = [' ' '\t']
 
 (* vertical spaces: newline (line feed), carriage return, vertical tab, form feed *)
 let vspace = ['\n' '\r' '\011' '\012']
+
 
 rule token = parse
   (* Handling whitespace mode *)
@@ -141,20 +144,20 @@ rule token = parse
 
   (* Some type of end, for sure *)
   | eof                        { EOF }
-  | _ as char { lexfail("illegal character " ^ Char.escaped char) }
+  | _ as char { lexfail(line_num lexbuf ^ "illegal character " ^ Char.escaped char) }
 
 and comment level = parse
   (* Comments can be nested *)
   | "/*"   { comment (level+1) lexbuf }
   | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
-  | eof    { lexfail("File ended inside comment.") }
+  | eof    { lexfail(line_num lexbuf ^ "File ended inside comment.") }
   | _      { comment (0) lexbuf }
 
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'           { escapechar chars lexbuf }
-  | eof            { lexfail("File ended inside string literal") }
-  | vspace as char { lexfail("Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
+  | eof            { lexfail(line_num lexbuf ^ "File ended inside string literal") }
+  | vspace as char { lexfail(line_num lexbuf ^ "Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
   | '"'            { SLIT(implode(List.rev chars)) }
   | _ as char      { stringlit (char::chars) lexbuf }
 
@@ -163,6 +166,6 @@ and escapechar chars = parse
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
-  | eof       { lexfail("File ended while seeking escape character") }
-  | _ as char { lexfail("illegal escape character:  \\" ^ Char.escaped(char)) }
+  | eof       { lexfail(line_num lexbuf ^ "File ended while seeking escape character") }
+  | _ as char { lexfail(line_num lexbuf ^ "Illegal escape character:  \\" ^ Char.escaped(char)) }
 
