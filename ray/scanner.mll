@@ -26,6 +26,12 @@
 
   let lexfail msg =
     raise (Failure(msg))
+
+  let line_number = ref 1
+
+  let count_lines v = (line_number := !line_number + String.length v)
+
+  let lexfail_line line_number = ("Line " ^ string_of_int !line_number ^ ": ")
 }
 
 let digit = ['0'-'9']
@@ -40,11 +46,12 @@ let hspace = [' ' '\t']
 (* vertical spaces: newline (line feed), carriage return, vertical tab, form feed *)
 let vspace = ['\n' '\r' '\011' '\012']
 
+
 rule token = parse
   (* Handling whitespace mode *)
-  | hspace+ as s               { SPACE(spacecount s) }
-  | ':' hspace* vspace+        { COLON }
-  | vspace+                    { NEWLINE }
+  | hspace+ as s                 { SPACE(spacecount s) }
+  | ':' hspace* (vspace+ as v)   { count_lines v; COLON }
+  | vspace+ as v                 { count_lines v; NEWLINE }
 
   (* Comments *)
   | "/*"                       { comment 0 lexbuf }
@@ -131,8 +138,8 @@ rule token = parse
   | ":="                       { ASSIGN }
 
   (* Variable and Type IDs *)
-  | lower ualphanum* as vid    { ID(vid) }
-  | upper ualphanum* as tid    { TYPE(tid) }
+  | '_'? lower ualphanum* as vid    { ID(vid) }
+  | upper ualphanum* as tid         { TYPE(tid) }
 
   (* Literals *)
   | digit+ as inum             { ILIT(int_of_string inum) }
@@ -141,20 +148,21 @@ rule token = parse
 
   (* Some type of end, for sure *)
   | eof                        { EOF }
-  | _ as char { lexfail("illegal character " ^ Char.escaped char) }
+  | _ as char { lexfail(lexfail_line line_number ^ "Illegal character " ^ Char.escaped char) }
 
 and comment level = parse
   (* Comments can be nested *)
-  | "/*"   { comment (level+1) lexbuf }
-  | "*/"   { if level = 0 then token lexbuf else comment (level-1) lexbuf }
-  | eof    { lexfail("File ended inside comment.") }
-  | _      { comment (0) lexbuf }
+  | "/*"          { comment (level+1) lexbuf }
+  | "*/"          { if level = 0 then token lexbuf else comment (level-1) lexbuf }
+  | eof           { lexfail(lexfail_line line_number ^ "File ended inside comment.") }
+  | vspace+ as v  { count_lines v; comment(0) lexbuf } 
+  | _             { comment (0) lexbuf }
 
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'           { escapechar chars lexbuf }
-  | eof            { lexfail("File ended inside string literal") }
-  | vspace as char { lexfail("Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
+  | eof            { lexfail(lexfail_line line_number ^ "File ended inside string literal") }
+  | vspace as char { lexfail(lexfail_line line_number ^ "Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
   | '"'            { SLIT(implode(List.rev chars)) }
   | _ as char      { stringlit (char::chars) lexbuf }
 
@@ -163,6 +171,6 @@ and escapechar chars = parse
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
-  | eof       { lexfail("File ended while seeking escape character") }
-  | _ as char { lexfail("illegal escape character:  \\" ^ Char.escaped(char)) }
+  | eof       { lexfail(lexfail_line line_number ^ "File ended while seeking escape character") }
+  | _ as char { lexfail(lexfail_line line_number ^ "Illegal escape character:  \\" ^ Char.escaped(char)) }
 
