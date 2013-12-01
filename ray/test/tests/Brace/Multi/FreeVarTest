@@ -1,25 +1,23 @@
 class Collection {
   public {
-    void addAll(Collection other) {
-      if(refinable(do)) {
-        refine combine(other) to void;
-      } else {
-        Iterator items := other.iterator();
-        while(not items.done()) {
-          add(items.next());
-        }
-      }
-    }
-
-    Boolean contains(Object item) {
+    Boolean free_vars_test(Integer var) {
       if(refinable(check)) {
         return refine check(item) to Boolean;
       }
-
+			
       Iterator items := this.iterator();
-      while(not items.done()) {
+			Integer var0 := var;
+			Integer var1 := var3;
+
+			while(not items.done()) {
         if(items.next() = item) {
-          return true;
+          var1 := 1;
+					var1 := var4;
+
+					Integer var2;
+					var2 := 2;
+
+					return true;
         }
       }
       return false;
