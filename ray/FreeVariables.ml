@@ -1,10 +1,6 @@
 open Parser
 open Ast
 
-let _id  = function
-	| None -> []
-	| Some(x) -> [x]
-
 let rec get_vars_expr = function
 	| Id(id) -> [id]
 	| This -> []
@@ -32,7 +28,7 @@ and get_vars_stmt = function
 	| Return(the_expr) -> apply_opt get_vars_expr the_expr
 	| Super(args) -> List.concat (List.map get_vars_expr args)
 and apply_clause (opt_expr, body) = (apply_opt get_vars_expr opt_expr) (*@ (List.concat (List.map get_vars_stmt body))*)
-and get_vars_func_def func = List.concat [(_id func.returns);(List.concat (List.map get_vars_var_def func.formals));(List.concat(List.map get_vars_stmt func.body))]
+and get_vars_func_def func = List.concat [(Util.option_as_list func.returns);(List.concat (List.map get_vars_var_def func.formals));(List.concat(List.map get_vars_stmt func.body))]
 
 module StringSet = Set.Make(String)
 
@@ -48,9 +44,9 @@ let free_vars stmts prebound =
     List.fold_left StringSet.union StringSet.empty var_list in
 
   let update_stmt = function
-    | Decl((var, e))  -> ((_id e), [], Some(var))
+    | Decl((var, e))  -> ((Util.option_as_list e), [], Some(var))
     | Expr(e)         -> ([e], [], None)
-    | Return(e)       -> ((_id e), [], None)
+    | Return(e)       -> ((Util.option_as_list e), [], None)
     | Super(es)       -> (es, [], None)
     | While(e, stmts) -> ([e], [stmts], None)
     | If(parts)       -> let (es, ts) = List.split parts in

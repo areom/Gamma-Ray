@@ -11,6 +11,10 @@ let filter_option list =
     | (Some(v))::tl -> do_filter (v::rlist) tl in
   do_filter [] list
 
+let option_as_list = function
+  | Some(v) -> [v]
+  | _ -> []
+
 (* Lexically compare two lists of comparable items *)
 let rec lexical_compare list1 list2 = match list1, list2 with
   | [], [] -> 0
