@@ -44,13 +44,13 @@ let free_vars stmts prebound =
     List.fold_left StringSet.union StringSet.empty var_list in
 
   let update_stmt = function
-    | Decl((var, e))  -> ((Util.option_as_list e), [], Some(var))
-    | Expr(e)         -> ([e], [], None)
-    | Return(e)       -> ((Util.option_as_list e), [], None)
-    | Super(es)       -> (es, [], None)
-    | While(e, stmts) -> ([e], [stmts], None)
-    | If(parts)       -> let (es, ts) = List.split parts in
-                         (Util.filter_option es, ts, None) in
+    | Decl(((_, var), e))  -> ((Util.option_as_list e), [], Some(var))
+    | Expr(e)              -> ([e], [], None)
+    | Return(e)            -> ((Util.option_as_list e), [], None)
+    | Super(es)            -> (es, [], None)
+    | While(e, stmts)      -> ([e], [stmts], None)
+    | If(parts)            -> let (es, ts) = List.split parts in
+                              (Util.filter_option es, ts, None) in
 
   let rec get_free_vars free bound stmts todo = match stmts, todo with
     | [], [] -> free
@@ -60,7 +60,7 @@ let free_vars stmts prebound =
       let free = StringSet.union free (free_in_exprs exprs bound) in
       let todo = (List.map (function t -> (bound, t)) tasks) @ todo in
       let bound = match decl with
-        | Some(var) -> StringSet.add (List.hd (get_vars_var_def var)) bound 
+        | Some(var) -> StringSet.add var bound
         | _ -> bound in
       get_free_vars free bound rest todo in
 
