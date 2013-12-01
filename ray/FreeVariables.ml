@@ -36,35 +36,35 @@ and get_vars_func_def func = List.concat [(_id func.returns);(List.concat (List.
 
 module StringSet = Set.Make(String)
 
-(*convert a StringSet list to a StringSet*)
 let free_vars stmts prebound =
- let rec free_in_expr bound expression = 
-	 let referenced_vars = get_vars_expr expression in
-		 let filter fv x = if StringSet.mem x bound then fv  else StringSet.add x fv in
-		   List.fold_left filter StringSet.empty referenced_vars in
- let rec free_in_exprs exprlist bound = 
-	 let var_list = (List.map (free_in_expr bound) exprlist) in
-		List.fold_left StringSet.union StringSet.empty var_list in
- let update_stmt = function
-   | Decl((var, e))  -> ((_id e), [], Some(var))
-   | Expr(e)         -> ([e], [], None)
-   | Return(e)       -> ((_id e), [], None)
-   | Super(es)       -> (es, [], None)
-   | While(e, stmts) -> ([e], [stmts], None)
-   | If(parts)       -> let (es, ts) = List.split parts in
-                        (Util.filter_option es, ts, None) in
+  let free_in_expr bound expression = 
+    let referenced_vars = get_vars_expr expression in
+    let filter fv x = if StringSet.mem x bound then fv  else StringSet.add x fv in
+    List.fold_left filter StringSet.empty referenced_vars in
 
- let rec get_free_vars free bound stmts todo = match stmts, todo with
-   | [], [] -> free
-   | [], (bound, stmts)::rest -> get_free_vars free bound stmts rest
-   | stmt::rest, _ ->
-     let (exprs, tasks, decl) = update_stmt stmt in
-     let free = StringSet.union free (free_in_exprs exprs bound) in
-     let todo = (List.map (function t -> (bound, t)) tasks) @ todo in
-     let bound = match decl with
-       | Some(var) -> StringSet.add (List.hd (get_vars_var_def var)) bound 
-       | _ -> bound in
-     get_free_vars free bound rest todo in
+  let free_in_exprs exprlist bound = 
+    let var_list = (List.map (free_in_expr bound) exprlist) in
+    List.fold_left StringSet.union StringSet.empty var_list in
 
- get_free_vars StringSet.empty prebound stmts []
+  let update_stmt = function
+    | Decl((var, e))  -> ((_id e), [], Some(var))
+    | Expr(e)         -> ([e], [], None)
+    | Return(e)       -> ((_id e), [], None)
+    | Super(es)       -> (es, [], None)
+    | While(e, stmts) -> ([e], [stmts], None)
+    | If(parts)       -> let (es, ts) = List.split parts in
+                         (Util.filter_option es, ts, None) in
 
+  let rec get_free_vars free bound stmts todo = match stmts, todo with
+    | [], [] -> free
+    | [], (bound, stmts)::rest -> get_free_vars free bound stmts rest
+    | stmt::rest, _ ->
+      let (exprs, tasks, decl) = update_stmt stmt in
+      let free = StringSet.union free (free_in_exprs exprs bound) in
+      let todo = (List.map (function t -> (bound, t)) tasks) @ todo in
+      let bound = match decl with
+        | Some(var) -> StringSet.add (List.hd (get_vars_var_def var)) bound 
+        | _ -> bound in
+      get_free_vars free bound rest todo in
+
+  get_free_vars StringSet.empty prebound stmts []
