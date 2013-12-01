@@ -36,6 +36,7 @@ and get_vars_func_def func = List.concat [(_id func.returns);(List.concat (List.
 
 module StringSet = Set.Make(String)
 
+(*convert a StringSet list to a StringSet*)
 let rec flatten = function
 	| [] -> StringSet.empty
 	| [s] -> s
