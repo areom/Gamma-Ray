@@ -50,7 +50,7 @@ let free_vars stmts prebound =
 	 let var_list = (List.map (free_in_expr bound) exprlist) in
 		flatten var_list in
  let update_stmt = function
-   | Decl((var, _))  -> ([], [], Some(var))
+   | Decl((var, e))  -> ((_id e), [], Some(var))
    | Expr(e)         -> ([e], [], None)
    | Return(e)       -> ((_id e), [], None)
    | Super(es)       -> (es, [], None)
