@@ -86,6 +86,11 @@ let klass_to_methods aklass =
   let s = aklass.sections in
   [(Publics, funcs s.publics); (Protects, funcs s.protects); (Privates, funcs s.privates)]
 
+(* Get anything that is invocable, not just instance methods *)
+let klass_to_functions aklass =
+  let s = aklass.sections in
+  (Refines, s.refines) :: (Mains, s.mains) :: klass_to_methods aklass
+
 (* Add the children map
  *   ( parent name (string) -> children names (string list) )
  * to a class_data record
