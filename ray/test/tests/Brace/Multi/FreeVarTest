@@ -1,0 +1,29 @@
+class Collection {
+  public {
+    void addAll(Collection other) {
+      if(refinable(do)) {
+        refine combine(other) to void;
+      } else {
+        Iterator items := other.iterator();
+        while(not items.done()) {
+          add(items.next());
+        }
+      }
+    }
+
+    Boolean contains(Object item) {
+      if(refinable(check)) {
+        return refine check(item) to Boolean;
+      }
+
+      Iterator items := this.iterator();
+      while(not items.done()) {
+        if(items.next() = item) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+  }
+}
