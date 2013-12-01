@@ -12,6 +12,8 @@ type class_data = {
   children : (string list) lookup_map;
   variables : (class_section * string) lookup_table;
   methods : (func_def list) lookup_table;
+  refines : (func_def list) lookup_table;
+  mains : func_def lookup_map;
   ancestors : (string list) lookup_map;
   distance : int lookup_table;
 }
@@ -22,6 +24,8 @@ let empty_data : class_data = {
   children = StringMap.empty;
   variables = StringMap.empty;
   methods = StringMap.empty;
+  refines = StringMap.empty;
+  mains = StringMap.empty;
   ancestors = StringMap.empty;
   distance = StringMap.empty;
 }
@@ -80,7 +84,7 @@ let klass_to_methods aklass =
     | _ -> None in
   let funcs members = filter_option (List.map to_function members) in
   let s = aklass.sections in
-  [(Publics, funcs s.publics); (Protects, funcs s.protects); (Privates, funcs s.privates); (Refines, s.refines); (Mains, s.mains)]
+  [(Publics, funcs s.publics); (Protects, funcs s.protects); (Privates, funcs s.privates)]
 
 (* Add the children map
  *   ( parent name (string) -> children names (string list) )
@@ -198,6 +202,43 @@ let build_class_method_map data klasses =
       | Right(collisions) -> (klass_map, (aklass.klass, to_collisions collisions)::collision_list) in
   match build_map_track_errors map_builder klasses with
     | Left(method_map) -> Left({ data with methods = method_map })
+    | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
+
+(* Build the map of refinements for a given class, returning a list of collisions
+ * when there are conflicting signatures. Keys to the map are "host.func"
+ *)
+let build_refinement_map aklass =
+  let add_refinement (map, collisions) func = match func.host with
+    | Some(host) ->
+      let key = func.name ^ "." ^ host in
+      if List.exists (conflicting_signatures func) (map_lookup_list key map)
+        then (map, func::collisions)
+        else (add_map_list key func map, collisions)
+    | None -> raise(Failure("Compilation error -- non-refinement found in searching for refinements.")) in
+  build_map_track_errors add_refinement aklass.sections.refines
+
+(* Build the map of classes to refinements -- class names are the first key, host.name is the second,
+ * results are lists of methods.
+ *)
+let build_class_refinement_map data klasses =
+  let to_collision func = (func.host, func.name, List.map fst func.formals) in
+  let to_collisions funcs = List.map to_collision funcs in
+  let map_builder (klass_map, collision_list) aklass =
+    match build_refinement_map aklass with
+      | Left(refinement_map) -> (StringMap.add aklass.klass refinement_map klass_map, collision_list)
+      | Right(collisions) -> (klass_map, (aklass.klass, to_collisions collisions)::collision_list) in
+  match build_map_track_errors map_builder klasses with
+    | Left(refinement_map) -> Left({ data with refines = refinement_map })
+    | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
+
+(* Build the map of mains -- class name to main *)
+let build_main_map data klasses =
+  let add_klass (map, collisions) aklass =  match aklass.sections.mains with
+    | [] -> (map, collisions)
+    | [main] -> (StringMap.add aklass.klass main map, collisions)
+    | _ -> (map, aklass.klass :: collisions) in
+  match build_map_track_errors add_klass klasses with
+    | Left(main_map) -> Left({ data with mains = main_map })
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
 (* Given a class_data record, a class name, and a variable name, return the information for
@@ -327,6 +368,8 @@ type class_data_error
   | DuplicateClasses of string list
   | DuplicateVariables of (string * string list) list
   | ConflictingMethods of (string * (string * string list) list) list
+  | ConflictingRefinements of (string * (string option * string * string list) list) list
+  | MultipleMains of string list
 
 let append_children klasses data = Left(build_children_map data klasses)
 let append_parent klasses data = Left(build_parent_map data klasses)
@@ -342,6 +385,12 @@ let append_variables klasses data = match build_class_var_map data klasses with
 let append_methods klasses data = match build_class_method_map data klasses with
   | Left(data) -> Left(data)
   | Right(collisions) -> Right(ConflictingMethods(collisions))
+let append_refines klasses data = match build_class_refinement_map data klasses with
+  | Left(data) -> Left(data)
+  | Right(collisions) -> Right(ConflictingRefinements(collisions))
+let append_mains klasses data = match build_main_map data klasses with
+  | Left(data) -> Left(data)
+  | Right(collisions) -> Right(MultipleMains(collisions))
 let append_ancestor data = Left(build_ancestor_map data)
 let append_distance data = Left(build_distance_map data)
 
@@ -353,5 +402,7 @@ let build_class_data klasses
   |> append_classes klasses
   |> append_variables klasses
   |> append_methods klasses
+  |> append_refines klasses
+  |> append_mains klasses
   |> append_ancestor
   |> append_distance
