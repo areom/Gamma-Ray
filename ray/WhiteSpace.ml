@@ -1,8 +1,18 @@
 open Parser
 
+(** Convert a whitespace file into a brace file. Yes, this module is the opposite of descriptively named. *)
+
+(**
+Gracefully tell the programmer that they done goofed
+@param msg The descriptive error message to convey to the programmer
+*)
 let wsfail msg = raise(Failure(msg))
 
-(* Only allow spacing that is at the start of a line *)
+(**
+    Only allow spacing that is at the start of a line
+    @param program A program as a list of tokens
+    @return A program that is easier to parse as whitespace(?)
+*)
 let indenting_space program =
   let rec space_indenting rtokens = function
     | NEWLINE::SPACE(n)::rest -> space_indenting (SPACE(n)::NEWLINE::rtokens) rest
@@ -14,8 +24,11 @@ let indenting_space program =
     | NEWLINE::rest -> rest
     | _ -> wsfail "Indenting should have left a NEWLINE at the start of program; did not."
 
-(* Between LBRACE and RBRACE we ignore spaces and newlines; colons are errors in this context.
- * It's not necessary that this be done after the above, but it is recommended.
+(**
+    Between LBRACE and RBRACE we ignore spaces and newlines; colons are errors in this context.
+    It's not necessary that this be done after the above, but it is recommended.
+    @param program A program in the form of a list of tokens
+    @return A slightly slimmer program
  *)
 let despace_brace program =
   let rec brace_despace depth tokens rtokens last =
@@ -39,7 +52,11 @@ let despace_brace program =
         | [] -> List.rev rtokens in
   brace_despace 0 program [] 0
 
-(* Remove empty indentation -- SPACE followed by COLON or NEWLINE *)
+(**
+    Remove empty indentation -- SPACE followed by COLON or NEWLINE
+    @param program A program as a list of tokens
+    @return A program without superfluous indentation
+*)
 let trim_lines program =
   let rec lines_trim tokens rtokens =
     match tokens with
@@ -49,7 +66,7 @@ let trim_lines program =
       | token::rest -> lines_trim rest (token::rtokens) in
   lines_trim program []
 
-(* Remove consecutive newlines *)
+(** Remove consecutive newlines *)
 let squeeze_lines program =
   let rec lines_squeeze tokens rtokens =
     match tokens with
@@ -59,15 +76,20 @@ let squeeze_lines program =
       | token::rest -> lines_squeeze rest (token::rtokens) in
   lines_squeeze program []
 
-(* Remove the initial space from a line but semantically note it *)
+(**
+  Remove the initial space from a line but semantically note it
+  @return an ordered pair of the number of spaces at the beginning
+  of the line and the tokens in the line
+*)
 let spacing = function
   | SPACE(n)::rest -> (n, rest)
   | list           -> (0, list)
 
-(* Remove spaces, newlines, and colons but semantically note their presence.
- * Returns a list of triples, one for each line. Each triple's first item is
- * the number of spaces at the beginning of the line; the second item are the
- * tokens in the line; the third is whether the line ended in a colon.
+(** Remove spaces, newlines, and colons but semantically note their presence.
+    @param program A full program
+    @return a list of triples, one for each line. Each triple's first item is
+    the number of spaces at the beginning of the line; the second item are the
+    tokens in the line; the third is whether the line ended in a colon.
  *)
 let tokens_to_lines program =
   let rec lines_from_tokens rline rlines = function
@@ -89,7 +111,11 @@ let tokens_to_lines program =
     | token::rest -> lines_from_tokens (token::rline) rlines rest in
   lines_from_tokens [] [] program
 
-(* Merge line continuatons from the above *)
+(**
+    Merge line continuatons from the above
+    @param program_lines The individual lines of the program
+    @return The lines of the program with whitespace collapsed
+*)
 let merge_lines program_lines =
   let rec lines_merge rlines = function
     | ((n1, _, _) as line1)::((n2, _, _) as line2)::rest when n1 >= n2 -> lines_merge (line1::rlines) (line2::rest)
@@ -99,15 +125,21 @@ let merge_lines program_lines =
     | [] -> List.rev rlines in
   lines_merge [] program_lines
 
-(* Check if a given line needs a semicolon at the end *)
+(**
+    Check if a given line needs a semicolon at the end
+*)
 let rec needs_semi = function
-  | [] -> true
-  | RBRACE::[] -> false
-  | SEMI::[] -> false
-  | _::rest -> needs_semi rest
+  | [] -> true              (* Null case*)
+  | RBRACE::[] -> false     (* The end of bodies do not require semicolons *)
+  | SEMI::[] -> false       (* A properly terminated line does not require an additional semicolon *) 
+  | _::rest -> needs_semi rest (* Go through *)
 
-(* Consecutive lines of the same indentation with only the last ending in a colon are a `block'
- * Blocks are just `lines' merged together but joined with a semi colon when necessary
+(**
+    Build a block. Consecutive lines of the same indentation with only the last ending
+    in a colon are a `block'. Blocks are just `lines' merged together but joined with
+    a semi colon when necessary.
+    @param lines The full set of lines
+    @return A list of blocks
  *)
 let block_merge lines =
   let braced = function
@@ -122,7 +154,7 @@ let block_merge lines =
     | [] -> List.rev rblocks in
   merge_blocks [] lines
 
-(* Make sure every line is terminated with a semi-colon *)
+(** Make sure every line is terminated with a semi-colon *)
 let terminate_blocks blocks =
   let rec block_terminate rblocks = function
     | (n, toks, false)::rest ->
@@ -133,16 +165,16 @@ let terminate_blocks blocks =
     | [] -> List.rev rblocks in
   block_terminate [] blocks
 
-(* Pops the stack and adds rbraces when necessary *)
+(** Pops the stack and adds rbraces when necessary *)
 let rec arrange n stack rtokens =
   match stack with
     | top::rest when n <= top -> arrange n rest (RBRACE::rtokens)
     | _ -> (stack, rtokens)
 
-(* Take results of pipeline and finally adds braces. If blocks are merged
- * then either consecutive lines differ in scope or there are colons.
- * so now everything should be easy peasy (lemon squeezy).
- *)
+(** Take results of pipeline and finally adds braces. If blocks are merged
+    then either consecutive lines differ in scope or there are colons.
+    so now everything should be easy peasy (lemon squeezy).
+*)
 let space_to_brace = function
   | [] -> []
   | linelist -> let rec despace_enbrace stack rtokens = function
@@ -153,7 +185,7 @@ let space_to_brace = function
       despace_enbrace stack (lbrace@(List.rev line)@rtokens) rest
     in despace_enbrace [] [] linelist
 
-(* Drop the EOF from a stream of tokens, failing if not possible *)
+(** Drop the EOF from a stream of tokens, failing if not possible *)
 let drop_eof program =
   let rec eof_drop rtokens = function
     | EOF::[] -> List.rev rtokens
@@ -162,27 +194,39 @@ let drop_eof program =
     | tk::tks -> eof_drop (tk::rtokens) tks in
   eof_drop [] program
 
+(** Append an eof token to a program *)
 let append_eof program =
   let rec eof_add rtokens = function
     | [] -> List.rev (EOF::rtokens)
     | tk::tks -> eof_add (tk::rtokens) tks in
   eof_add [] program
 
-(* Run the entire pipeline *)
+(** Run the entire pipeline *)
 let convert program =
+  (* Get rid of the end of file *)
   let noeof = drop_eof program in
+  (* Indent in response to blocks *)
   let indented = indenting_space noeof in
+  (* Collapse whitespace around braces *)
   let despaced = despace_brace indented in
+  (* Get rid of trailing whitespace *)
   let trimmed = trim_lines despaced in
+  (* Remove consequetive newlines *)
   let squeezed = squeeze_lines trimmed in
+  (* Turn tokens into semantics *)
   let lines = tokens_to_lines squeezed in
+  (* Consolidate those semantics *)
   let merged = merge_lines lines in
+  (* Turn the semantics into blocks *)
   let blocks = block_merge merged in
+  (* Put in the semicolons *)
   let terminated = terminate_blocks blocks in
+  (* Turn the blocks into braces *)
   let converted = space_to_brace terminated in
+  (* Put the eof on *)
   append_eof converted
 
-(* A function to act like a lexfun *)
+(** A function to act like a lexfun *)
 let lextoks toks =
   let tokens = ref (convert toks) in
   function _ ->
