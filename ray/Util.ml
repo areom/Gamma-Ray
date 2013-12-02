@@ -15,6 +15,10 @@ let option_as_list = function
   | Some(v) -> [v]
   | _ -> []
 
+let decide_option x = function
+  | true -> Some(x)
+  | _ -> None
+
 (* Lexically compare two lists of comparable items *)
 let rec lexical_compare list1 list2 = match list1, list2 with
   | [], [] -> 0
