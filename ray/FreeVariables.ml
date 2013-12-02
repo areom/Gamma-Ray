@@ -3,6 +3,10 @@ open Ast
 open Util
 module StringSet = Set.Make(String)
 
+let formal_vars func =
+  let add_param set (_, v) = StringSet.add v set in
+  List.fold_left add_param StringSet.empty func.formals
+
 let free_vars bound stmts =
   let rec get_free_vars free = function
     | [] -> free
@@ -28,7 +32,10 @@ let free_vars bound stmts =
   and get_free_exprs free bound todo = function
     | [] -> get_free_vars free todo
     | expr::rest ->
-      let (exprs, blocks, id) = match expr with
+      let func_to_task bound func =
+        (StringSet.union (formal_vars func) bound, Left(func.body)) in
+
+      let (exprs, tasks, id) = match expr with
         | NewObj(_, args)           -> (args, [], None)
         | Assign(l, r)              -> ([l; r], [], None)
         | Deref(v, i)               -> ([v; i], [], None)
@@ -42,10 +49,10 @@ let free_vars bound stmts =
         | Refinable(_)              -> ([], [], None)
         | Literal(_)                -> ([], [], None) 
         | Id(id)                    -> ([], [], decide_option id (not (StringSet.mem id bound)))
-        | Anonymous(_, args, funcs) -> let bodies = List.map (fun f -> f.body) funcs in
-                                       (args, bodies, None) in
+        | Anonymous(_, args, funcs) -> (args, List.map (func_to_task bound) funcs, None) in
+
       let rest = exprs @ rest in
-      let todo = (List.map (fun body -> (bound, Left(body))) blocks) @ todo in
+      let todo = tasks @ todo in
       let free = match id with
         | Some(id) -> StringSet.add id free
         | None -> free in
