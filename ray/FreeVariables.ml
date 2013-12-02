@@ -1,4 +1,3 @@
-open Parser
 open Ast
 open Util
 module StringSet = Set.Make(String)
