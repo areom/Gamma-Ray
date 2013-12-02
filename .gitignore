@@ -36,3 +36,4 @@ parser.output
 expect-*
 *.cmi
 *.cmo
+ray/doc/*
