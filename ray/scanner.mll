@@ -1,7 +1,14 @@
 {
   open Parser
 
-  (* from: http://caml.inria.fr/mantis/view.php?id=5367 *)
+  (** The general lexographic scanner for Gamma *)
+
+  (**
+  	Build a string from a list of characters...why aren't we using fold for this?
+	from: http://caml.inria.fr/mantis/view.php?id=5367
+	@param l The list to be glued
+	@return A string of the characters in the list glued together
+  *)
   let implode l =
     let res = String.create (List.length l) in
     let rec imp i = function
@@ -9,6 +16,11 @@
     | c :: l -> res.[i] <- c; imp (i + 1) l in
     imp 0 l
 
+  (**
+    Explode a string into a list of characters
+  	@param s The string to be exploded
+	@return A list of the characters in the string in order
+  *)
   let explode s =
     let rec exploder idx l =
       if idx < 0
@@ -16,22 +28,41 @@
         else exploder (idx-1) (s.[idx] :: l) in
     exploder (String.length s - 1) []
 
+  (**
+  	A generic function to count the character-spaces of a character. (I.e. weight tabs more heavily)
+  *)
   let spacecounter = function
     | '\t' -> 8
     | _    -> 1
 
+  (**
+    Count the space width of a string using the spacecounter function
+	@param s The string to be evaluated
+	@return The effective width of the string when rendered
+  *)
   let spacecount s =
     let spaces = List.map spacecounter (explode s) in
     List.fold_left (+) 0 spaces
 
-  let lexfail msg =
-    raise (Failure(msg))
-
+  (**/**)
   let line_number = ref 1
+  (**/**)
 
+  (**
+    Count the lines in a series of vertical spacing characters.
+    Please note that as of now, it is not intelligent enough to understand
+    that \n\r should be counted as one. It seems like an oversized-amount
+    of work for something we will never effectively need.
+    @param v The vertical spacing series string
+  *)
   let count_lines v = (line_number := !line_number + String.length v)
 
-  let lexfail_line line_number = ("Line " ^ string_of_int !line_number ^ ": ")
+  (**
+    Gracefully tell the programmer that they done goofed
+	@param msg The descriptive error message to convey to the programmer
+  *)
+  let lexfail msg =
+    raise (Failure("Line " ^ string_of_int !line_number ^ ": " ^ msg))
 }
 
 let digit = ['0'-'9']
@@ -148,21 +179,21 @@ rule token = parse
 
   (* Some type of end, for sure *)
   | eof                        { EOF }
-  | _ as char { lexfail(lexfail_line line_number ^ "Illegal character " ^ Char.escaped char) }
+  | _ as char { lexfail("Illegal character " ^ Char.escaped char) }
 
 and comment level = parse
   (* Comments can be nested *)
   | "/*"          { comment (level+1) lexbuf }
   | "*/"          { if level = 0 then token lexbuf else comment (level-1) lexbuf }
-  | eof           { lexfail(lexfail_line line_number ^ "File ended inside comment.") }
+  | eof           { lexfail("File ended inside comment.") }
   | vspace+ as v  { count_lines v; comment(0) lexbuf } 
   | _             { comment (0) lexbuf }
 
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)
   | '\\'           { escapechar chars lexbuf }
-  | eof            { lexfail(lexfail_line line_number ^ "File ended inside string literal") }
-  | vspace as char { lexfail(lexfail_line line_number ^ "Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
+  | eof            { lexfail("File ended inside string literal") }
+  | vspace as char { lexfail("Line ended inside string literal (" ^ Char.escaped char ^ " used): " ^ implode(List.rev chars)) }
   | '"'            { SLIT(implode(List.rev chars)) }
   | _ as char      { stringlit (char::chars) lexbuf }
 
@@ -171,6 +202,6 @@ and escapechar chars = parse
   | ['a' 'b' 'f' 'n' 'r' 't' 'v' '\\' '"' '0'] as char {
       stringlit (char :: '\\' :: chars) lexbuf
     }
-  | eof       { lexfail(lexfail_line line_number ^ "File ended while seeking escape character") }
-  | _ as char { lexfail(lexfail_line line_number ^ "Illegal escape character:  \\" ^ Char.escaped(char)) }
+  | eof       { lexfail("File ended while seeking escape character") }
+  | _ as char { lexfail("Illegal escape character:  \\" ^ Char.escaped(char)) }
 

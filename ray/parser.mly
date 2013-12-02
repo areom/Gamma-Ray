@@ -1,13 +1,22 @@
 %{
 open Ast
 
+(** Let's parse up this bad mofo *)
+
+(** Set a single function to belong to a certain section *)
 let set_func_section_to sect f = { f with section = sect }
+(** Set a list of functions to belong to a certain section *)
 let set_func_section sect = List.map (set_func_section_to sect)
 
+(** Set a single member to belong to a certain subset of class memory.
+    This is necessary as a complicated function because init and main
+    can live in one of the several access levels. *)
 let set_mem_section_to sect = function
   | VarMem(v) -> VarMem(v)
   | InitMem(func) -> InitMem({ func with section = sect })
   | MethodMem(func) -> MethodMem({ func with section = sect })
+
+(** Set a list of members to belong to a certain subset of class memory *)
 let set_mem_section sect = List.map (set_mem_section_to sect)
 
 %}
