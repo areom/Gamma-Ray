@@ -1,7 +1,10 @@
 open Parser
 open Ast
 
+(** A easy way to see what the compiler is doing *)
+
 (* TOKEN stuff *)
+(** Convert a given token to a string representation for output *)
 let token_to_string = function
   | SPACE(n) -> "SPACE(" ^ string_of_int n ^ ")"
   | COLON -> "COLON"
@@ -70,6 +73,7 @@ let token_to_string = function
   | SLIT(str) -> Printf.sprintf "SLIT(%s)" (String.escaped str)
   | EOF -> "EOF"
 
+(** Convert token to its (assumed) lexographical source *)
 let descan = function
   | COLON -> ":"
   | NEWLINE -> "\n"
@@ -138,22 +142,55 @@ let descan = function
   | SLIT(s) -> s
   | EOF -> "eof"
 
+(** Build a list of tokens ala parser
+    @param lexfun A function that takes a lexbuf and returns a token
+    @param lexbuf A lexographical buffer from Lexing
+    @return A list of tokens parsed from the buffer
+*)
 let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
   let rec list_tokens rtokens =
     match (lexfun lexbuf) with
       | EOF -> List.rev (EOF::rtokens)
       | tk -> list_tokens (tk::rtokens) in
   list_tokens []
+
+(** 
+    Use the token_list function to parse a source
+    @param source A channel to buffer
+    @return A list of tokens taken from a source
+*)
 let from_channel source = token_list Scanner.token (Lexing.from_channel source)
 
+(**
+   Print out one of our list of tokens. Does this need to be recursive?
+   @param tokens A list of tokens
+   @return Only returns a unit 
+*)
 let rec print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
 
+(**
+    Print out the important predicates to whitespace style interpretation
+   @return Only returns a unit 
+*)
 let print_token_line = function
   | (space, toks, colon) ->
     print_string ("(" ^ string_of_int space ^ "," ^ string_of_bool colon ^ ") ");
     print_token_list toks
 
+(**
+    Print out a list of tokens with a specific header and some extra margins
+    @param header A nonsemantic string to preface our list
+    @param toks A list of tokens
+    @return Only returns a unit 
+*)
 let pprint_token_list header toks = print_string header ; print_token_list toks ; print_newline ()
+
+(**
+    Print out a series of important predicates to whitespace style interpreation for a set of lines
+    @param header A nonsemantic string to preface our list
+    @param lines A list of line representations (number of spaces, if it ends in a colon, a list of tokens)
+    @return Only returns a unit
+*)
 let pprint_token_lines header lines =
   let spaces = String.make (String.length header) ' ' in
   let rec lines_printer prefix = function
@@ -164,6 +201,10 @@ let pprint_token_lines header lines =
       lines_printer spaces rest
     | [] -> () in
   lines_printer header lines
+
+(**
+    The majority of the following functions are relatively direct AST to string operations
+*)
 
 
 (* AST Parser Stuff *)
