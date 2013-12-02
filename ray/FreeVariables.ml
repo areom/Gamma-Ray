@@ -1,6 +1,6 @@
 open Ast
 open Util
-module StringSet = Set.Make(String)
+open StringModules
 
 let formal_vars func =
   let add_param set (_, v) = StringSet.add v set in

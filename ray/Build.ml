@@ -1,5 +1,6 @@
 open Sast
-module StringMap = Map.Make(String)
+open StringModules
+
 let env = StringMap.empty
 
 let rec attach_bindings stmts env =

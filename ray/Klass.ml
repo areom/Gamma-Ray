@@ -1,6 +1,6 @@
 open Ast
 open Util
-module StringMap = Map.Make (String)
+open StringModules
 
 (* Just for convenient reading *)
 type 'a lookup_table = 'a StringMap.t StringMap.t
