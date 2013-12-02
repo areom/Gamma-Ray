@@ -3,11 +3,11 @@
 *)
 
 (**
-    The four literal classes of Gamma
-    * Int - Integer
-    * Float - Floating-point number
-    * String - A sequence of characters
-    * Bool - a boolean value of either true or false
+    The four literal classes of Gamma:
+    - Int - Integer
+    - Float - Floating-point number
+    - String - A sequence of characters
+    - Bool - a boolean value of either true or false
 *)
 type lit =
     Int of int
@@ -78,10 +78,10 @@ and func_def = {
   section : class_section;  (** A semenantic tag of the class section in which the function lives *)
 }
 
-(* A member is either a variable or some sort of function *)
+(** A member is either a variable or some sort of function *)
 type member_def = VarMem of var_def | MethodMem of func_def | InitMem of func_def
 
-(* Things that can go in a class *)
+(** Things that can go in a class *)
 type class_sections_def = {
   privates : member_def list;
   protects : member_def list;
@@ -91,10 +91,12 @@ type class_sections_def = {
 }
 	
 (* Just pop init and main in there? *)
+(** The basic class definition *)
 type class_def = {
-  klass    : string;
-  parent   : string option;
-  sections : class_sections_def;
+  klass    : string; (** A name string *)
+  parent   : string option; (** The parent class name *)
+  sections : class_sections_def; (** The five sections *)
 }
 
+(** A program, right and proper  *)
 type program = class_def list
