@@ -13,29 +13,56 @@ let get_type exp =
 			|	String(_) -> String
 			|	Bool(_) -> Boolean
 				
-	|       Binop(e1,x,e2) ->
+	|       Binop(e1,op,e2) ->
 				let t1 = get_type e1 and
 				let t2 = get_type e2
+				in
 				if(t1 = Int and t2 = Int) then
 					Int
 				else
 					raise "Required Int"
+	|       Refinable(s1) -> Boolean
+	|       Unop(op, expr) ->
+			if get_type expr = Int
+				Int
+			else
+				raise "Required Int for unary"
+	
+	| 	Invoc(e1, s1, argsexpr_list) ->
+		
+			List.map get_type argsexpr_list
+	
+			match get_type e1 with
+			| User ->
+				method_lookup e1 s1 argsexpr_list
+			| _ ->
+				raise "Unknown invocation"
+		
+	|       Assign(e1, e2) ->
+				
+			let t1 = get_type e1 and t2 = get_type e2
+			in
+			if t1 = t2 then t1
+			else 
+				raise "Types do not match"
+			
+				
 
-
-let annotate_expr expr = (expr , get_type expr)	
-
-let annotate_exprlist elist = List.map annotate_expr elist
 
 
 let rec attach_bindings stmts env =
 
+    let annotate_expr expr =  (expr , get_type expr)	
+    in
+
+    let annotate_exprlist elist = List.map annotate_expr elist
+    in
+
     let build_ifstmt iflist env=
 	
 	let build_block env (expr, slist) = (annotate_expr expr, (attach_bindings slist env))
-
 	in
 	Sast.If( List.map (build_block env) iflist, env)
-		
     in
 
     let build_env (output, env) stmt =
