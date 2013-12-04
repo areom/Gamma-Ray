@@ -38,7 +38,7 @@ let empty_data : class_data = {
 
 (**
     To put it into symbols, we have builder : (StringMap, errorList) -> item -> (StringMap', errorList')
-    @param builder A functor that accepts a StringMap/(error list) pair and a new item
+    @param builder A function that accepts a StringMap/(error list) pair and a new item
     and returns a new pair with either and updated map or updated error list
     @param alist The list of data to build the map out of.
 *)
