@@ -1,4 +1,6 @@
-all:
+all: compile doc tool
+
+compile:
 	#Generate the lexer and parser
 	ocamllex scanner.mll
 	ocamlyacc parser.mly
@@ -21,6 +23,7 @@ all:
 	ocamlc -c -g FreeVariables.ml
 	ocamlc -c -g freevars.ml
 
+tools:
 	#Make the tools
 	ocamlc -g -o tools/prettify scanner.cmo parser.cmo Inspector.cmo Pretty.cmo WhiteSpace.cmo prettify.cmo
 	ocamlc -g -o tools/inspect scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
@@ -28,9 +31,11 @@ all:
 	ocamlc -g -o tools/canonical scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo
 	ocamlc -g -o tools/freevars scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo Util.cmo Klass.cmo Debug.cmo FreeVariables.cmo freevars.cmo 
 
+doc:
 	#Generate the documentation
 	mkdir -p doc
-	ocamldoc -html -d doc ast.mli
+	ocamldoc -d doc -html ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml
+	rm -r ./doc
