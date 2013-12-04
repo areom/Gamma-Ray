@@ -35,7 +35,7 @@ tools:
 doc:
 	#Generate the documentation
 	mkdir -p doc
-	ocamldoc -d doc -html ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml
+	ocamldoc -d doc -html ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml

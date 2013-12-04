@@ -58,7 +58,7 @@ let find_all_min cmp alist =
     Either monad stuffage
     @param value A monad
     @param func A function to run on a monad
-    @return The result of func if we're on the left side, or the next part of the tree if we're on the right
+    @return The result of func if we're on the left side, or the error if we're on the right
 *)
 let (|>) value func =
   match value with
