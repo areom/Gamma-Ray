@@ -1,12 +1,12 @@
-type builtInType = Int | Float | Boolean | String
+type builtInType = Integer | FloatPt | Boolean | Strings | User of string| Undef
 
 
 type varkind = Instance | Local
 
 
-type environment = (string * varkind) Map.Make(String).t
+type environment = (builtInType * varkind) Map.Make(String).t
 
-
+(*
 type lit =
     Int of int
   | Float of float
@@ -17,20 +17,20 @@ type arith = Add | Sub | Prod | Quot | Div | Mod | Neg | Pow
 type numtest = Eq | Neq | Less | Grtr | Leq | Geq
 type combtest = And | Or | Nand | Nor | Xor | Not
 type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
-
+*)
 type expr_detail =
     This
   | Null
   | Id of string
   | NewObj of string * expr list
   | Anonymous of string * expr list * func_def list
-  | Literal of lit
+  | Literal of Ast.lit
   | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
   | Deref of expr * expr (* road[pavement] *)
   | Field of expr * string (* road.pavement *)
   | Invoc of expr * string * expr list (* receiver.method(args) *)
-  | Unop of op * expr (* !x *)
-  | Binop of expr * op * expr (* x + y *)
+  | Unop of Ast.op * expr (* !x *)
+  | Binop of expr * Ast.op * expr (* x + y *)
   | Refine of string * expr list * string option
   | Refinable of string (* refinable *)
 
@@ -40,7 +40,7 @@ expr = expr_detail * builtInType
 
 and 
  
-var_def = (string * string)
+var_def = (builtInType * string)
 
 and sstmt =
     Decl of (var_def * expr option * environment)
