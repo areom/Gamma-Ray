@@ -1,6 +1,10 @@
 open Parser
 open Ast
 
+(** A collection of pretty printing functions.
+    I don't believe it actually needs the Parser dependency.
+    Should probably absorb a fair margin from other files like Inspector.ml *)
+
 let indent level = String.make (level*2) ' '  
 let _id x = x
 
