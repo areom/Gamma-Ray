@@ -14,6 +14,7 @@ compile:
 	ocamlc -c -g Inspector.ml
 	ocamlc -c -g Pretty.ml
 	ocamlc -c -g Util.ml
+	ocamlc -c -g StringModules.ml
 	ocamlc -c -g Klass.ml
 	ocamlc -c -g inspect.ml
 	ocamlc -c -g prettify.ml
@@ -29,7 +30,7 @@ tools:
 	ocamlc -g -o tools/inspect scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
 	ocamlc -g -o tools/streams scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo streams.cmo
 	ocamlc -g -o tools/canonical scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo
-	ocamlc -g -o tools/freevars scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo Util.cmo Klass.cmo Debug.cmo FreeVariables.cmo freevars.cmo 
+	ocamlc -g -o tools/freevars scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo Util.cmo StringModules.cmo Klass.cmo Debug.cmo FreeVariables.cmo freevars.cmo 
 
 doc:
 	#Generate the documentation

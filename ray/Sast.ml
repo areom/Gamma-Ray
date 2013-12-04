@@ -1,4 +1,5 @@
-type t = Int | Float | Bool | String
+type builtInType = Int | Float | Boolean | String
+
 
 type varkind = Instance | Local
 
@@ -17,7 +18,7 @@ type numtest = Eq | Neq | Less | Grtr | Leq | Geq
 type combtest = And | Or | Nand | Nor | Xor | Not
 type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
 
-type (*expr =
+type expr_detail =
     This
   | Null
   | Id of string
@@ -34,17 +35,20 @@ type (*expr =
   | Refinable of string (* refinable *)
 
 and  
+
+expr = expr_detail * builtInType
+
+and 
  
- *)
 var_def = (string * string)
 
 and sstmt =
-    Decl of (var_def * Ast.expr option * environment)
-  | If of ((Ast.expr option * sstmt list) list * environment)
-  | While of ((Ast.expr * sstmt list) * environment)
-  | Expr of Ast.expr * environment
-  | Return of Ast.expr option * environment
-  | Super of Ast.expr list * environment
+    Decl of (var_def * expr option * environment)
+  | If of ((expr option * sstmt list) list * environment)
+  | While of ((expr * sstmt list) * environment)
+  | Expr of expr * environment
+  | Return of expr option * environment
+  | Super of expr list * environment
 
 
 and func_def = {

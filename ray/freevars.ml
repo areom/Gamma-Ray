@@ -1,5 +1,6 @@
 open Ast
 open FreeVariables
+open StringModules
 
 let rec get_vars_formals = function
 	| [] -> StringSet.empty
