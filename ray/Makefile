@@ -1,4 +1,4 @@
-all: compile doc tool
+all: compile doc tools
 
 compile:
 	#Generate the lexer and parser
@@ -35,7 +35,7 @@ tools:
 doc:
 	#Generate the documentation
 	mkdir -p doc
-	ocamldoc -d doc -html ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml
+	ocamldoc -d doc -html ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml inspect.ml prettify.ml streams.ml canonical.ml Debug.ml FreeVariables.ml freevars.ml
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml

@@ -1,4 +1,5 @@
 open Ast
+open Klass
 
 let get_example_path dir example = String.concat Filename.dir_sep ["test"; "tests"; "Brace"; dir; example]
 
