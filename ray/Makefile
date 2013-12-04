@@ -1,4 +1,4 @@
-all: compile doc tools
+all: compile docs tools
 
 compile:
 	#Generate the lexer and parser
@@ -32,10 +32,16 @@ tools:
 	ocamlc -g -o tools/canonical scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo
 	ocamlc -g -o tools/freevars scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo Util.cmo StringModules.cmo Klass.cmo Debug.cmo FreeVariables.cmo freevars.cmo 
 
-doc:
+docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml inspect.ml prettify.ml streams.ml canonical.ml Debug.ml FreeVariables.ml freevars.ml 
+docgen = ./doc/.docgen
+
+docs:
 	#Generate the documentation
 	mkdir -p doc
-	ocamldoc -d doc -html ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml inspect.ml prettify.ml streams.ml canonical.ml Debug.ml FreeVariables.ml freevars.ml
+	ocamldoc -dump $(docgen) -keep-code $(docsources)
+	ocamldoc -load $(docgen) -d doc -t "The Ray Compiler" -html -colorize-code -all-params
+	ocamldoc -load $(docgen) -dot -o "./doc/ray-modules.dot"
+	ocamldoc -load $(docgen) -dot -dot-types -o "./doc/ray-types.dot"
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml

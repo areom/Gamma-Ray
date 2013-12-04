@@ -49,8 +49,8 @@ let build_map_track_errors builder alist =
 
 (**
     Look a value up in a map
-    @key The key to look up
-    @map The map to search in
+    @param key The key to look up
+    @param map The map to search in
     @return Some(value) or None
 *)
 let map_lookup key map = if StringMap.mem key map
@@ -59,8 +59,8 @@ let map_lookup key map = if StringMap.mem key map
 
 (**
     Look a list up in a map
-    @key The key to look up
-    @map The map to search in
+    @param key The key to look up
+    @param map The map to search in
     @return a list or None
 *)
 let map_lookup_list key map = if StringMap.mem key map
