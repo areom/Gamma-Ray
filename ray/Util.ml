@@ -1,9 +1,19 @@
 open Ast
 
+(**
+    Various utility functions
+*)
+
 (* Types *)
+(**
+	Paramaterized variable typing for building binary ASTs
+	@see <http://caml.inria.fr/pub/docs/oreilly-book/html/book-ora016.html#toc19> For more details on paramterized typing
+*)
 type ('a, 'b) either = Left of 'a | Right of 'b
 
-(* Reduce a list of options to the values in the Some constructors *)
+(**
+    Reduce a list of options to the values in the Some constructors
+*)
 let filter_option list =
   let rec do_filter rlist = function
     | [] -> List.rev rlist
@@ -19,16 +29,21 @@ let decide_option x = function
   | true -> Some(x)
   | _ -> None
 
-(* Lexically compare two lists of comparable items *)
+(** Lexically compare two lists of comparable items *)
 let rec lexical_compare list1 list2 = match list1, list2 with
   | [], [] -> 0
   | [], _  -> -1
   | _, []  -> 1
   | (x::xs), (y::ys) -> if x < y then -1 else if x > y then 1 else lexical_compare xs ys
 
-(* Loop through a list and find all the items that are minimum with respect to the total
- * ordering cmp. Note can return any size list.
- *)
+(**
+    Loop through a list and find all the items that are minimum with respect to the total
+    ordering cmp. (If an item is found to be a minimum, any item that is found to
+    be equal to the item is in the returned list.) Note can return any size list.
+    @param cmp A comparator function
+    @param alist A list of items
+    @return A list of one or more items deemed to be the minimum by cmp.
+*)
 let find_all_min cmp alist =
   let rec min_find found items = match found, items with
     | _, [] -> List.rev found (* Return in the same order at least *)
@@ -39,13 +54,22 @@ let find_all_min cmp alist =
       else min_find found is in
   min_find [] alist
 
-(* Either monad stuffage *)
+(**
+    Either monad stuffage
+    @param value A monad
+    @param func A function to run on a monad
+    @return The result of func if we're on the left side, or the next part of the tree if we're on the right
+*)
 let (|>) value func =
   match value with
     | Left(v) -> func(v)
     | Right(problem) -> Right(problem)
 
-(* Return the length of a block -- i.e. the total number of statements (recursively) in it *)
+(**
+    Return the length of a block -- i.e. the total number of statements (recursively) in it
+    @param stmt_list A list of stmt type objects
+    @return An int encoding the length of a block    
+*)
 let get_statement_count stmt_list =
   let rec do_count stmts blocks counts = match stmts, blocks with
     | [], [] -> counts
