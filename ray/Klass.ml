@@ -102,7 +102,7 @@ let build_parent_map data klasses =
   let map_builder map aklass =
     let parent = klass_to_parent aklass in
     let child  = aklass.klass in
-    StringMap.add parent child map in
+    StringMap.add child parent map in
   let parent_map = List.fold_left map_builder StringMap.empty klasses in
   { data with parents = parent_map }
 
