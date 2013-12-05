@@ -1,0 +1,29 @@
+
+dir="$1"
+file="$2"
+tool="$3"
+shift 3
+
+type="Brace"
+if [ ${#@} -ne 0 ] ; then
+  case "$1" in
+    -b) type="Brace"
+        ;;
+    -s) type="Space"
+        ;;
+    -m1) type="Mixed1"
+        ;;
+    *)  echo "Unknown meta-directory $1" >&2
+        exit 1
+        ;;
+  esac
+fi
+
+tool="$( basename "$tool" )"
+if [ ! -e "tools/${tool}" ] ; then
+  echo "Cannot find tool '${tool}' to execute." >&2
+  exit 1
+fi
+
+test -e "tools/${tool}"
+cat "test/tests/${type}/${dir}/${file}" | "tools/${tool}"
