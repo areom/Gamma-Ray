@@ -30,49 +30,6 @@ let empty_data : class_data = {
   distance = StringMap.empty;
 }
 
-(**
-    To put it into symbols, we have builder : (StringMap, errorList) -> item -> (StringMap', errorList')
-    @param builder A function that accepts a StringMap/(error list) pair and a new item
-    and returns a new pair with either and updated map or updated error list
-    @param alist The list of data to build the map out of.
-*)
-let build_map_track_errors builder alist =
-  match List.fold_left builder (StringMap.empty, []) alist with
-    | (value, []) -> Left(value)
-    | (_, errors) -> Right(errors)
-
-(**
-    Look a value up in a map
-    @param key The key to look up
-    @param map The map to search in
-    @return Some(value) or None
-*)
-let map_lookup key map = if StringMap.mem key map
-  then Some(StringMap.find key map)
-  else None
-
-(**
-    Look a list up in a map
-    @param key The key to look up
-    @param map The map to search in
-    @return a list or None
-*)
-let map_lookup_list key map = if StringMap.mem key map
-  then StringMap.find key map
-  else []
-
-(** Updating a string map that has list of possible values *)
-let add_map_list key value map =
-  if StringMap.mem key map
-    then StringMap.add key (value::(StringMap.find key map)) map
-    else StringMap.add key [value] map
-
-(** Update a map but keep track of collisions *)
-let add_map_unique key value (map, collisions) =
-  if StringMap.mem key map
-    then (map, key::collisions)
-    else (StringMap.add key value map, collisions)
-
 (** From a class get the parent *)
 let klass_to_parent = function
   | { parent = None; _ } -> "Object"
