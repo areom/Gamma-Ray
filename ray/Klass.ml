@@ -4,12 +4,6 @@ open StringModules
 
 (** Approximates a class *)
 
-(* Just for convenient reading *)
-(** A type and two string maps *)
-type 'a lookup_table = 'a StringMap.t StringMap.t
-(** A type and a string maps *)
-type 'a lookup_map = 'a StringMap.t
-
 (** A full class record table as a type *)
 type class_data = {
   classes : class_def lookup_map;
