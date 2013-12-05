@@ -1,4 +1,10 @@
 
+if [ "${#@}" -eq 0 ] ; then
+  # Read from stdin when there are no arguments (runtool)
+  cat
+  exit 0
+fi
+
 dir="$1"
 file="$2"
 shift 2
