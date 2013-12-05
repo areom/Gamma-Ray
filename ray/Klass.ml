@@ -35,6 +35,21 @@ let klass_to_parent = function
   | { parent = None; _ } -> "Object"
   | { parent = Some(aklass); _ } -> aklass
 
+(** Utility function -- place variables in left, methods (including init) in right *)
+let member_split = function
+  | VarMem(v) -> Left(v)
+  | MethodMem(m) -> Right(m)
+  | InitMem(i) -> Right(i)
+
+
+(** Stringify a section to be printed *)
+let section_string = function
+  | Privates -> "private"
+  | Protects -> "protected"
+  | Publics -> "public"
+  | Refines -> "refinement"
+  | Mains -> "main"
+
 (**
     Return the variables of the class
     @param aklass The class to explore
@@ -43,10 +58,7 @@ let klass_to_parent = function
     is a map of the variables
 *)
 let klass_to_variables aklass =
-  let to_variable = function
-    | VarMem(v) -> Some(v)
-    | _ -> None in
-  let vars members = filter_option (List.map to_variable members) in
+  let vars members = fst (either_split (List.map member_split members)) in
   let s = aklass.sections in
   [(Publics, vars s.publics); (Protects, vars s.protects); (Privates, vars s.privates)]
 
@@ -58,11 +70,7 @@ let klass_to_variables aklass =
     is a map of the methods
 *)
 let klass_to_methods aklass =
-  let to_function = function
-    | MethodMem(m) -> Some(m)
-    | InitMem(i) -> Some(i)
-    | _ -> None in
-  let funcs members = filter_option (List.map to_function members) in
+  let funcs members = snd (either_split (List.map member_split members)) in
   let s = aklass.sections in
   [(Publics, funcs s.publics); (Protects, funcs s.protects); (Privates, funcs s.privates)]
 
@@ -174,6 +182,13 @@ let conflicting_signatures func1 func2 =
 let signature_string func_def =
   Format.sprintf "%s(%s)" func_def.name (String.concat ", " (List.map fst func_def.formals))
 
+(** Signature with return type. *)
+let full_signature_string func =
+  let ret = match func.returns with
+    | None -> "Void"
+    | Some(t) -> t in
+  Format.sprintf "%s %s" ret (signature_string func)
+
 (**
     Builds a map of all the methods within a class, returning a list of collisions
     when there are conflicting signatures. Keys to the map are function names and
@@ -224,7 +239,9 @@ let build_refinement_map aklass =
     @return Lists of methods.
 *)
 let build_class_refinement_map data klasses =
-  let to_collision func = (func.host, func.name, List.map fst func.formals) in
+  let to_collision func = match func.host with
+    | None -> raise(Invalid_argument("Cannot build refinement collisions -- refinement without host [compiler error]."))
+    | Some(host) -> (host, func.name, List.map fst func.formals) in
   let to_collisions funcs = List.map to_collision funcs in
   let map_builder (klass_map, collision_list) aklass =
     match build_refinement_map aklass with
@@ -385,7 +402,7 @@ type class_data_error
   | DuplicateClasses of string list
   | DuplicateVariables of (string * string list) list
   | ConflictingMethods of (string * (string * string list) list) list
-  | ConflictingRefinements of (string * (string option * string * string list) list) list
+  | ConflictingRefinements of (string * (string * string * string list) list) list
   | MultipleMains of string list
 
 (**
@@ -432,3 +449,45 @@ let build_class_data klasses
   |-> append_mains klasses
   |-> append_ancestor
   |-> append_distance
+
+let print_class_data data =
+  let id x = x in
+  let from_list lst = Format.sprintf "[%s]" (String.concat ", " lst) in
+  let table_printer tbl name stringer =
+    let printer p s i = Format.sprintf "\t%s : %s => %s\n" p s (stringer i) in
+    print_string (name ^ ":\n");
+    print_lookup_table tbl printer in
+  let map_printer map name stringer =
+    let printer k i = Format.sprintf "\t%s => %s\n" k (stringer i) in
+    print_string (name ^ ":\n");
+    print_lookup_map map printer in
+
+  let func_list funcs =
+    let sigs = List.map (fun f -> "\n\t\t" ^ (full_signature_string f)) funcs in
+    String.concat "" sigs in
+
+  let class_printer cdef =
+    let rec count sect = function
+      | (where, members)::_ when where = sect -> List.length members
+      | _::rest -> count sect rest
+      | [] -> raise(Failure("The impossible happened -- searching for a section that should exist doesn't exist.")) in
+    let vars = klass_to_variables cdef in
+    let funcs = klass_to_functions cdef in
+    let format = "class %s extends %s and has\n" ^^
+                 "\t\t(%d/%d/%d) methods -- private, protected, public\n" ^^
+                 "\t\t%d refinements, %d mains\n" ^^
+                 "\t\t(%d/%d/%d) fields -- private, protected, public" in
+    Format.sprintf format cdef.klass (klass_to_parent cdef)
+                   (count Privates funcs) (count Protects funcs) (count Publics funcs)
+                   (count Refines funcs) (count Mains funcs)
+                   (count Privates vars) (count Protects vars) (count Publics vars) in
+
+  map_printer data.classes "Classes" class_printer;
+  map_printer data.parents "Parents" id;
+  map_printer data.children "Children" from_list;
+  table_printer data.variables "Fields" (fun (sect, t) -> Format.sprintf "%s %s" (section_string sect) t);
+  table_printer data.methods "Methods" func_list;
+  table_printer data.refines "Refines" func_list;
+  map_printer data.mains "Mains" full_signature_string;
+  map_printer data.ancestors "Ancestors" from_list;
+  table_printer data.distance "Distance" string_of_int
