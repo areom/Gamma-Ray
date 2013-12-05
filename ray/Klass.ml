@@ -471,13 +471,13 @@ let append_distance data = Left(build_distance_map data)
 *)
 let build_class_data klasses
   =  Left(empty_data)
-  |> append_children klasses
-  |> append_parent klasses
-  |> test_tree
-  |> append_classes klasses
-  |> append_variables klasses
-  |> append_methods klasses
-  |> append_refines klasses
-  |> append_mains klasses
-  |> append_ancestor
-  |> append_distance
+  |-> append_children klasses
+  |-> append_parent klasses
+  |-> test_tree
+  |-> append_classes klasses
+  |-> append_variables klasses
+  |-> append_methods klasses
+  |-> append_refines klasses
+  |-> append_mains klasses
+  |-> append_ancestor
+  |-> append_distance

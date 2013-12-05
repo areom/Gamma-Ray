@@ -60,7 +60,7 @@ let find_all_min cmp alist =
     @param func A function to run on a monad
     @return The result of func if we're on the left side, or the error if we're on the right
 *)
-let (|>) value func =
+let (|->) value func =
   match value with
     | Left(v) -> func(v)
     | Right(problem) -> Right(problem)
