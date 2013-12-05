@@ -187,7 +187,7 @@ let full_signature_string func =
   let ret = match func.returns with
     | None -> "Void"
     | Some(t) -> t in
-  Format.sprintf "%s %s" ret (signature_string func)
+  Format.sprintf "%s %s %s" (section_string func.section) ret (signature_string func)
 
 (**
     Builds a map of all the methods within a class, returning a list of collisions
@@ -475,19 +475,27 @@ let print_class_data data =
     let funcs = klass_to_functions cdef in
     let format = "class %s extends %s and has\n" ^^
                  "\t\t(%d/%d/%d) methods -- private, protected, public\n" ^^
-                 "\t\t%d refinements, %d mains\n" ^^
-                 "\t\t(%d/%d/%d) fields -- private, protected, public" in
+                 "\t\t(%d/%d/%d) fields -- private, protected, public\n" ^^
+                 "\t\t%d refinements, %d mains" in
     Format.sprintf format cdef.klass (klass_to_parent cdef)
                    (count Privates funcs) (count Protects funcs) (count Publics funcs)
                    (count Refines funcs) (count Mains funcs)
                    (count Privates vars) (count Protects vars) (count Publics vars) in
 
   map_printer data.classes "Classes" class_printer;
+  print_newline ();
   map_printer data.parents "Parents" id;
+  print_newline ();
   map_printer data.children "Children" from_list;
+  print_newline ();
   table_printer data.variables "Fields" (fun (sect, t) -> Format.sprintf "%s %s" (section_string sect) t);
+  print_newline ();
   table_printer data.methods "Methods" func_list;
+  print_newline ();
   table_printer data.refines "Refines" func_list;
+  print_newline ();
   map_printer data.mains "Mains" full_signature_string;
+  print_newline ();
   map_printer data.ancestors "Ancestors" from_list;
+  print_newline ();
   table_printer data.distance "Distance" string_of_int
