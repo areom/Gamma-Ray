@@ -1,10 +1,8 @@
-type builtInType = Integer | FloatPt | Boolean | Strings | User of string| Undef
-
 
 type varkind = Instance | Local
 
 
-type environment = (builtInType * varkind) Map.Make(String).t
+type environment = (string * varkind) Map.Make(String).t
 
 (*
 type lit =
@@ -36,11 +34,11 @@ type expr_detail =
 
 and  
 
-expr = expr_detail * builtInType
+expr = expr_detail * string 
 
 and 
  
-var_def = (builtInType * string)
+var_def = (string * string)
 
 and sstmt =
     Decl of (var_def * expr option * environment)

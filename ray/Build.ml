@@ -1,4 +1,6 @@
 open Sast
+open Klass
+open Str
 (*open StringModules*)
 module StringMap = Map.Make(String)
 
@@ -21,86 +23,110 @@ consistent.
 
 assignment to the lvalue on the left
 *)
-let rec eval env exp = 
 
+(*ADD MORE CHECKS*)
+let getInstanceType vname env klass_data kname =
+
+		if (StringMap.mem vname env) then fst(StringMap.find vname env)
+		else
+			raise(Failure "Undefined identifier")	
+
+let getLiteralType litparam =
+		match litparam with
+					Ast.Int(i) -> "Integer"
+			     	|	Ast.Float(f) -> "Float"
+			     	|	Ast.String(s) -> "String"
+			     	|	Ast.Bool(b) -> "Boolean"
+
+let getMethodType klass_data kname methd arglist = "String"
+		
+
+let rec eval klass_data kname env exp = 
+
+    	let eval_exprlist env' elist = List.map (eval klass_data kname env') elist
+	in
 	match exp with
-		Ast.This 	-> Sast.Null, Boolean
-	|	Ast.Null	-> Sast.Null, User("Null")
-	|	Ast.Id(name)    ->
-			   		if (StringMap.mem name env) then 
-						
-						let vartyp = StringMap.find name env
+		Ast.This 	-> (Sast.This, "Current-Klass")
+	|	Ast.Null	-> (Sast.Null, "Null")
+	|	Ast.Id(vname)    -> (Sast.Id(vname),  getInstanceType vname env klass_data kname)
+	|	Ast.Literal(lit) -> (Sast.Literal(lit), getLiteralType lit)
+	|       Ast.NewObj(s1, elist) -> (Sast.NewObj(s1, eval_exprlist env elist), s1)
 
-						in
-						(Sast.Id(name),  fst(vartyp))
-					else
-						raise (Failure "Undefined Identified")
+	| 	Ast.Field(expr, mbr) ->
+					let rec recvr = eval klass_data kname env expr in
+					let recvr_type = snd(recvr) in
 
-	|	Ast.Literal(lit) -> 
-			let get_typ t1= 
-				match t1 with 
-					Ast.Int(i) -> Integer
-			     	|	Ast.Float(f) -> FloatPt
-			     	|	Ast.String(s) -> Strings
-			     	|	Ast.Bool(b) -> Boolean
-			in
-			(Sast.Literal(lit), get_typ lit)
+					(Sast.Field(recvr, mbr), getInstanceType mbr env klass_data recvr_type)	
+	|       Ast.Invoc(expr, methd, elist) ->
 
-	|       Ast.Binop(e1,op,e2) ->
-				let t1 = eval env e1 and  t2 = eval env e2
-				in
-				if(snd(t1) = Integer && snd(t2) = Integer) then
-				   let gettype op =
-					match op with
-						 Ast.Arithmetic(_) -> Integer
-				       		|Ast.NumTest(_) -> Boolean
-				       		|Ast.CombTest(_) -> Boolean
+					let recvr_type param = snd(param) in
+					let rec recvr = eval klass_data kname env expr and arglist = eval_exprlist env elist 
+					in
+					(Sast.Invoc(recvr, methd, arglist), getMethodType klass_data recvr_type methd arglist)
 
-				   in (Sast.Binop(t1,op,t2), gettype op)
-				
-				else
-					raise(Failure "Bin op needs Integer error")
-					
-	|       Ast.Refinable(s1) -> (Sast.Refinable(s1), Boolean) (*Check if the method is refinable*)
-
-	|       Ast.Unop(op, expr) ->
-				let t1 = eval env expr in
-		
-				if(snd(t1) = Integer || snd(t1) = Boolean) then
-					(Sast.Unop(op,t1), Boolean)
-				else
-					raise(Failure "Unary op takes Integer error") 
-				
-(*	
-	| 	Invoc(e1, s1, argsexpr_list) ->
-		
-			List.map get_type argsexpr_list
-	
-			match get_type e1 with
-			| User ->
-				method_lookup e1 s1 argsexpr_list
-			| _ ->
-				Undef
-*)
-		
 	|       Ast.Assign(e1, e2) ->
-				
-			let t1 = eval env e1  and t2 = eval env e2
+	
+			let t1 = eval klass_data kname env e1  and t2 = eval klass_data kname env e2
 			in
-			if snd(t1) = snd(t2) then 
+			if ((*is_subtype klass_data snd(t2) snd(t1) = *)true) then 
 				(Sast.Assign(t1, t2), snd(t1))
 			else 
-				raise (Failure "Assign type failed")
-	|        _ -> (Sast.Null, Boolean)
+				raise (Failure "Assigning to incompatible type") 
+
+	|       Ast.Binop(e1,op,e2) ->
+				let isCompatible typ1 typ2 = typ1 (*EDIT*)
+				(*	if  Klass.is_subtype gKInfo typ1 typ2 then  typ2
+					else if Klass.is_subtype gKinfo typ2 typ1 then  typ1
+					else raise (Failure "Binop takes incompatible types")*)
+				in
+				let t1 = eval klass_data kname env e1 and  t2 = eval klass_data kname env e2
+				in	
+				let getype op (_,typ1) (_,typ2) = 
+					match op with
+						Ast.Arithmetic(_) -> isCompatible typ1 typ2
+					|	Ast.NumTest(_)   
+					|	Ast.CombTest(_) ->
+						  ignore(isCompatible typ1 typ2); "Boolean"
+								     
+				in (Sast.Binop(t1,op,t2),getype op t1 t2)
+				
+(*	| 	Ast.Anonymous(s1, elist, fdef) ->
+
+				 Sast.Anonymous(s1, eval_exprlist env elist,
+				(*we have to attach bindings on fdef*)				fdef ), s1 
+
+	|       Ast.Refine(s1, elist, soption) ->
+	|
+*)
+	|       Ast.Deref(e1, e2) ->
+					let expectArray typename = 
+						match last_chars typename 2 with
+							"[]"    ->  List.hd (split (regexp "\[") typename)
+						|	_	-> raise (Failure "Not an array type")
+					in
+					let t1 = eval klass_data kname env e1 and t2 = eval klass_data kname env e2
+					in
+					let getArrayType (_, typ1) (_,typ2) = 
+						if typ2 = "Integer" then  expectArray typ2 
+						else raise(Failure "Dereferencing invalid")
+					in
+					(Sast.Deref(t1, t2), getArrayType t1 t2)
+					
+	|       Ast.Refinable(s1) -> (Sast.Refinable(s1), "Boolean") (*Check if the method is refinable ?*)
+
+	|       Ast.Unop(op, expr) ->
+				let t1 = eval klass_data kname env expr in
+		
+				(Sast.Unop(op,t1), "Boolean")
 				
 
 
 
 
-let rec attach_bindings stmts env =
+let rec attach_bindings klass_data kname stmts env =
 
 
-    let eval_exprlist env' elist = List.map (eval env') elist
+    let eval_exprlist env' elist = List.map (eval klass_data kname env') elist
     in
 
     let build_ifstmt iflist env=
@@ -111,10 +137,10 @@ let rec attach_bindings stmts env =
 
 		match exp with
 		  None -> None
-		| Some exp -> Some(eval env exp)
+		| Some exp -> Some(eval klass_data kname env exp)
 
 	     in
-	     (exprtyp, attach_bindings slist env)
+	     (exprtyp, attach_bindings klass_data kname slist env)
 	in
 	Sast.If( List.map (build_block env) iflist, env)
     in 
@@ -124,43 +150,34 @@ let rec attach_bindings stmts env =
 	match stmt with
 		| Ast.While(expr, slist)  -> 
 						let exprtyp = 
-							let e1 = eval env expr
+							let e1 = eval klass_data kname env expr
 							in
 							match snd(e1) with
-								Boolean -> e1
+								"Boolean" -> e1
 								| _  -> raise (Failure "While expects Boolean")
 						in		
-						(Sast.While(((exprtyp), attach_bindings slist env), env)::output, env)
+						(Sast.While(((exprtyp), attach_bindings klass_data kname slist env), env)::output, env)
 
  		| Ast.If (iflist)            	->  ((build_ifstmt iflist env)::output, env) 
 		| Ast.Decl((vtype,vname),opt_expr)->
-							let convert_type stringed =
-								match stringed with
-								"Integer" -> Integer
-							   |    "Boolean" -> Boolean	
-							   |    "String"  -> Strings
-							   |    "Float"   -> FloatPt
-							   |    others    -> User(others)
-							in
-							
 							let exprtyp = 
 								match opt_expr with 
-								Some exp -> Some(eval env exp)
+								Some exp -> Some(eval klass_data kname env exp)
 								| None -> None
 						 	in
-						 	(Sast.Decl((convert_type vtype, vname), exprtyp , env)::output, 
-								(StringMap.add vname (convert_type vtype,Local) env))
+						 	(Sast.Decl((vtype, vname), exprtyp , env)::output, 
+								(StringMap.add vname (vtype,Local) env))
 
-  		| Ast.Expr(expr) 		-> (Sast.Expr((eval env expr), env)::output, env)
+  		| Ast.Expr(expr) 		-> (Sast.Expr((eval klass_data kname env expr), env)::output, env)
 		| Ast.Return(opt_expr) 		->
 						 let exprtyp = 
 							match opt_expr with
-						   	  Some exp -> Some (eval env exp)
+						   	  Some exp -> Some (eval klass_data kname env exp)
 							| None -> None
 						 in
 						 (Sast.Return(exprtyp, env)::output, env)
 
-	        | Ast.Super(expr_list) 		-> (Sast.Super(eval_exprlist env  expr_list,env)::output, env)
+	        | Ast.Super(expr_list) 		-> (Sast.Super(eval_exprlist env expr_list,env)::output, env)
 
     in (List.rev (fst(List.fold_left build_env ([],env) stmts)))
 
