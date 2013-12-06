@@ -1,13 +1,8 @@
 
-if [ "${#@}" -eq 0 ] ; then
-  # Read from stdin when there are no arguments (runtool)
-  cat
-  exit 0
-fi
-
 dir="$1"
 file="$2"
-shift 2
+tool="$3"
+shift 3
 
 type="Brace"
 if [ ${#@} -ne 0 ] ; then
@@ -24,4 +19,11 @@ if [ ${#@} -ne 0 ] ; then
   esac
 fi
 
-cat "test/tests/${type}/${dir}/${file}"
+tool="$( basename "$tool" )"
+if [ ! -e "tools/${tool}" ] ; then
+  echo "Cannot find tool '${tool}' to execute." >&2
+  exit 1
+fi
+
+test -e "tools/${tool}"
+cat "test/tests/${type}/${dir}/${file}" | "tools/${tool}"

@@ -34,7 +34,7 @@ class Collection:
         }
       return false
 
-    Boolean containsAll(Colletion other):
+    Boolean containsAll(Collection other):
       if(refinable(check)) {
         return refine check(other) to Boolean;
       }

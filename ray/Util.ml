@@ -12,6 +12,16 @@ open Ast
 type ('a, 'b) either = Left of 'a | Right of 'b
 
 (**
+    Split a list of 'a 'b either values into a pair of 'a list and 'b list
+  *)
+let either_split eithers =
+  let split_eithers (left, right) = function
+    | [] -> (List.rev left, List.rev right)
+    | (Left(a))::rest -> (a::left, right)
+    | (Right(b))::rest -> (left, b::right) in
+  split_eithers ([], []) eithers
+
+(**
     Reduce a list of options to the values in the Some constructors
 *)
 let filter_option list =
