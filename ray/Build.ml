@@ -6,31 +6,55 @@ module StringMap = Map.Make(String)
 
 let env = StringMap.empty
 
-(*
-Ï Used identiﬁers must be deﬁned
-
-Ï Function calls must refer to functions
-
-Ï Identiﬁer references must be to variables
-
-Ï The types of operands for unary and binary operators must be
-
-consistent.
-
-Ï The predicate of an if and while must be a Boolean.
-
-Ï It must be possible to assign the type on the right side of an
-
-assignment to the lvalue on the left
-*)
-
 (*ADD MORE CHECKS*)
-let getInstanceType vname env klass_data kname =
 
-		if (StringMap.mem vname env) then fst(StringMap.find vname env)
+(*Get the parent of kname
+		and invoke getInstanceType on it 
+				if kname has no parent 
+					throw exception*)
+let rec getInstanceType vname env klass_data kname = 
+			match class_var_lookup klass_data kname vname with
+			| Some (varmap) ->  Some(varmap, kname)
+			| None -> 
+					if kname = "Object" then
+						None
+					else
+						let parent = StringMap.find kname klass_data.parents
+						in
+						getInstanceType vname env klass_data parent
+
+let getIDType vname env klass_data kname =
+
+		if (StringMap.mem vname env) then 
+			fst(StringMap.find vname env)
 		else
-			raise(Failure "Undefined identifier")	
+			let instancedata = getInstanceType vname env klass_data kname
+			in
+			match instancedata with
+			Some((section, vtyp),cname) ->
+							if kname = cname then
+								vtyp
+							else if section <> Ast.Privates then
+								vtyp
+							else
+								raise (Failure "ID private")
+			| None -> raise (Failure "Id not found")
+			(*Do a lookup on the instance variable for the
+			current classdef and return its type else then recurse its ancestor*)
+			
 
+let getFieldType member env klass_data kname =
+
+	let instancedata = getInstanceType member env klass_data kname
+	in
+	match instancedata with
+	Some((section, vtyp), cname) -> if section <> Ast.Publics then
+						raise (Failure "Instance can acess only public")
+					else
+						vtyp
+	| None -> raise	(Failure "Field unknown")
+	
+	
 let getLiteralType litparam =
 		match litparam with
 					Ast.Int(i) -> "Integer"
@@ -38,8 +62,18 @@ let getLiteralType litparam =
 			     	|	Ast.String(s) -> "String"
 			     	|	Ast.Bool(b) -> "Boolean"
 
-let getMethodType klass_data kname methd arglist = "String"
-		
+let getMethodType env klass_data kname methd arglist = "String"
+
+	(*	let kdef =  klass_lookup kname
+		in 
+		let mdef =  method_lookup methd arglist
+		in
+*)
+		(*Do a lookup on the classname, 
+		  Get the function definitions 
+		  and check if a matching function
+		  exist and return its type else
+		  recurse on its ancestor *)	
 
 let rec eval klass_data kname env exp = 
 
@@ -48,21 +82,20 @@ let rec eval klass_data kname env exp =
 	match exp with
 		Ast.This 	-> (Sast.This, "Current-Klass")
 	|	Ast.Null	-> (Sast.Null, "Null")
-	|	Ast.Id(vname)    -> (Sast.Id(vname),  getInstanceType vname env klass_data kname)
+	|	Ast.Id(vname)    -> (Sast.Id(vname),  getIDType vname env klass_data kname)
 	|	Ast.Literal(lit) -> (Sast.Literal(lit), getLiteralType lit)
 	|       Ast.NewObj(s1, elist) -> (Sast.NewObj(s1, eval_exprlist env elist), s1)
 
 	| 	Ast.Field(expr, mbr) ->
 					let rec recvr = eval klass_data kname env expr in
 					let recvr_type = snd(recvr) in
-
-					(Sast.Field(recvr, mbr), getInstanceType mbr env klass_data recvr_type)	
+					(Sast.Field(recvr, mbr), getFieldType mbr env klass_data recvr_type)	
 	|       Ast.Invoc(expr, methd, elist) ->
 
 					let recvr_type param = snd(param) in
 					let rec recvr = eval klass_data kname env expr and arglist = eval_exprlist env elist 
 					in
-					(Sast.Invoc(recvr, methd, arglist), getMethodType klass_data recvr_type methd arglist)
+					(Sast.Invoc(recvr, methd, arglist), getMethodType env klass_data recvr_type methd arglist)
 
 	|       Ast.Assign(e1, e2) ->
 	
@@ -118,6 +151,7 @@ let rec eval klass_data kname env exp =
 				let t1 = eval klass_data kname env expr in
 		
 				(Sast.Unop(op,t1), "Boolean")
+	|       _  -> Sast.Null, "dummy"
 				
 
 
@@ -137,7 +171,16 @@ let rec attach_bindings klass_data kname stmts env =
 
 		match exp with
 		  None -> None
-		| Some exp -> Some(eval klass_data kname env exp)
+		| Some exp ->
+				let checktype (exp, typ) =
+					if typ = "Boolean" then
+						(exp,typ)
+					else
+						raise (Failure "Predicates must be boolean")
+				in
+				let exptype = eval klass_data kname env exp
+				in
+				Some(checktype exptype)
 
 	     in
 	     (exprtyp, attach_bindings klass_data kname slist env)
