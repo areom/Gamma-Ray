@@ -1,4 +1,10 @@
 
+program="$( basename "$0" )"
+if [ ${#@} -lt 3 ] ; then
+  echo "Usage: $program dir file tool [-s|-b|-m1]" >&2
+  exit 1
+fi
+
 dir="$1"
 file="$2"
 tool="$3"
