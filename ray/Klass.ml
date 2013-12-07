@@ -335,6 +335,11 @@ let get_distance data klass1 klass2 =
     | None, Some(n) -> Some(-n)
     | res, _ ->  res
 
+(** Check if a type exists in the class data -- convenience function *)
+let is_type data atype = match map_lookup atype data.classes with
+  | None -> false
+  | _ -> true
+
 (**
     Check if a class is a subclass of another given a class_data record
     @return Whether the first type is a subtype of the second
