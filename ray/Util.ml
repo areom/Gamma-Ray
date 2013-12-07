@@ -15,10 +15,10 @@ type ('a, 'b) either = Left of 'a | Right of 'b
     Split a list of 'a 'b either values into a pair of 'a list and 'b list
   *)
 let either_split eithers =
-  let split_eithers (left, right) = function
+  let rec split_eithers (left, right) = function
     | [] -> (List.rev left, List.rev right)
-    | (Left(a))::rest -> (a::left, right)
-    | (Right(b))::rest -> (left, b::right) in
+    | (Left(a))::rest -> split_eithers (a::left, right) rest
+    | (Right(b))::rest -> split_eithers (left, b::right) rest in
   split_eithers ([], []) eithers
 
 (**
