@@ -118,7 +118,7 @@ let rec eval klass_data kname env exp =
         if is_subtype klass_data typ1 typ2 then typ2
         else if is_subtype klass_data typ2 typ1 then typ1
         else raise (Failure "Binop takes incompatible types") in
-      let t1 = eval klass_data kname env e1 and  t2 = eval klass_data kname env e2 in
+      let t1 = eval klass_data kname env e1 and t2 = eval klass_data kname env e2 in
       let gettype op (typ1,_) (typ2,_) = match op with
         | Ast.Arithmetic(_) -> isCompatible typ1 typ2
         | Ast.NumTest(_)
@@ -175,7 +175,7 @@ let rec attach_bindings klass_data kname stmts env =
  * Build the environment (actually Sast) for every Ast statement,
  * build the corressponding Sast.ssmt which is Ast.stmt * env
  * while updating the env in its scope if there was a new declaration
- *  and for every Ast.expr, annotate it with type -> type, Ast.expr
+ * and for every Ast.expr, annotate it with type -> type, Ast.expr
  *)
   let build_env (output, env) stmt = match stmt with
     | Ast.While(expr, slist) ->
