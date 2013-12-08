@@ -15,30 +15,30 @@ let pp_lit = function
   | Bool(b)   -> Printf.sprintf "Bool(%B)" b
 
 let pp_arith = function
-  | Add  -> Printf.sprintf "Add"
-  | Sub  -> Printf.sprintf "Sub"
-  | Prod -> Printf.sprintf "Prod"
-  | Quot -> Printf.sprintf "Quot"
-  | Div  -> Printf.sprintf "Div"
-  | Mod  -> Printf.sprintf "Mod"
-  | Neg  -> Printf.sprintf "Neg"
-  | Pow  -> Printf.sprintf "Pow"
+  | Add  -> "Add"
+  | Sub  -> "Sub"
+  | Prod -> "Prod"
+  | Quot -> "Quot"
+  | Div  -> "Div"
+  | Mod  -> "Mod"
+  | Neg  -> "Neg"
+  | Pow  -> "Pow"
 
 let pp_numtest = function
-  | Eq   -> Printf.sprintf "Eq"
-  | Neq  -> Printf.sprintf "Neq"
-  | Less -> Printf.sprintf "Less"
-  | Grtr -> Printf.sprintf "Grtr"
-  | Leq  -> Printf.sprintf "Leq"
-  | Geq  -> Printf.sprintf "Geq"
+  | Eq   -> "Eq"
+  | Neq  -> "Neq"
+  | Less -> "Less"
+  | Grtr -> "Grtr"
+  | Leq  -> "Leq"
+  | Geq  -> "Geq"
 
 let pp_combtest = function
-  | And  -> Printf.sprintf "And"
-  | Or   -> Printf.sprintf "Or"
-  | Nand -> Printf.sprintf "Nand"
-  | Nor  -> Printf.sprintf "Nor"
-  | Xor  -> Printf.sprintf "Xor"
-  | Not  -> Printf.sprintf "Not"
+  | And  -> "And"
+  | Or   -> "Or"
+  | Nand -> "Nand"
+  | Nor  -> "Nor"
+  | Xor  -> "Xor"
+  | Not  -> "Not"
 
 let pp_op = function
   | Arithmetic(an_op) -> Printf.sprintf "Arithmetic(%s)" (pp_arith an_op)
@@ -75,12 +75,12 @@ and pp_stmt depth = function
   | Super(args) -> Printf.sprintf "\n%sSuper(%s)" (indent depth) (pp_str_list (pp_expr depth) args depth)
 and inspect_clause depth (opt_expr, body) = Printf.sprintf "(%s, %s)" (pp_opt (pp_expr depth) opt_expr) (pp_str_list (pp_stmt (depth+1)) body depth)
 and class_section = function
-  | Publics  -> Printf.sprintf "Publics"
-  | Protects -> Printf.sprintf "Protects"
-  | Privates -> Printf.sprintf "Privates"
-  | Refines  -> Printf.sprintf "Refines"
-  | Mains    -> Printf.sprintf "Mains"
-and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s\n%s}"
+  | Publics  -> "Publics"
+  | Protects -> "Protects"
+  | Privates -> "Privates"
+  | Refines  -> "Refines"
+  | Mains    -> "Mains"
+and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s,\n%sinklass = %s\n%s}"
   (indent (depth-1))
   (indent depth)
   (pp_opt _id func.returns)
@@ -96,6 +96,8 @@ and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s
   (pp_str_list (pp_stmt (depth+1)) func.body depth)
   (indent depth)
   (class_section func.section)
+  (indent depth)
+  func.inklass
   (indent (depth-1))
 
 let pp_member_def depth = function
