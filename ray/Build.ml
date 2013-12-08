@@ -8,8 +8,16 @@ let env = StringMap.empty
 
 (*ADD MORE CHECKS*)
 
-(* Get the parent of kname and invoke getInstanceType on it
-   if kname has no parent throw exception*)
+(**
+    Get the type of an instance variable data for a given variable name
+    and class name given a class_data record.
+    @param vname The variable being sought
+    @param klass_data The class_data record
+    @param kname The class we are looking in
+    @return Either Some(section, klass) where vname is an instance variable
+    in the variable table (map) for the class (klass), or None if there is no
+    variable to be found.
+  *)
 let rec getInstanceType vname klass_data kname =
   match class_var_lookup klass_data kname vname with
     | Some (varmap) ->  Some(varmap, kname)
@@ -18,37 +26,44 @@ let rec getInstanceType vname klass_data kname =
       else let parent = StringMap.find kname klass_data.parents in
         getInstanceType vname klass_data parent
 
-(*
- * Get an Id's type - Not accessed through objects
- * Therefore, it can be a local variable visible in the current scope i.e., present inside env
- * It can be an instance variable in the current class of any access scope
- * Or it can be an instance variable which is either protected or public in any of its ancestor
- * We just get to the closest ancestor
- *)
+(**
+    Get an Id's type - Not accessed through objects
+    Therefore, it can be a local variable visible in the current scope i.e., present inside env
+    It can be an instance variable in the current class of any access scope
+    Or it can be an instance variable which is either protected or public in any of its ancestor
+    We just get to the closest ancestor
+  *)
 let getIDType vname env klass_data kname =
+  match map_lookup vname env with
+    | Some((vtyp, _)) -> vtyp
+    | _ -> match getInstanceType vname klass_data kname with
+      | Some((section, vtyp), cname) ->
+        if (kname = cname || section <> Ast.Privates) then vtyp
+        else raise (Failure("ID " ^ vname ^ " not in accessible scope"))
+      | None -> raise (Failure("ID " ^ vname ^ " not found"))
+(*
   if (StringMap.mem vname env)
     then fst(StringMap.find vname env)
-    else let instancedata = getInstanceType vname klass_data kname in
-     match instancedata with
-       | Some((section, vtyp), cname) ->
-         if (kname = cname || section <> Ast.Privates) then vtyp
-         else raise (Failure "ID not in access scope")
-       | None -> raise (Failure "Id not found")
+    else match getInstanceType vname klass_data kname with
+     | Some((section, vtyp), cname) ->
+       if (kname = cname || section <> Ast.Privates) then vtyp
+       else raise (Failure "ID not in access scope")
+     | None -> raise (Failure "Id not found")
+*)
 
 (* Do a lookup on the instance variable for the current classdef and return
    its type else then recurse its ancestor *)
 let getFieldType recvr member klass_data cur_kname =
-  let lookupclass = if recvr = "Kurrent-Klass" then  cur_kname else recvr in
-  let instancedata = getInstanceType member klass_data lookupclass in
-    match instancedata with
-      | Some((section, vtyp), cname) ->
-        if section = Ast.Publics then vtyp
-        else if recvr = "Kurrent-Klass" then
-          if section = Ast.Protects then vtyp
-          else if section = Ast.Privates && lookupclass = cname then vtyp
-          else raise (Failure "Non-public members can only this as receiver")
-       else raise (Failure "Access only public through instance")
-      | None -> raise (Failure "Field unknown")
+  let lookupclass = if recvr = "Kurrent-Klass" then cur_kname else recvr in
+  match getInstanceType member klass_data lookupclass with
+    | Some((section, vtyp), cname) ->
+      if section = Ast.Publics then vtyp
+      else if recvr = "Kurrent-Klass" then
+        if section = Ast.Protects then vtyp
+        else if section = Ast.Privates && lookupclass = cname then vtyp
+        else raise (Failure "Non-public members can only this as receiver")
+     else raise (Failure "Access only public through instance")
+    | None -> raise (Failure "Field unknown")
 
 let getLiteralType litparam = match litparam with
   | Ast.Int(i) -> "Integer"
