@@ -4,10 +4,10 @@
   (** The general lexographic scanner for Gamma *)
 
   (**
-  	Build a string from a list of characters...why aren't we using fold for this?
-	from: http://caml.inria.fr/mantis/view.php?id=5367
-	@param l The list to be glued
-	@return A string of the characters in the list glued together
+      Build a string from a list of characters
+      from: http://caml.inria.fr/mantis/view.php?id=5367
+      @param l The list to be glued
+      @return A string of the characters in the list glued together
   *)
   let implode l =
     let res = String.create (List.length l) in
@@ -17,9 +17,9 @@
     imp 0 l
 
   (**
-    Explode a string into a list of characters
-  	@param s The string to be exploded
-	@return A list of the characters in the string in order
+      Explode a string into a list of characters
+      @param s The string to be exploded
+      @return A list of the characters in the string in order
   *)
   let explode s =
     let rec exploder idx l =
@@ -29,16 +29,16 @@
     exploder (String.length s - 1) []
 
   (**
-  	A generic function to count the character-spaces of a character. (I.e. weight tabs more heavily)
+      A generic function to count the character-spaces of a character. (I.e. weight tabs more heavily)
   *)
   let spacecounter = function
     | '\t' -> 8
     | _    -> 1
 
   (**
-    Count the space width of a string using the spacecounter function
-	@param s The string to be evaluated
-	@return The effective width of the string when rendered
+      Count the space width of a string using the spacecounter function
+      @param s The string to be evaluated
+      @return The effective width of the string when rendered
   *)
   let spacecount s =
     let spaces = List.map spacecounter (explode s) in
@@ -58,8 +58,8 @@
   let count_lines v = (line_number := !line_number + String.length v)
 
   (**
-    Gracefully tell the programmer that they done goofed
-	@param msg The descriptive error message to convey to the programmer
+      Gracefully tell the programmer that they done goofed
+      @param msg The descriptive error message to convey to the programmer
   *)
   let lexfail msg =
     raise (Failure("Line " ^ string_of_int !line_number ^ ": " ^ msg))
@@ -186,7 +186,7 @@ and comment level = parse
   | "/*"          { comment (level+1) lexbuf }
   | "*/"          { if level = 0 then token lexbuf else comment (level-1) lexbuf }
   | eof           { lexfail("File ended inside comment.") }
-  | vspace+ as v  { count_lines v; comment(0) lexbuf } 
+  | vspace+ as v  { count_lines v; comment(0) lexbuf }
   | _             { comment (0) lexbuf }
 
 and stringlit chars = parse
