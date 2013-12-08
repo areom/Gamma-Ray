@@ -6,14 +6,54 @@ open StringModules
 
 (** A full class record table as a type *)
 type class_data = {
+  (** A map that goes from class names to to class definition records *)
   classes : class_def lookup_map;
+
+  (**
+      A map that goes from class names to parents --
+      everything should have a parent except Object
+    *)
   parents : string lookup_map;
+
+  (** A map that goes from class names to a list of children *)
   children : (string list) lookup_map;
+
+  (**
+      A table [map -> map -> value]; primary key is the class name;
+      secondary key is variable name; result is a pair: the section 
+      variable was declared in and its type
+    *)
   variables : (class_section * string) lookup_table;
+
+  (**
+      A table [map -> map -> value]; primary key is the class name;
+      secondary key is the method name; result is a list of functions
+      that have the given name in the given class
+    *)
   methods : (func_def list) lookup_table;
+
+  (**
+      A table [map -> map -> value]; primary key is the class name;
+      secondary key is the refinement `host.refinement'; the result is
+      a list of functions that have the given name in the given class
+    *)
   refines : (func_def list) lookup_table;
+
+  (** A map from class names to main functions *)
   mains : func_def lookup_map;
+
+  (**
+      A map from class names to the list of ancestors -- the list runs
+      from the given class back to Object in the expected fashion
+    *)
   ancestors : (string list) lookup_map;
+
+  (**
+      A table [map -> map -> value]; primary key is subtype; secondary
+      key is the ancestor; result is the positive integer distance that
+      represents how many hops along the class tree are between the two
+      classes. Distance from a type to itself is 0.
+    *)
   distance : int lookup_table;
 }
 
@@ -30,20 +70,32 @@ let empty_data : class_data = {
   distance = StringMap.empty;
 }
 
-(** From a class get the parent *)
-let klass_to_parent = function
+(**
+    From a class get the parent
+    @param aklass is a class_def to get the parent of
+    @return The name of the parent object
+  *)
+let klass_to_parent aklass = match aklass with
   | { parent = None; _ } -> "Object"
   | { parent = Some(aklass); _ } -> aklass
 
-(** Utility function -- place variables in left, methods (including init) in right *)
-let member_split = function
+(**
+    Utility function -- place variables in left, methods (including init) in right
+    @param mem A member_def value (VarMem, MethodMem, InitMem)
+    @return Places the values held by VarMem in Left, values held by MethodMem or InitMem in Right
+  *)
+let member_split mem = match mem with
   | VarMem(v) -> Left(v)
   | MethodMem(m) -> Right(m)
   | InitMem(i) -> Right(i)
 
 
-(** Stringify a section to be printed *)
-let section_string = function
+(**
+    Stringify a section to be printed
+    @param section A class_section value (Privates, Protects, Publics, Refines, or Mains)
+    @return The stringification of the section for printing
+  *)
+let section_string section = match section with
   | Privates -> "private"
   | Protects -> "protected"
   | Publics -> "public"
@@ -55,7 +107,8 @@ let section_string = function
     @param aklass The class to explore
     @return A list of ordered pairs representing different sections,
     the first item of each pair is the type of the section, the second
-    is a map of the variables
+    is a map of the variables. Note that this only returns pairs for
+    Publics, Protects, and Privates as the others cannot have variables
 *)
 let klass_to_variables aklass =
   let vars members = fst (either_split (List.map member_split members)) in
@@ -67,7 +120,9 @@ let klass_to_variables aklass =
     @param aklass The class to explore
     @return A list of ordered pairs representing different sections,
     the first item of each pair is the type of the section, the second
-    is a map of the methods
+    is a map of the methods. Note that this only returns the methods
+    in Publics, Protects, or Privates as the other sections don't have
+    `normal' methods in them
 *)
 let klass_to_methods aklass =
   let funcs members = snd (either_split (List.map member_split members)) in
@@ -87,6 +142,9 @@ let klass_to_functions aklass =
     Add the children map
     ( parent name (string) -> children names (string list) )
     to a class_data record
+    @param data A class_data record
+    @param klasses A list of parsed classes
+    @return data but with the children map updated given klasses.
 *)
 let build_children_map data klasses =
   let map_builder map aklass = add_map_list (klass_to_parent aklass) (aklass.klass) map in
@@ -97,6 +155,9 @@ let build_children_map data klasses =
     Add the parent map
     ( child name (string) -> parent name (string) )
     to a class_data record
+    @param data A class_data record
+    @param klasses A list of parsed classes
+    @return data but with the children map added in given klasses
 *)
 let build_parent_map data klasses =
   let map_builder map aklass =
@@ -108,6 +169,7 @@ let build_parent_map data klasses =
 
 (**
     Validate that the parent map in a class_data record represents a tree rooted at object.
+    @param data a class_data record
     @return An optional string (Some(string)) when there is an issue.
 *)
 let is_tree_hierarchy data =
@@ -380,8 +442,9 @@ let compatible_function data actuals func_def =
     Raises an error if somehow our list of compatible methods becomes incompatible
     [i.e. there is a logic error in the compiler].
 *)
-let best_matching_signature data actuals funcs =
+let best_matching_signature data actuals funcs sections =
   let funcs = List.filter (compatible_function data actuals) funcs in
+  let funcs = List.filter (fun f -> List.mem f.section sections) funcs in
   let distance_of actual formal = match get_distance data actual formal with
     | Some(n) when n >= 0 -> n
     | _ -> raise(Invalid_argument("Compatible methods somehow incompatible: " ^ actual ^ " vs. " ^ formal ^ ". Compiler error.")) in
@@ -395,9 +458,9 @@ let best_matching_signature data actuals funcs =
     method. Note that if there is more than one then an exception is raised as this should
     have been reported during collision detection [compiler error].
 *)
-let best_method data klass_name method_name actuals =
+let best_method data klass_name method_name actuals sections =
   let methods = class_method_lookup data klass_name method_name in
-  match best_matching_signature data actuals methods with
+  match best_matching_signature data actuals methods sections with
     | [] -> None
     | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
