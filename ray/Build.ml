@@ -1,8 +1,8 @@
+open Ast
 open Sast
 open Klass
 open Str
-(*open StringModules*)
-module StringMap = Map.Make(String)
+open StringModules
 
 let env = StringMap.empty
 
@@ -46,7 +46,8 @@ let getIDType vname env klass_data kname =
 							else
 								raise (Failure "ID not in access scope")
 			| None -> raise (Failure "Id not found")
-			(*Do a lookup on the instance variable for the
+			
+(*Do a lookup on the instance variable for the
 			current classdef and return its type else then recurse its ancestor*)
 			
 
@@ -61,10 +62,12 @@ let getFieldType recvr member klass_data cur_kname =
 				getInstanceType member klass_data lookupclass
 	in
 	match instancedata with
-	Some((section, vtyp), cname) -> if   (cname <> lookupclass && section <> Ast.Publics) then
-						raise (Failure "Access only public instance through instance")
-					else
-						vtyp
+	Some((section, vtyp), cname) ->  if section = Ast.Publics then vtyp
+					 else if recvr = "Kurrent-Klass" then
+							if section = Ast.Protects then vtyp
+							else if section = Ast.Privates && lookupclass = cname then vtyp
+							else raise (Failure "Non-public members can only this as receiver")
+					 else	raise (Failure "Access only public through instance")
 	| None -> raise	(Failure "Field unknown")
 	
 	
@@ -75,18 +78,61 @@ let getLiteralType litparam =
 			     	|	Ast.String(s) -> "String"
 			     	|	Ast.Bool(b) -> "Boolean"
 
-let getMethodType env klass_data kname methd arglist = 
+let rec getAncestor klass_data recvr methd argtypelist section =
 
-	match best_method klass_data kname methd arglist with
-	 Some(fdef) -> "Some" (*fdef*)
-	| None ->    "None"  (* if kname = "Object" then
-				raise (Failure "No matching function found")
-			else
-				let parent = StringMap.find kname klass_data.parents
-                      		in
-				getMethodType env klass_data kname parent methd arglist
+	let parent = StringMap.find recvr klass_data.parents
+        in
+	match best_method klass_data parent methd argtypelist section with
 			
-*)
+	 None -> 	if   parent = "Object" then
+				raise (Failure "Method not found")
+			else 
+				getAncestor klass_data parent methd argtypelist section
+
+	 | Some(fdef) ->
+			match fdef.returns with
+				Some(retval) -> retval
+				| None -> "Void" 
+
+let getPubMethodType klass_data kname recvr methd arglist = 
+
+	let argtypes =
+			List.map fst arglist
+	in
+	let section = 	[Ast.Publics]
+	in
+	match best_method klass_data recvr methd argtypes section with
+	 None ->
+			if recvr = "Object" then
+				raise (Failure "Method not found")
+
+			else getAncestor klass_data recvr methd argtypes section
+
+	 | Some(fdef) -> 
+			match fdef.returns with
+					Some(retval) -> retval
+					| None -> "Void" 
+
+
+let getInstanceMethodType klass_data kname recvr methd arglist = 
+
+	let argtypes =
+			List.map fst arglist
+	in
+	let section = 	[Ast.Publics; Ast.Protects; Ast.Privates]
+	in
+	match best_method klass_data recvr methd argtypes section with
+	 None ->
+			if recvr = "Object" then
+				raise (Failure "Method not found")
+
+			else getAncestor klass_data recvr methd argtypes (List.tl section)
+
+	| Some(fdef) -> 
+			match fdef.returns with
+					Some(retval) -> retval
+					| None -> "Void" 
+
 let rec eval klass_data kname env exp = 
 
     	let eval_exprlist env' elist = List.map (eval klass_data kname env') elist
@@ -112,29 +158,35 @@ let rec eval klass_data kname env exp =
 				in
 				let arglist = eval_exprlist env elist 
 				in
-				let mtype = 
-					getMethodType env klass_data kname  methd arglist
+				let mtype =
+					if recvr_type = "Kurrent-Klass" then
+						 getInstanceMethodType klass_data kname recvr_type methd arglist
+					else 
+						 getPubMethodType klass_data kname recvr_type methd arglist
 				in
-				(mtype, Sast.Invoc(recvr, methd, arglist))
+				(mtype, Sast.Invoc(recvr, methd, arglist))   
+
 
 	|       Ast.Assign(e1, e2) ->
 	
 			let t1 = eval klass_data kname env e1  and t2 = eval klass_data kname env e2
 			in
-			if ((*is_subtype klass_data snd(t2) snd(t1) = *)true) then 
-				("Integer", Sast.Assign(t1, t2))
+			let type1 = fst(t1) and type2 = fst(t2)
+			in
+			if (is_subtype klass_data type2 type1 = true) then 
+				(type1, Sast.Assign(t1, t2))
 			else 
 				raise (Failure "Assigning to incompatible type") 
 
 	|       Ast.Binop(e1,op,e2) ->
-				let isCompatible typ1 typ2 = "Integer" (*EDIT*)
-				(*	if  Klass.is_subtype gKInfo typ1 typ2 then  typ2
-					else if Klass.is_subtype gKinfo typ2 typ1 then  typ1
-					else raise (Failure "Binop takes incompatible types")*)
+				let isCompatible typ1 typ2 = 
+					if is_subtype klass_data typ1 typ2 then typ2
+					else if is_subtype klass_data typ2 typ1 then typ1
+					else raise (Failure "Binop takes incompatible types")
 				in
 				let t1 = eval klass_data kname env e1 and  t2 = eval klass_data kname env e2
 				in	
-				let gettype op (_,typ1) (_,typ2) = 
+				let gettype op (typ1,_) (typ2,_) = 
 					match op with
 						Ast.Arithmetic(_) -> isCompatible typ1 typ2
 					|	Ast.NumTest(_)   
@@ -165,11 +217,11 @@ let rec eval klass_data kname env exp =
 					in
 					let t1 = eval klass_data kname env e1 and t2 = eval klass_data kname env e2
 					in
-					let getArrayType (_, typ1) (_,typ2) = 
-						if typ2 = "Integer" then  expectArray typ2 
+					let getArrayType (typ1, _) (typ2, _) = 
+						if typ2 = "Integer" then  expectArray typ1 
 						else raise(Failure "Dereferencing invalid")
 					in
-					("Integer", Sast.Deref(t1, t2))
+					(getArrayType t1 t2, Sast.Deref(t1, t2))
 					
 	|       Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
 
