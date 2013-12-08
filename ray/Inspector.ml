@@ -217,30 +217,30 @@ let inspect_lit = function
   | Bool(b)   -> Printf.sprintf "Bool(%B)" b
 
 let inspect_arith = function
-  | Add  -> Printf.sprintf "Add"
-  | Sub  -> Printf.sprintf "Sub"
-  | Prod -> Printf.sprintf "Prod"
-  | Quot -> Printf.sprintf "Quot"
-  | Div  -> Printf.sprintf "Div"
-  | Mod  -> Printf.sprintf "Mod"
-  | Neg  -> Printf.sprintf "Neg"
-  | Pow  -> Printf.sprintf "Pow"
+  | Add  -> "Add"
+  | Sub  -> "Sub"
+  | Prod -> "Prod"
+  | Quot -> "Quot"
+  | Div  -> "Div"
+  | Mod  -> "Mod"
+  | Neg  -> "Neg"
+  | Pow  -> "Pow"
 
 let inspect_numtest = function
-  | Eq   -> Printf.sprintf "Eq"
-  | Neq  -> Printf.sprintf "Neq"
-  | Less -> Printf.sprintf "Less"
-  | Grtr -> Printf.sprintf "Grtr"
-  | Leq  -> Printf.sprintf "Leq"
-  | Geq  -> Printf.sprintf "Geq"
+  | Eq   -> "Eq"
+  | Neq  -> "Neq"
+  | Less -> "Less"
+  | Grtr -> "Grtr"
+  | Leq  -> "Leq"
+  | Geq  -> "Geq"
 
 let inspect_combtest = function
-  | And  -> Printf.sprintf "And"
-  | Or   -> Printf.sprintf "Or"
-  | Nand -> Printf.sprintf "Nand"
-  | Nor  -> Printf.sprintf "Nor"
-  | Xor  -> Printf.sprintf "Xor"
-  | Not  -> Printf.sprintf "Not"
+  | And  -> "And"
+  | Or   -> "Or"
+  | Nand -> "Nand"
+  | Nor  -> "Nor"
+  | Xor  -> "Xor"
+  | Not  -> "Not"
 
 let inspect_op = function
   | Arithmetic(an_op) -> Printf.sprintf "Arithmetic(%s)" (inspect_arith an_op)
@@ -277,12 +277,12 @@ and inspect_stmt = function
   | Super(args) -> Printf.sprintf "Super(%s)" (inspect_str_list inspect_expr args)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
 and inspect_class_section = function
-  | Publics -> Printf.sprintf "Publics"
-  | Protects -> Printf.sprintf "Protects"
-  | Privates -> Printf.sprintf "Privates"
-  | Refines -> Printf.sprintf "Refines"
-  | Mains -> Printf.sprintf "Mains"
-and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s, section = %s }"
+  | Publics  -> "Publics"
+  | Protects -> "Protects"
+  | Privates -> "Privates"
+  | Refines  -> "Refines"
+  | Mains    -> "Mains"
+and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s, section = %s, inklass = %s }"
   (inspect_opt _id func.returns)
   (inspect_opt _id func.host)
   func.name
@@ -290,6 +290,7 @@ and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s
   (inspect_str_list inspect_var_def func.formals)
   (inspect_str_list inspect_stmt func.body)
   (inspect_class_section func.section)
+  func.inklass
 
 let inspect_member_def = function
   | VarMem(vmem) -> Printf.sprintf "VarMem(%s)" (inspect_var_def vmem)
