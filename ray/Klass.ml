@@ -442,8 +442,9 @@ let compatible_function data actuals func_def =
     Raises an error if somehow our list of compatible methods becomes incompatible
     [i.e. there is a logic error in the compiler].
 *)
-let best_matching_signature data actuals funcs =
+let best_matching_signature data actuals funcs sections =
   let funcs = List.filter (compatible_function data actuals) funcs in
+  let funcs = List.filter (fun f -> List.mem f.section sections) funcs in
   let distance_of actual formal = match get_distance data actual formal with
     | Some(n) when n >= 0 -> n
     | _ -> raise(Invalid_argument("Compatible methods somehow incompatible: " ^ actual ^ " vs. " ^ formal ^ ". Compiler error.")) in
@@ -457,9 +458,9 @@ let best_matching_signature data actuals funcs =
     method. Note that if there is more than one then an exception is raised as this should
     have been reported during collision detection [compiler error].
 *)
-let best_method data klass_name method_name actuals =
+let best_method data klass_name method_name actuals sections =
   let methods = class_method_lookup data klass_name method_name in
-  match best_matching_signature data actuals methods with
+  match best_matching_signature data actuals methods sections with
     | [] -> None
     | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
