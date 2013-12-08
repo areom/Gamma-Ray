@@ -34,7 +34,7 @@ type expr_detail =
 
 and  
 
-expr = expr_detail * string 
+expr = string * expr_detail
 
 and 
  
