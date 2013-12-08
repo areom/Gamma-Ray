@@ -131,7 +131,7 @@ let merge_lines program_lines =
 let rec needs_semi = function
   | [] -> true              (* Null case*)
   | RBRACE::[] -> false     (* The end of bodies do not require semicolons *)
-  | SEMI::[] -> false       (* A properly terminated line does not require an additional semicolon *) 
+  | SEMI::[] -> false       (* A properly terminated line does not require an additional semicolon *)
   | _::rest -> needs_semi rest (* Go through *)
 
 (**
