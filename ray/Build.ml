@@ -109,9 +109,7 @@ let rec eval klass_data kname env exp =
     | Ast.Null -> ("Null", Sast.Null)
     | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
-(*
     | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist env elist))
-*)
     | Ast.Field(expr, mbr) ->
       let rec recvr = eval klass_data kname env expr in
       let recvr_type = fst(recvr) in
