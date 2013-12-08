@@ -20,7 +20,7 @@ type class_data = {
 
   (**
       A table [map -> map -> value]; primary key is the class name;
-      secondary key is variable name; result is a pair: the section 
+      secondary key is variable name; result is a pair: the section
       variable was declared in and its type
     *)
   variables : (class_section * string) lookup_table;
@@ -109,7 +109,7 @@ let section_string section = match section with
     the first item of each pair is the type of the section, the second
     is a map of the variables. Note that this only returns pairs for
     Publics, Protects, and Privates as the others cannot have variables
-*)
+  *)
 let klass_to_variables aklass =
   let vars members = fst (either_split (List.map member_split members)) in
   let s = aklass.sections in
@@ -123,7 +123,7 @@ let klass_to_variables aklass =
     is a map of the methods. Note that this only returns the methods
     in Publics, Protects, or Privates as the other sections don't have
     `normal' methods in them
-*)
+  *)
 let klass_to_methods aklass =
   let funcs members = snd (either_split (List.map member_split members)) in
   let s = aklass.sections in
@@ -133,7 +133,7 @@ let klass_to_methods aklass =
     Get anything that is invocable, not just instance methods
     @param aklass The class to explore
     @return The combined list of refinements, mains, and methods
-*)
+  *)
 let klass_to_functions aklass =
   let s = aklass.sections in
   (Refines, s.refines) :: (Mains, s.mains) :: klass_to_methods aklass
@@ -145,7 +145,7 @@ let klass_to_functions aklass =
     @param data A class_data record
     @param klasses A list of parsed classes
     @return data but with the children map updated given klasses.
-*)
+  *)
 let build_children_map data klasses =
   let map_builder map aklass = add_map_list (klass_to_parent aklass) (aklass.klass) map in
   let children_map = List.fold_left map_builder StringMap.empty klasses in
@@ -158,7 +158,7 @@ let build_children_map data klasses =
     @param data A class_data record
     @param klasses A list of parsed classes
     @return data but with the children map added in given klasses
-*)
+  *)
 let build_parent_map data klasses =
   let map_builder map aklass =
     let parent = klass_to_parent aklass in
@@ -171,7 +171,7 @@ let build_parent_map data klasses =
     Validate that the parent map in a class_data record represents a tree rooted at object.
     @param data a class_data record
     @return An optional string (Some(string)) when there is an issue.
-*)
+  *)
 let is_tree_hierarchy data =
   let rec from_object klass checked =
     match map_lookup klass checked with
@@ -194,7 +194,10 @@ let is_tree_hierarchy data =
     Add the class map
     ( class name (string) -> class (class_def) )
     to a class_data record
-*)
+    @param data A class_data record to update
+    @klasses A list of parsed classes
+    @return data but with the class map added given klasses
+  *)
 let build_class_map data klasses =
   let map_builder map aklass = add_map_unique (aklass.klass) aklass map in
   match build_map_track_errors map_builder klasses with
@@ -206,7 +209,9 @@ let build_class_map data klasses =
     If all instance variables are uniquely named, returns Left (map) where map
     is  var name -> (class_section, type)  otherwise returns Right (collisions)
     where collisions are the names of variables that are multiply declared.
-*)
+    @param aklass A parsed class
+    @return a map of instance variables in the class
+  *)
 let build_var_map aklass =
   let add_var section map (typeId, varId) = add_map_unique varId (section, typeId) map in
   let map_builder map (section, members) = List.fold_left (add_var section) map members in
@@ -216,9 +221,11 @@ let build_var_map aklass =
     Add the variable map
     ( class name (string) -> variable name (string) -> variable info (class_section, type) )
     to a class_data record
+    @param data A class_data record
+    @param klasses A list of parsed classes
     @return Either a list of collisions (in Right) or the updated record (in Left).
     Collisions are pairs (class name, collisions (var names) for that class)
-*)
+  *)
 let build_class_var_map data klasses =
   let map_builder (klass_map, collision_list) aklass =
     match build_var_map aklass with
@@ -230,7 +237,10 @@ let build_class_var_map data klasses =
 
 (**
     Return whether two function definitions have conflicting signatures
-*)
+    @param func1 A func_def
+    @param func2 A func_def
+    @return Whether the functions have the same name and the same parameter type sequence
+  *)
 let conflicting_signatures func1 func2 =
   let same_type (t1, _) (t2, _) = (t1 = t2) in
   let same_name = (func1.name = func2.name) in
@@ -240,11 +250,20 @@ let conflicting_signatures func1 func2 =
 
 (**
     Return a string that describes a function
-*)
-let signature_string func_def =
-  Format.sprintf "%s(%s)" func_def.name (String.concat ", " (List.map fst func_def.formals))
+    @param func A func_def
+    @return A string showing the simple signature ([host.]name and arg types)
+  *)
+let signature_string func =
+  let name = match func.host with
+    | None -> func.name
+    | Some(h) -> Format.sprintf "%s.%s" h func.name in
+  Format.sprintf "%s(%s)" name (String.concat ", " (List.map fst func.formals))
 
-(** Signature with return type. *)
+(**
+    Return a string representing the full signature of the function
+    @param func A func_def
+    @return A string showing the signature (section, [host.]name, arg types)
+  *)
 let full_signature_string func =
   let ret = match func.returns with
     | None -> "Void"
@@ -252,10 +271,12 @@ let full_signature_string func =
   Format.sprintf "%s %s %s" (section_string func.section) ret (signature_string func)
 
 (**
-    Builds a map of all the methods within a class, returning a list of collisions
-    when there are conflicting signatures. Keys to the map are function names and
-    the values are list of func_def pairs.
-*)
+    Build a map of all the methods within a class, returing either a list of collisions
+    (in Right) when there are conflicting signatures or the map (in Left) when there
+    are not. Keys to the map are function names and the values are lists of func_def's.
+    @param aklass A klass to build a method map for
+    @return Either a list of collisions or a map of function names to func_def's.
+  *)
 let build_method_map aklass =
   let add_method (map, collisions) fdef =
     if List.exists (conflicting_signatures fdef) (map_lookup_list fdef.name map)
@@ -265,13 +286,16 @@ let build_method_map aklass =
   build_map_track_errors map_builder (List.map snd (klass_to_methods aklass))
 
 (**
-    Add the method map
-    ( class name (string) -> method name (string) -> methods (func_def list) )
-    to the class_data record.
+    Add the class name (string) -> method name (string) -> methods  (func_def list)
+    methods table to a class_data record, given a list of classes. If there are no
+    collisions, the updated record is returned (in Left), otherwise the collision
+    list is returned (in Right).
+    @param data A class data record
+    @param klasses A list of parsed classes
     @return Either a list of collisions (in Right) or the updated record (in Left).
     Collisions are pairs (class name, colliding methods for that class). Methods collide
     if they have conflicting signatures (ignoring return type).
-*)
+  *)
 let build_class_method_map data klasses =
   let to_collision func = (func.name, List.map fst func.formals) in
   let to_collisions funcs = List.map to_collision funcs in
@@ -283,9 +307,13 @@ let build_class_method_map data klasses =
     | Left(method_map) -> Left({ data with methods = method_map })
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
-(** Build the map of refinements for a given class. Keys to the map are "host.func"
-    @return A list of collisions when there are conflicting signatures.
-*)
+(**
+    Build the map of refinements for a given class. Keys to the map are `host.name'
+    @param aklass aklass A class to build a refinement map out of
+    @return Either a list of collisions (in Right) or the map (in left). Refinements
+    conflict when they have the same name (`host.name' in this case) and have the same
+    argument type sequence.
+  *)
 let build_refinement_map aklass =
   let add_refinement (map, collisions) func = match func.host with
     | Some(host) ->
@@ -297,9 +325,15 @@ let build_refinement_map aklass =
   build_map_track_errors add_refinement aklass.sections.refines
 
 (**
-    Build the map of classes to refinements -- class names are the first key, host.name is the second,
-    @return Lists of methods.
-*)
+    Add the class name (string) -> refinement (`host.name' - string) -> func list
+    map to a class_data record. If there are no collisions (conflicting signatures
+    given the same host), then the updated record is returned (in Left) otherwise
+    a list of collisions is returned (in Right).
+    @param data A class_data record
+    @param klasses A list of parsed classes
+    @return either a list of collisions (in Right) or the updated record (in Left).
+    Collisions are (class, (host, method, formals) list)
+  *)
 let build_class_refinement_map data klasses =
   let to_collision func = match func.host with
     | None -> raise(Invalid_argument("Cannot build refinement collisions -- refinement without host [compiler error]."))
@@ -314,10 +348,15 @@ let build_class_refinement_map data klasses =
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
 (**
-    Build the map of mains -- class name to main
-*)
+    Add a map of main functions, from class name (string) to main (func_def) to the
+    class_data record passed in. Returns a list of collisions if any class has more
+    than one main (in Right) or the updated record (in Left)
+    @param data A class_data record
+    @param klasses A list of parsed classes
+    @return Either the collisions (Right) or the updated record (Left)
+  *)
 let build_main_map data klasses =
-  let add_klass (map, collisions) aklass =  match aklass.sections.mains with
+  let add_klass (map, collisions) aklass = match aklass.sections.mains with
     | [] -> (map, collisions)
     | [main] -> (StringMap.add aklass.klass main map, collisions)
     | _ -> (map, aklass.klass :: collisions) in
@@ -374,7 +413,7 @@ let build_distance klass ancestors =
     Given a class_data record, add the distance map for the record. The distance map takes a sub class
     and then an ancestor class and tells you the distance between the two. (requires ancestor map built)
 *)
-let build_distance_map data = 
+let build_distance_map data =
   let distance_map = StringMap.mapi build_distance data.ancestors in
   { data with distance = distance_map }
 
@@ -431,25 +470,33 @@ let compatible_formals data actuals formals =
     | Invalid_argument(_) -> false
 
 (** A predicate for whether a func_def is compatible with an actuals list *)
-let compatible_function data actuals func_def =
-  compatible_formals data actuals (List.map fst func_def.formals)
+let compatible_function data actuals func =
+  compatible_formals data actuals (List.map fst func.formals)
+
+(**
+    Filter a list of functions based on their section.
+    @param funcs a list of functions
+    @param sects a list of class_section values
+    @return a list of functions in the given sections
+  *)
+let in_section sects funcs =
+  List.filter (fun f -> List.mem f.section sects) funcs
 
 (**
     Given a class_data record, a list of actual arguments, and a list of methods,
     find the best matches for the actuals. Note that if there are multiple best
     matches (i.e. ties) then a non-empty non-singleton list is returned.
- 
+
     Raises an error if somehow our list of compatible methods becomes incompatible
     [i.e. there is a logic error in the compiler].
 *)
 let best_matching_signature data actuals funcs sections =
   let funcs = List.filter (compatible_function data actuals) funcs in
-  let funcs = List.filter (fun f -> List.mem f.section sections) funcs in
   let distance_of actual formal = match get_distance data actual formal with
     | Some(n) when n >= 0 -> n
     | _ -> raise(Invalid_argument("Compatible methods somehow incompatible: " ^ actual ^ " vs. " ^ formal ^ ". Compiler error.")) in
   let to_distance func = List.map2 distance_of actuals (List.map fst func.formals) in
-  let with_distances = List.map (function func -> (func, to_distance func)) funcs in
+  let with_distances = List.map (fun func -> (func, to_distance func)) funcs in
   let lex_compare (_, lex1) (_, lex2) = lexical_compare lex1 lex2 in
   List.map fst (find_all_min lex_compare with_distances)
 
@@ -460,6 +507,7 @@ let best_matching_signature data actuals funcs sections =
 *)
 let best_method data klass_name method_name actuals sections =
   let methods = class_method_lookup data klass_name method_name in
+  let methods = in_section sections methods in
   match best_matching_signature data actuals methods sections with
     | [] -> None
     | [func] -> Some(func)
