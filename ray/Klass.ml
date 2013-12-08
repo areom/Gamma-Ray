@@ -139,9 +139,8 @@ let klass_to_functions aklass =
   (Refines, s.refines) :: (Mains, s.mains) :: klass_to_methods aklass
 
 (**
-    Add the children map
-    ( parent name (string) -> children names (string list) )
-    to a class_data record
+    Add the parent (class name - string) -> children (class name -> string list)
+    map to a class_data record.
     @param data A class_data record
     @param klasses A list of parsed classes
     @return data but with the children map updated given klasses.
@@ -152,9 +151,8 @@ let build_children_map data klasses =
   { data with children = children_map }
 
 (**
-    Add the parent map
-    ( child name (string) -> parent name (string) )
-    to a class_data record
+    Add the child (class name - string) -> parent (class name - string) map to
+    a class_data record.
     @param data A class_data record
     @param klasses A list of parsed classes
     @return data but with the children map added in given klasses
@@ -191,9 +189,8 @@ let is_tree_hierarchy data =
     | _ -> None
 
 (**
-    Add the class map
-    ( class name (string) -> class (class_def) )
-    to a class_data record
+    Add the class (class name - string) to definition (class - class_def)
+    map to a class_data record.
     @param data A class_data record to update
     @klasses A list of parsed classes
     @return data but with the class map added given klasses
@@ -218,9 +215,8 @@ let build_var_map aklass =
   build_map_track_errors map_builder (klass_to_variables aklass)
 
 (**
-    Add the variable map
-    ( class name (string) -> variable name (string) -> variable info (class_section, type) )
-    to a class_data record
+    Add the class (class name - string) -> variable (var name - string) -> info (section/type
+    pair - class_section * string) table to a class_data record.
     @param data A class_data record
     @param klasses A list of parsed classes
     @return Either a list of collisions (in Right) or the updated record (in Left).
@@ -365,28 +361,39 @@ let build_main_map data klasses =
     | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
 (**
-    Look up an instance variable given a class_data record, a class name, and a variable name
-    @return The information for that instance variable in that class if it exists.
-*)
+    Given a class_data record, a class name, and a variable name, lookup the section and type
+    info for that variable.
+    @param data A class_data record
+    @param klass_name The name of a class (string)
+    @param var_name The name of a variable (string)
+    @return Either None if the variable is not declared in the class or Some((section, type))
+    where the variable is declared in section and has the given type.
+  *)
 let class_var_lookup data klass_name var_name =
   match map_lookup klass_name data.variables with
     | Some(var_map) -> map_lookup var_name var_map
     | _ -> None
 
 (**
-    Look up the methods of a class given a class_data record, a class name, and a method name,
-    @return A list of methods in that class with that name or the empty list if no such method exists.
-*)
+    Given a class_data record, a class name, and a method name, lookup all the methods in the
+    given class with that name.
+    @param data A class_data record
+    @param klass_name The name of a class (string)
+    @param func_name The name of a method (string)
+    @return A list of methods in the class with that name or the empty list if no such method exists.
+  *)
 let class_method_lookup data klass_name func_name =
   match map_lookup klass_name data.methods with
     | Some(method_map) -> map_lookup_list func_name method_map
     | _ -> []
 
 (**
-    Given a class_data record, add the ancestor map ( class name (string) -> ancestors (string list) )
-    to the record; note that the ancestors start with the given class and end with Object (or should).
-    the ancestors should be given in order.
-*)
+    Add the class (class name - string) -> ancestors (list of ancestors - string list) map to a
+    class_data record. Note that the ancestors go from `youngest' to `oldest' and so should start
+    with the given class (hd) and end with Object (last item in the list).
+    @param data The class_data record to update
+    @return An updated class_data record with the ancestor map added.
+  *)
 let build_ancestor_map data =
   let rec ancestor_builder klass map =
     if StringMap.mem klass map then map
@@ -401,32 +408,43 @@ let build_ancestor_map data =
   { data with ancestors = ancestor_map }
 
 (**
-    Given a klass and its list of ancestors, build a distance map to those
-    ancestors -- i.e. the number of hops back up the tree one must take to
-    get to any of those ancestors (assumes they are given in order)
-*)
+    Given a class and a list of its ancestors, build a map detailing the distance
+    between the class and any of its ancestors. The distance is the number of hops
+    one must take to get from the given class to the ancestor. The distance between
+    an Object and itself should be 0, and the largest distance should be to object.
+    @param klass The class to build the table for
+    @param ancestors The list of ancestors of the given class.
+    @return A map from class names to integers
+  *)
 let build_distance klass ancestors =
   let map_builder (map, i) item = (StringMap.add item i map, i+1) in
   fst (List.fold_left map_builder (StringMap.empty, 0) ancestors)
 
 (**
-    Given a class_data record, add the distance map for the record. The distance map takes a sub class
-    and then an ancestor class and tells you the distance between the two. (requires ancestor map built)
-*)
+    Add a class (class name - string) -> class (class name - string) -> distance (int option)
+    table a given class_data record. The distance is always a positive integer and so the
+    first type must be either the same as the second or a subtype, else None is returned.
+    Note that this requires that the ancestor map be built.
+    @param data The class_data record to update.
+    @return The class_data record with the distance map added.
+  *)
 let build_distance_map data =
   let distance_map = StringMap.mapi build_distance data.ancestors in
   { data with distance = distance_map }
 
 (**
     Given a class_data record and two classes, returns the distance between them. If one is a proper
-    subtype of the other then Some(n) is returned where n is non-zero -- zero is returned when the
-    two are the same class. If incomparable then None is returned
-
-    A non-negative value is returned if the first class is a subtype of the second; otherwise a
-    non-positive value is returned if the second is a subtype of the first.
-*)
+    subtype of the other then Some(n) is returned where n is non-zero when the two classes are different
+    and comparable (one is a subtype of the other), zero when they are the same, and None when they are
+    incomparable (one is not a subtype of the other)
+    @param data A class_data record
+    @param klass1 A class to check the relation of to klass2
+    @param klass2 A class to check the relation of to klass1
+    @return An int option, None when the two classes are incomparable, Some(positive) when klass2 is an
+    ancestor of klass1, Some(negative) when klass1 is an ancestor of klass2.
+  *)
 let get_distance data klass1 klass2 =
-  (* We lt these pop exceptions because that means bad programming on the compiler
+  (* We let these pop exceptions because that means bad programming on the compiler
    * writers part, not on the GAMMA programmer's part (when klass1, klass2 aren't found)
    *)
   let klass1_map = StringMap.find klass1 data.distance in
@@ -436,40 +454,66 @@ let get_distance data klass1 klass2 =
     | None, Some(n) -> Some(-n)
     | res, _ ->  res
 
-(** Check if a type exists in the class data -- convenience function *)
+(**
+    Check if a type exists in the class data -- convenience function
+    @param data A class_data record
+    @param atype The name of a class (string)
+    @return True if the atype is a known type, false otherwise.
+  *)
 let is_type data atype = match map_lookup atype data.classes with
   | None -> false
   | _ -> true
 
 (**
     Check if a class is a subclass of another given a class_data record
-    @return Whether the first type is a subtype of the second
-    Note that this holds when the two types are identical
-*)
+    @param data A class_data record
+    @param subtype A class name (string)
+    @param supertype A class name (string)
+    @return Whether subtype has supertype as an ancestor given data.
+    Note that this is true when the two are equal (trivial ancestor).
+  *)
 let is_subtype data subtype supertype =
   match get_distance data subtype supertype with
     | Some(n) when n >= 0 -> true
     | _ -> false
 
 (**
-    Check if a type is proper subtype of a second given a class_data record
-    @return Whether the first type is a proper subtype of the second.
- *)
+    Check if a class is a proper subclass of another given a class_data record
+    @param data A class_data record
+    @param subtype A class name (string)
+    @param supertype A class name (string)
+    @return Whether subtype has supertype as an ancestor given data.
+    Note that this IS NOT true when the two are equal (trivial ancestor).
+  *)
 let is_proper_subtype data subtype supertype =
   match get_distance data subtype supertype with
     | Some(n) when n > 0 -> true
     | _ -> false
 
 (**
-    Return whether a formals list is compatible with an actuals list
-    This includes checking that the number of arguments are the same, too.
-*)
+    Return whether a list of actuals and a list of formals are compatible.
+    For this to be true, each actual must be a (not-necessarily-proper) subtype
+    of the formal at the same position. This requires that both be the same
+    in quantity, obviously.
+    @param data A class_data record (has type information)
+    @param actuals A list of the types (and just the types) of the actual arguments
+    @param formals A list of the types (and just the types) of the formal arguments
+    @return Whether the actual arguments are compatible with the formal arguments.
+  *)
 let compatible_formals data actuals formals =
   let compatible formal actual = is_subtype data actual formal in
   try List.for_all2 compatible formals actuals with
     | Invalid_argument(_) -> false
 
-(** A predicate for whether a func_def is compatible with an actuals list *)
+(**
+    Return whether a given func_def is compatible with a list of actual arguments.
+    This means making sure that it has the right number of formal arguments and that
+    each actual agument is a subtype of the corresponding formal argument.
+    @param data A class_data record (has type information)
+    @param actuals A list of the types (and just the types) of the actual arguments
+    @param func A func_def from which to get formals
+    @return Whether the given func_def is compatible with the actual arguments.
+  *)
 let compatible_function data actuals func =
   compatible_formals data actuals (List.map fst func.formals)
 
@@ -486,11 +530,14 @@ let in_section sects funcs =
     Given a class_data record, a list of actual arguments, and a list of methods,
     find the best matches for the actuals. Note that if there are multiple best
     matches (i.e. ties) then a non-empty non-singleton list is returned.
-
     Raises an error if somehow our list of compatible methods becomes incompatible
     [i.e. there is a logic error in the compiler].
-*)
-let best_matching_signature data actuals funcs sections =
+    @param data A class_data record
+    @param actuals The list of types (and only types) for the actual arguments
+    @param funcs The list of candidate functions
+    @return The list of all best matching functions (should be at most one, we hope).
+  *)
+let best_matching_signature data actuals funcs =
   let funcs = List.filter (compatible_function data actuals) funcs in
   let distance_of actual formal = match get_distance data actual formal with
     | Some(n) when n >= 0 -> n
@@ -501,18 +548,26 @@ let best_matching_signature data actuals funcs sections =
   List.map fst (find_all_min lex_compare with_distances)
 
 (**
-    Given a class_data record, method name, and list of actuals, get the best matching
-    method. Note that if there is more than one then an exception is raised as this should
-    have been reported during collision detection [compiler error].
-*)
+    Given a class_data record, method name, and list of actuals, and a list of sections to consider,
+    get the best matching  method. Note that if there is more than one then an exception is raised
+    as this should have been reported during collision detection [compiler error].
+    @param data A class_data record
+    @param method_name The name to lookup candidates for
+    @param actuals The list of types (and only types) for the actual arguments
+    @param sections The sections to filter on (only look in these sections)
+    @return Either None if no function is found, Some(f) if one function is found, or an error is raised.
+  *)
 let best_method data klass_name method_name actuals sections =
   let methods = class_method_lookup data klass_name method_name in
   let methods = in_section sections methods in
-  match best_matching_signature data actuals methods sections with
+  match best_matching_signature data actuals methods with
     | [] -> None
     | [func] -> Some(func)
     | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
 
+(**
+    All the different types of non-compiler errors that can occur (programmer errors)
+  *)
 type class_data_error
   = HierarchyIssue of string
   | DuplicateClasses of string list
@@ -520,12 +575,6 @@ type class_data_error
   | ConflictingMethods of (string * (string * string list) list) list
   | ConflictingRefinements of (string * (string * string * string list) list) list
   | MultipleMains of string list
-
-(**
-    Append functions build the class_data record (Left) if successful,
-    the error stack if unsuccessful (Right)
-*)
-
 
 let append_children klasses data = Left(build_children_map data klasses)
 let append_parent klasses data = Left(build_parent_map data klasses)
@@ -550,9 +599,6 @@ let append_mains klasses data = match build_main_map data klasses with
 let append_ancestor data = Left(build_ancestor_map data)
 let append_distance data = Left(build_distance_map data)
 
-(**
-    Build it up
-*)
 let build_class_data klasses
   =  Left(empty_data)
   |-> append_children klasses
