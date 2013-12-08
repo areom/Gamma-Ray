@@ -75,7 +75,8 @@ and func_def = {
   static  : bool;           (** If the function is static *)
   formals : var_def list;   (** A list of all formal parameters of the function *)
   body    : stmt list;      (** A list of statements that form the function body *)
-  section : class_section;  (** A semenantic tag of the class section in which the function lives *)
+  section : class_section;  (** A sementic tag of the class section in which the function lives *)
+  inklass : string;         (** A semantic tag of the class in which the function lives *)
 }
 
 (** A member is either a variable or some sort of function *)
