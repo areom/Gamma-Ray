@@ -8,6 +8,8 @@ let env = StringMap.empty
 
 (*ADD MORE CHECKS*)
 
+let current_class = "_CurrentClassMarker_"
+
 (**
     Get the type of an instance variable data for a given variable name
     and class name given a class_data record.
@@ -54,11 +56,11 @@ let getIDType vname env klass_data kname =
 (* Do a lookup on the instance variable for the current classdef and return
    its type else then recurse its ancestor *)
 let getFieldType recvr member klass_data cur_kname =
-  let lookupclass = if recvr = "Kurrent-Klass" then cur_kname else recvr in
+  let lookupclass = if recvr = current_class then cur_kname else recvr in
   match getInstanceType member klass_data lookupclass with
     | Some((section, vtyp), cname) ->
       if section = Ast.Publics then vtyp
-      else if recvr = "Kurrent-Klass" then
+      else if recvr = current_class then
         if section = Ast.Protects then vtyp
         else if section = Ast.Privates && lookupclass = cname then vtyp
         else raise (Failure "Non-public members can only this as receiver")
@@ -103,7 +105,7 @@ let getInstanceMethodType klass_data kname recvr methd arglist =
 let rec eval klass_data kname env exp =
   let eval_exprlist env' elist = List.map (eval klass_data kname env') elist in
   match exp with
-    | Ast.This -> ("Kurrent-klass", Sast.This)
+    | Ast.This -> (current_class, Sast.This)
     | Ast.Null -> ("Null", Sast.Null)
     | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
@@ -118,7 +120,7 @@ let rec eval klass_data kname env exp =
       let recvr = eval klass_data kname env expr in
       let recvr_type = fst(recvr) in
       let arglist = eval_exprlist env elist in
-      let mtype = if recvr_type = "Kurrent-Klass"
+      let mtype = if recvr_type = current_class
         then getInstanceMethodType klass_data kname recvr_type methd arglist
         else getPubMethodType klass_data kname recvr_type methd arglist in
         (mtype, Sast.Invoc(recvr, methd, arglist))
