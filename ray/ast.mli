@@ -90,7 +90,7 @@ type class_sections_def = {
   refines  : func_def list;
   mains    : func_def list;
 }
-	
+
 (* Just pop init and main in there? *)
 (** The basic class definition *)
 type class_def = {

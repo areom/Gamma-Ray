@@ -46,7 +46,7 @@ let free_vars bound stmts =
         | This                      -> ([], [], None)
         | Null                      -> ([], [], None)
         | Refinable(_)              -> ([], [], None)
-        | Literal(_)                -> ([], [], None) 
+        | Literal(_)                -> ([], [], None)
         | Id(id)                    -> ([], [], decide_option id (not (StringSet.mem id bound)))
         | Anonymous(_, args, funcs) -> (args, List.map (func_to_task bound) funcs, None) in
 

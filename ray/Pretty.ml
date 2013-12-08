@@ -5,7 +5,7 @@ open Ast
     I don't believe it actually needs the Parser dependency.
     Should probably absorb a fair margin from other files like Inspector.ml *)
 
-let indent level = String.make (level*2) ' '  
+let indent level = String.make (level*2) ' '
 let _id x = x
 
 let pp_lit = function
@@ -51,7 +51,7 @@ let pp_opt stringer = function
   | Some(v) -> Printf.sprintf "Some(%s)" (stringer v)
 
 let rec pp_expr depth = function
-  | Id(id) -> Printf.sprintf "Id(%s)"  id
+  | Id(id) -> Printf.sprintf "Id(%s)" id
   | This -> "This"
   | Null -> "Null"
   | NewObj(the_type, args) -> Printf.sprintf("\n%sNewObj(%s, %s)") (indent depth) the_type (pp_str_list (pp_expr depth) args depth)
@@ -75,11 +75,11 @@ and pp_stmt depth = function
   | Super(args) -> Printf.sprintf "\n%sSuper(%s)" (indent depth) (pp_str_list (pp_expr depth) args depth)
 and inspect_clause depth (opt_expr, body) = Printf.sprintf "(%s, %s)" (pp_opt (pp_expr depth) opt_expr) (pp_str_list (pp_stmt (depth+1)) body depth)
 and class_section = function
-	| Publics		-> Printf.sprintf "Publics"
-	| Protects	-> Printf.sprintf "Protects" 
-	| Privates	-> Printf.sprintf "Privates" 
-	| Refines		-> Printf.sprintf "Refines"	
-	| Mains			-> Printf.sprintf "Mains" 
+  | Publics  -> Printf.sprintf "Publics"
+  | Protects -> Printf.sprintf "Protects"
+  | Privates -> Printf.sprintf "Privates"
+  | Refines  -> Printf.sprintf "Refines"
+  | Mains    -> Printf.sprintf "Mains"
 and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s\n%s}"
   (indent (depth-1))
   (indent depth)
@@ -94,21 +94,21 @@ and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s
   (pp_str_list (pp_var_def (depth+1)) func.formals depth)
   (indent depth)
   (pp_str_list (pp_stmt (depth+1)) func.body depth)
-	(indent depth)
-	(class_section func.section)
+  (indent depth)
+  (class_section func.section)
   (indent (depth-1))
 
 let pp_member_def depth = function
   | VarMem(vmem) -> Printf.sprintf "\n%sVarMem(%s)" (indent depth) (pp_var_def (depth+1) vmem)
   | MethodMem(mmem) -> Printf.sprintf "\n%sMethodMem(%s)" (indent depth) (pp_func_def (depth+1) mmem)
-  | InitMem(imem) ->  (*let fmt = "@[<v " ^^ (string_of_int depth) ^^ ">@,InitMem(%s)@]" in*) 
-			Format.sprintf "\n%sInitMem(%s)@]" 
-			(indent depth) (pp_func_def (depth+1) imem)
-			(*Format.sprintf fmt 
-			(pp_func_def (depth+1) imem)*)
+  | InitMem(imem) ->  (*let fmt = "@[<v " ^^ (string_of_int depth) ^^ ">@,InitMem(%s)@]" in*)
+    Format.sprintf "\n%sInitMem(%s)@]"
+    (indent depth) (pp_func_def (depth+1) imem)
+    (*Format.sprintf fmt
+    (pp_func_def (depth+1) imem)*)
 
 let pp_class_sections sections depth =
-	Format.sprintf "@[<v 3>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
+  Format.sprintf "@[<v 3>@,{@[<v 2>@,privates = %s,@,protects = %s,@,publics = %s,@,refines = %s,@,mains = %s@]@,}@]"
   (pp_str_list (pp_member_def (depth+1)) sections.privates depth)
   (pp_str_list (pp_member_def (depth+1)) sections.protects depth)
   (pp_str_list (pp_member_def (depth+1)) sections.publics depth)

@@ -6,8 +6,8 @@ open Ast
 
 (* Types *)
 (**
-	Paramaterized variable typing for building binary ASTs
-	@see <http://caml.inria.fr/pub/docs/oreilly-book/html/book-ora016.html#toc19> For more details on paramterized typing
+    Paramaterized variable typing for building binary ASTs
+    @see <http://caml.inria.fr/pub/docs/oreilly-book/html/book-ora016.html#toc19> For more details on paramterized typing
 *)
 type ('a, 'b) either = Left of 'a | Right of 'b
 
@@ -78,7 +78,7 @@ let (|->) value func =
 (**
     Return the length of a block -- i.e. the total number of statements (recursively) in it
     @param stmt_list A list of stmt type objects
-    @return An int encoding the length of a block    
+    @return An int encoding the length of a block
 *)
 let get_statement_count stmt_list =
   let rec do_count stmts blocks counts = match stmts, blocks with

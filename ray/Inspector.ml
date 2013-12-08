@@ -154,7 +154,7 @@ let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
       | tk -> list_tokens (tk::rtokens) in
   list_tokens []
 
-(** 
+(**
     Use the token_list function to parse a source
     @param source A channel to buffer
     @return A list of tokens taken from a source
@@ -162,15 +162,15 @@ let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
 let from_channel source = token_list Scanner.token (Lexing.from_channel source)
 
 (**
-   Print out one of our list of tokens. Does this need to be recursive?
-   @param tokens A list of tokens
-   @return Only returns a unit 
+    Print out one of our list of tokens. Does this need to be recursive?
+    @param tokens A list of tokens
+    @return Only returns a unit
 *)
 let rec print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
 
 (**
     Print out the important predicates to whitespace style interpretation
-   @return Only returns a unit 
+    @return Only returns a unit
 *)
 let print_token_line = function
   | (space, toks, colon) ->
@@ -181,7 +181,7 @@ let print_token_line = function
     Print out a list of tokens with a specific header and some extra margins
     @param header A nonsemantic string to preface our list
     @param toks A list of tokens
-    @return Only returns a unit 
+    @return Only returns a unit
 *)
 let pprint_token_list header toks = print_string header ; print_token_list toks ; print_newline ()
 
@@ -277,11 +277,11 @@ and inspect_stmt = function
   | Super(args) -> Printf.sprintf "Super(%s)" (inspect_str_list inspect_expr args)
 and inspect_clause (opt_expr, body) = Printf.sprintf "(%s, %s)" (inspect_opt inspect_expr opt_expr) (inspect_str_list inspect_stmt body)
 and inspect_class_section = function
-	| Publics -> Printf.sprintf "Publics"
-	| Protects -> Printf.sprintf "Protects"
-	| Privates -> Printf.sprintf "Privates"
-	| Refines -> Printf.sprintf "Refines"
-	| Mains -> Printf.sprintf "Mains"
+  | Publics -> Printf.sprintf "Publics"
+  | Protects -> Printf.sprintf "Protects"
+  | Privates -> Printf.sprintf "Privates"
+  | Refines -> Printf.sprintf "Refines"
+  | Mains -> Printf.sprintf "Mains"
 and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s, section = %s }"
   (inspect_opt _id func.returns)
   (inspect_opt _id func.host)
@@ -289,7 +289,7 @@ and inspect_func_def func = Printf.sprintf "{ returns = %s, host = %s, name = %s
   func.static
   (inspect_str_list inspect_var_def func.formals)
   (inspect_str_list inspect_stmt func.body)
-	(inspect_class_section func.section)
+  (inspect_class_section func.section)
 
 let inspect_member_def = function
   | VarMem(vmem) -> Printf.sprintf "VarMem(%s)" (inspect_var_def vmem)
