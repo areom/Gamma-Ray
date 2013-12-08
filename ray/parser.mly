@@ -19,6 +19,25 @@ let set_mem_section_to sect = function
 (** Set a list of members to belong to a certain subset of class memory *)
 let set_mem_section sect = List.map (set_mem_section_to sect)
 
+
+(** Set the klass of a func_def *)
+let set_func_klass aklass func = { func with inklass = aklass }
+
+(** Set the klass of a function member *)
+let set_member_klass aklass = function
+  | InitMem(func) -> InitMem(set_func_klass aklass func)
+  | MethodMem(func) -> MethodMem(set_func_klass aklass func)
+  | v -> v
+
+(** Set the klass of all sections *)
+let set_func_class aklass sections =
+  let set_mems = List.map (set_member_klass aklass) in
+  let set_funcs = List.map (set_func_klass aklass) in
+  { privates = set_mems  sections.privates;
+    publics  = set_mems  sections.publics;
+    protects = set_mems  sections.protects;
+    refines  = set_funcs sections.refines;
+    mains    = set_funcs sections.mains }
 %}
 
 %token <int> SPACE
@@ -67,7 +86,7 @@ cdecl:
   | CLASS TYPE extend_opt class_section_list
     { { klass     = $2;
         parent    = $3;
-        sections  = $4  } }
+        sections  = set_func_class $2 $4  } }
 extend_opt:
   | /* default */  { Some("Object") }
   | EXTEND TYPE    { Some($2) }
@@ -141,7 +160,8 @@ callable:
         static  = false;
         formals = $1;
         body    = $2;
-        section = Privates } }
+        section = Privates;
+        inklass = "" } }
 
 /* Statements */
 stmt_block:
@@ -233,7 +253,7 @@ test:
 
 instantiate:
   | NEW vartype actuals  { NewObj($2, $3) }
-  | NEW vartype actuals LBRACE refinements RBRACE  { Anonymous($2, $3, $5) }
+  | NEW TYPE actuals LBRACE refinements RBRACE  { Anonymous($2, $3, List.map (set_func_klass $2) $5) }
 
 refineexpr:
   | REFINE ID actuals TO vartype  { Refine($2, $3, Some($5)) }
