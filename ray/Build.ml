@@ -122,6 +122,8 @@ let rec eval klass_data kname env exp =
         else raise (Failure "Binop takes incompatible types") in
       let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
       let gettype op (typ1,_) (typ2,_) = match op with
+        | Ast.Arithmetic(Neg) -> raise(Failure("Negation is not a binary operation!"))
+        | Ast.CombTest(Not) -> raise(Failure("Boolean negation is not a binary operation!"))
         | Ast.Arithmetic(_) -> isCompatible typ1 typ2
         | Ast.NumTest(_)
         | Ast.CombTest(_) -> ignore(isCompatible typ1 typ2); "Boolean" in
