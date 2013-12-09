@@ -148,8 +148,8 @@ let rec eval klass_data kname env exp =
       let (typ, _) as evaled = eval' kname env expr in
       (typ, Sast.Unop(Ast.Arithmetic(Neg), evaled))
     | Ast.Unop(Ast.CombTest(Not), expr) -> ("Boolean", Sast.Unop(Ast.CombTest(Not), eval' kname env expr))
+    | Ast.Unop(op, _) -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_op op ^ " given."))
     | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
-    | _ -> "Dummy",Sast.Null
 
 
 
