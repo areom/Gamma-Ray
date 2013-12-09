@@ -107,8 +107,8 @@ let rec eval klass_data kname env exp =
       (mtype, Sast.Invoc(recvr, methd, arglist)) in
 
   let get_assign e1 e2 =
-    let t1 = eval' e1 and t2 = eval' e2 in
-    let type1 = fst(t1) and type2 = fst(t2) in
+    let (t1, t2) = (eval' e1, eval' e2) in
+    let (type1, type2) = (fst t1, fst t2) in
     if is_subtype klass_data type2 type1
       then (type1, Sast.Assign(t1, t2))
       else raise (Failure "Assigning to incompatible type") in
@@ -118,7 +118,7 @@ let rec eval klass_data kname env exp =
       if is_subtype klass_data typ1 typ2 then typ2
       else if is_subtype klass_data typ2 typ1 then typ1
       else raise (Failure "Binop takes incompatible types") in
-    let t1 = eval' e1 and t2 = eval' e2 in
+    let (t1, t2) = (eval' e1, eval' e2) in
     let gettype op (typ1,_) (typ2,_) = match op with
       | Ast.Arithmetic(Neg) -> raise(Failure("Negation is not a binary operation!"))
       | Ast.CombTest(Not) -> raise(Failure("Boolean negation is not a binary operation!"))
@@ -138,7 +138,7 @@ let rec eval klass_data kname env exp =
     let expectArray typename = match last_chars typename 2 with
       | "[]" -> first_chars typename (String.length typename - 2)
       | _  -> raise (Failure "Not an array type") in
-    let t1 = eval' e1 and t2 = eval' e2 in
+    let (t1, t2) = (eval' e1, eval' e2) in
     let getArrayType (typ1, _) (typ2, _) = match typ2 with
       | "Integer" -> expectArray typ1
       | _ -> raise(Failure "Dereferencing invalid") in
