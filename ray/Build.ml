@@ -9,6 +9,7 @@ let env = StringMap.empty
 (*ADD MORE CHECKS*)
 
 let current_class = "_CurrentClassMarker_"
+let null_class = "_Null_"
 
 (**
     Get the type of an instance variable data for a given variable name
@@ -93,7 +94,7 @@ let rec eval klass_data kname env exp =
   let eval_exprlist env' elist = List.map (eval klass_data kname env') elist in
   match exp with
     | Ast.This -> (current_class, Sast.This)
-    | Ast.Null -> ("Null", Sast.Null)
+    | Ast.Null -> (null_class, Sast.Null)
     | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
     | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist env elist))
