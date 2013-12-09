@@ -253,7 +253,7 @@ test:
 
 instantiate:
   | NEW vartype actuals  { NewObj($2, $3) }
-  | NEW TYPE actuals LBRACE refinements RBRACE  { Anonymous($2, $3, List.map (set_func_klass $2) $5) }
+  | NEW vartype actuals LBRACE refinements RBRACE  { Anonymous($2, $3, List.map (set_func_klass $2) $5) }
 
 refineexpr:
   | REFINE ID actuals TO vartype  { Refine($2, $3, Some($5)) }
