@@ -142,10 +142,11 @@ let rec eval klass_data kname env exp =
         | _ -> raise(Failure "Dereferencing invalid") in
       (getArrayType t1 t2, Sast.Deref(t1, t2))
     | Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
-    | Ast.Unop(Neg, expr) ->
+    | Ast.Unop(Ast.Arithmetic(Neg), expr) ->
       let (typ, _) as evaled = eval' kname env expr in
-      (typ, Sast.Unop(Neg, evaled)
-    | Ast.Unop(Not, expr) -> ("Boolean", Sast.Unop(Not, eval' kname env expr))
+      (typ, Sast.Unop(Ast.Arithmetic(Neg), evaled))
+    | Ast.Unop(Ast.CombTest(Not), expr) -> ("Boolean", Sast.Unop(Ast.CombTest(Not), eval' kname env expr))
+    | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
     | _ -> "Dummy",Sast.Null
 
 

@@ -21,7 +21,7 @@ type expr_detail =
   | Null
   | Id of string
   | NewObj of string * expr list
-  | Anonymous of string * expr list * func_def list
+  | Anonymous of string * Ast.expr list * Ast.func_def list (* Evaluation is delayed *)
   | Literal of Ast.lit
   | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
   | Deref of expr * expr (* road[pavement] *)
