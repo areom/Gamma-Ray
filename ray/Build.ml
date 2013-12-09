@@ -74,7 +74,7 @@ let rec getAncestor klass_data recvr methd argtypelist section =
     | None, _ -> getAncestor klass_data parent methd argtypelist section
     | Some(fdef), _ -> getRetType fdef
 
-let getPubMethodType klass_data kname recvr methd arglist =
+let getPubMethodType klass_data recvr methd arglist =
   let argtypes = List.map fst arglist in
   let section = [Ast.Publics] in
   match best_method klass_data recvr methd argtypes section, recvr with
@@ -82,7 +82,7 @@ let getPubMethodType klass_data kname recvr methd arglist =
     | None, _ -> getAncestor klass_data recvr methd argtypes section
     | Some(fdef), _ -> getRetType fdef
 
-let getInstanceMethodType klass_data kname recvr methd arglist =
+let getInstanceMethodType klass_data recvr methd arglist =
   let argtypes = List.map fst arglist in
   let section = [Ast.Privates; Ast.Protects; Ast.Publics] in
   match best_method klass_data recvr methd argtypes section, recvr with
@@ -106,8 +106,8 @@ let rec eval klass_data kname env exp =
       let (recvr_type, _) as recvr = eval' kname env expr in
       let arglist = eval_exprlist elist in
       let mtype = if recvr_type = current_class
-        then getInstanceMethodType klass_data kname recvr_type methd arglist
-        else getPubMethodType klass_data kname recvr_type methd arglist in
+        then getInstanceMethodType klass_data recvr_type methd arglist
+        else getPubMethodType klass_data recvr_type methd arglist in
         (mtype, Sast.Invoc(recvr, methd, arglist))
     | Ast.Assign(e1, e2) ->
       let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
