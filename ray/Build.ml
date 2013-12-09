@@ -91,8 +91,9 @@ let getInstanceMethodType klass_data recvr methd arglist =
     | Some(fdef), _ -> getRetType fdef
 
 let rec eval klass_data kname env exp =
-  let eval' = eval klass_data in
-  let eval_exprlist elist = List.map (eval' kname env) elist in
+  let eval' expr = eval klass_data kname env expr in
+  let eval_exprlist elist = List.map eval' elist in
+
   match exp with
     | Ast.This -> (current_class, Sast.This)
     | Ast.Null -> (null_class, Sast.Null)
@@ -100,17 +101,17 @@ let rec eval klass_data kname env exp =
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
     | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist elist))
     | Ast.Field(expr, mbr) ->
-      let (recvr_type, _) as recvr = eval' kname env expr in
+      let (recvr_type, _) as recvr = eval' expr in
       (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr))
     | Ast.Invoc(expr, methd, elist) ->
-      let (recvr_type, _) as recvr = eval' kname env expr in
+      let (recvr_type, _) as recvr = eval' expr in
       let arglist = eval_exprlist elist in
       let mtype = if recvr_type = current_class
         then getInstanceMethodType klass_data recvr_type methd arglist
         else getPubMethodType klass_data recvr_type methd arglist in
         (mtype, Sast.Invoc(recvr, methd, arglist))
     | Ast.Assign(e1, e2) ->
-      let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
+      let t1 = eval' e1 and t2 = eval' e2 in
       let type1 = fst(t1) and type2 = fst(t2) in
       if is_subtype klass_data type2 type1
         then (type1, Sast.Assign(t1, t2))
@@ -120,7 +121,7 @@ let rec eval klass_data kname env exp =
         if is_subtype klass_data typ1 typ2 then typ2
         else if is_subtype klass_data typ2 typ1 then typ1
         else raise (Failure "Binop takes incompatible types") in
-      let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
+      let t1 = eval' e1 and t2 = eval' e2 in
       let gettype op (typ1,_) (typ2,_) = match op with
         | Ast.Arithmetic(Neg) -> raise(Failure("Negation is not a binary operation!"))
         | Ast.CombTest(Not) -> raise(Failure("Boolean negation is not a binary operation!"))
@@ -138,16 +139,16 @@ let rec eval klass_data kname env exp =
       let expectArray typename = match last_chars typename 2 with
         | "[]" -> first_chars typename (String.length typename - 2)
         | _  -> raise (Failure "Not an array type") in
-      let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
+      let t1 = eval' e1 and t2 = eval' e2 in
       let getArrayType (typ1, _) (typ2, _) = match typ2 with
         | "Integer" -> expectArray typ1
         | _ -> raise(Failure "Dereferencing invalid") in
       (getArrayType t1 t2, Sast.Deref(t1, t2))
     | Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
     | Ast.Unop(Ast.Arithmetic(Neg), expr) ->
-      let (typ, _) as evaled = eval' kname env expr in
+      let (typ, _) as evaled = eval' expr in
       (typ, Sast.Unop(Ast.Arithmetic(Neg), evaled))
-    | Ast.Unop(Ast.CombTest(Not), expr) -> ("Boolean", Sast.Unop(Ast.CombTest(Not), eval' kname env expr))
+    | Ast.Unop(Ast.CombTest(Not), expr) -> ("Boolean", Sast.Unop(Ast.CombTest(Not), eval' expr))
     | Ast.Unop(op, _) -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_op op ^ " given."))
     | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
 
