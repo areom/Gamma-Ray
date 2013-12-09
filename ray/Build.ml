@@ -129,7 +129,7 @@ let rec eval klass_data kname env exp =
       let arglist = eval_exprlist env elist in
       let refinedtype = match soption with
         | Some (typ) -> typ
-        | None -> "None" in (*getMethodType env klass_data kname s1 arglist*)
+        | None -> "Void" in (*getMethodType env klass_data kname s1 arglist*)
       (refinedtype, Sast.Refine(s1, arglist, soption))
     | Ast.Deref(e1, e2) ->
       let expectArray typename = match last_chars typename 2 with
