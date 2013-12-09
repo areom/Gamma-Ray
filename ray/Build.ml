@@ -99,12 +99,10 @@ let rec eval klass_data kname env exp =
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
     | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist env elist))
     | Ast.Field(expr, mbr) ->
-      let rec recvr = eval klass_data kname env expr in
-      let recvr_type = fst(recvr) in
+      let (recvr_type, _) as recvr = eval klass_data kname env expr in
       (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr))
     | Ast.Invoc(expr, methd, elist) ->
-      let recvr = eval klass_data kname env expr in
-      let recvr_type = fst(recvr) in
+      let (recvr_type, _) as recvr = eval klass_data kname env expr in
       let arglist = eval_exprlist env elist in
       let mtype = if recvr_type = current_class
         then getInstanceMethodType klass_data kname recvr_type methd arglist
