@@ -94,64 +94,76 @@ let rec eval klass_data kname env exp =
   let eval' expr = eval klass_data kname env expr in
   let eval_exprlist elist = List.map eval' elist in
 
+  let get_field expr mbr =
+    let (recvr_type, _) as recvr = eval' expr in
+    (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr)) in
+
+  let get_invoc expr methd elist =
+    let (recvr_type, _) as recvr = eval' expr in
+    let arglist = eval_exprlist elist in
+    let mtype = if recvr_type = current_class
+      then getInstanceMethodType klass_data recvr_type methd arglist
+      else getPubMethodType klass_data recvr_type methd arglist in
+      (mtype, Sast.Invoc(recvr, methd, arglist)) in
+
+  let get_assign e1 e2 =
+    let t1 = eval' e1 and t2 = eval' e2 in
+    let type1 = fst(t1) and type2 = fst(t2) in
+    if is_subtype klass_data type2 type1
+      then (type1, Sast.Assign(t1, t2))
+      else raise (Failure "Assigning to incompatible type") in
+
+  let get_binop e1 op e2 =
+    let isCompatible typ1 typ2 =
+      if is_subtype klass_data typ1 typ2 then typ2
+      else if is_subtype klass_data typ2 typ1 then typ1
+      else raise (Failure "Binop takes incompatible types") in
+    let t1 = eval' e1 and t2 = eval' e2 in
+    let gettype op (typ1,_) (typ2,_) = match op with
+      | Ast.Arithmetic(Neg) -> raise(Failure("Negation is not a binary operation!"))
+      | Ast.CombTest(Not) -> raise(Failure("Boolean negation is not a binary operation!"))
+      | Ast.Arithmetic(_) -> isCompatible typ1 typ2
+      | Ast.NumTest(_)
+      | Ast.CombTest(_) -> ignore(isCompatible typ1 typ2); "Boolean" in
+    (gettype op t1 t2, Sast.Binop(t1,op,t2)) in
+
+  let get_refine s1 elist soption =
+    let arglist = eval_exprlist elist in
+    let refinedtype = match soption with
+      | Some (typ) -> typ
+      | None -> "Void" in (*getMethodType env klass_data kname s1 arglist*)
+    (refinedtype, Sast.Refine(s1, arglist, soption)) in
+
+  let get_deref e1 e2 =
+    let expectArray typename = match last_chars typename 2 with
+      | "[]" -> first_chars typename (String.length typename - 2)
+      | _  -> raise (Failure "Not an array type") in
+    let t1 = eval' e1 and t2 = eval' e2 in
+    let getArrayType (typ1, _) (typ2, _) = match typ2 with
+      | "Integer" -> expectArray typ1
+      | _ -> raise(Failure "Dereferencing invalid") in
+    (getArrayType t1 t2, Sast.Deref(t1, t2)) in
+
+  let get_unop op expr = match op with
+    | Ast.Arithmetic(Neg) -> let (typ, _) as evaled = eval' expr in (typ, Sast.Unop(op, evaled))
+    | Ast.CombTest(Not) -> ("Boolean", Sast.Unop(op, eval' expr))
+    | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_op op ^ " given.")) in
+
   match exp with
     | Ast.This -> (current_class, Sast.This)
     | Ast.Null -> (null_class, Sast.Null)
     | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
     | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist elist))
-    | Ast.Field(expr, mbr) ->
-      let (recvr_type, _) as recvr = eval' expr in
-      (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr))
-    | Ast.Invoc(expr, methd, elist) ->
-      let (recvr_type, _) as recvr = eval' expr in
-      let arglist = eval_exprlist elist in
-      let mtype = if recvr_type = current_class
-        then getInstanceMethodType klass_data recvr_type methd arglist
-        else getPubMethodType klass_data recvr_type methd arglist in
-        (mtype, Sast.Invoc(recvr, methd, arglist))
-    | Ast.Assign(e1, e2) ->
-      let t1 = eval' e1 and t2 = eval' e2 in
-      let type1 = fst(t1) and type2 = fst(t2) in
-      if is_subtype klass_data type2 type1
-        then (type1, Sast.Assign(t1, t2))
-        else raise (Failure "Assigning to incompatible type")
-    | Ast.Binop(e1,op,e2) ->
-      let isCompatible typ1 typ2 =
-        if is_subtype klass_data typ1 typ2 then typ2
-        else if is_subtype klass_data typ2 typ1 then typ1
-        else raise (Failure "Binop takes incompatible types") in
-      let t1 = eval' e1 and t2 = eval' e2 in
-      let gettype op (typ1,_) (typ2,_) = match op with
-        | Ast.Arithmetic(Neg) -> raise(Failure("Negation is not a binary operation!"))
-        | Ast.CombTest(Not) -> raise(Failure("Boolean negation is not a binary operation!"))
-        | Ast.Arithmetic(_) -> isCompatible typ1 typ2
-        | Ast.NumTest(_)
-        | Ast.CombTest(_) -> ignore(isCompatible typ1 typ2); "Boolean" in
-      (gettype op t1 t2, Sast.Binop(t1,op,t2))
-    | Ast.Refine(s1, elist, soption) ->
-      let arglist = eval_exprlist elist in
-      let refinedtype = match soption with
-        | Some (typ) -> typ
-        | None -> "Void" in (*getMethodType env klass_data kname s1 arglist*)
-      (refinedtype, Sast.Refine(s1, arglist, soption))
-    | Ast.Deref(e1, e2) ->
-      let expectArray typename = match last_chars typename 2 with
-        | "[]" -> first_chars typename (String.length typename - 2)
-        | _  -> raise (Failure "Not an array type") in
-      let t1 = eval' e1 and t2 = eval' e2 in
-      let getArrayType (typ1, _) (typ2, _) = match typ2 with
-        | "Integer" -> expectArray typ1
-        | _ -> raise(Failure "Dereferencing invalid") in
-      (getArrayType t1 t2, Sast.Deref(t1, t2))
+    | Ast.Field(expr, mbr) -> get_field expr mbr
+    | Ast.Invoc(expr, methd, elist) -> get_invoc expr methd elist
+    | Ast.Assign(e1, e2) -> get_assign e1 e2
+    | Ast.Binop(e1,op,e2) -> get_binop e1 op e2
+    | Ast.Refine(s1, elist, soption) -> get_refine s1 elist soption
+    | Ast.Deref(e1, e2) -> get_deref e1 e2
     | Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
-    | Ast.Unop(Ast.Arithmetic(Neg), expr) ->
-      let (typ, _) as evaled = eval' expr in
-      (typ, Sast.Unop(Ast.Arithmetic(Neg), evaled))
-    | Ast.Unop(Ast.CombTest(Not), expr) -> ("Boolean", Sast.Unop(Ast.CombTest(Not), eval' expr))
-    | Ast.Unop(op, _) -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_op op ^ " given."))
+    | Ast.Unop(op, expr) -> get_unop op expr
     | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
-
 
 
 (*
