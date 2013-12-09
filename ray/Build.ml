@@ -91,7 +91,8 @@ let getInstanceMethodType klass_data kname recvr methd arglist =
     | Some(fdef), _ -> getRetType fdef
 
 let rec eval klass_data kname env exp =
-  let eval_exprlist env' elist = List.map (eval klass_data kname env') elist in
+  let eval' = eval klass_data in
+  let eval_exprlist env' elist = List.map (eval' kname env') elist in
   match exp with
     | Ast.This -> (current_class, Sast.This)
     | Ast.Null -> (null_class, Sast.Null)
@@ -99,17 +100,17 @@ let rec eval klass_data kname env exp =
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
     | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist env elist))
     | Ast.Field(expr, mbr) ->
-      let (recvr_type, _) as recvr = eval klass_data kname env expr in
+      let (recvr_type, _) as recvr = eval' kname env expr in
       (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr))
     | Ast.Invoc(expr, methd, elist) ->
-      let (recvr_type, _) as recvr = eval klass_data kname env expr in
+      let (recvr_type, _) as recvr = eval' kname env expr in
       let arglist = eval_exprlist env elist in
       let mtype = if recvr_type = current_class
         then getInstanceMethodType klass_data kname recvr_type methd arglist
         else getPubMethodType klass_data kname recvr_type methd arglist in
         (mtype, Sast.Invoc(recvr, methd, arglist))
     | Ast.Assign(e1, e2) ->
-      let t1 = eval klass_data kname env e1 and t2 = eval klass_data kname env e2 in
+      let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
       let type1 = fst(t1) and type2 = fst(t2) in
       if (is_subtype klass_data type2 type1 = true)
         then (type1, Sast.Assign(t1, t2))
@@ -119,7 +120,7 @@ let rec eval klass_data kname env exp =
         if is_subtype klass_data typ1 typ2 then typ2
         else if is_subtype klass_data typ2 typ1 then typ1
         else raise (Failure "Binop takes incompatible types") in
-      let t1 = eval klass_data kname env e1 and t2 = eval klass_data kname env e2 in
+      let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
       let gettype op (typ1,_) (typ2,_) = match op with
         | Ast.Arithmetic(_) -> isCompatible typ1 typ2
         | Ast.NumTest(_)
@@ -135,12 +136,12 @@ let rec eval klass_data kname env exp =
       let expectArray typename = match last_chars typename 2 with
         | "[]" ->  List.hd (split (regexp "\\[") typename)
         | _  -> raise (Failure "Not an array type") in
-      let t1 = eval klass_data kname env e1 and t2 = eval klass_data kname env e2 in
+      let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
       let getArrayType (typ1, _) (typ2, _) =
         if typ2 = "Integer" then expectArray typ1 else raise(Failure "Dereferencing invalid") in
       (getArrayType t1 t2, Sast.Deref(t1, t2))
     | Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
-    | Ast.Unop(op, expr) -> let t1 = eval klass_data kname env expr in
+    | Ast.Unop(op, expr) -> let t1 = eval' kname env expr in
       ("Boolean", Sast.Unop(op,t1))
     | _ -> "Dummy",Sast.Null
 
