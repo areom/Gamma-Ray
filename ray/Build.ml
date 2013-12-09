@@ -134,7 +134,7 @@ let rec eval klass_data kname env exp =
       (refinedtype, Sast.Refine(s1, arglist, soption))
     | Ast.Deref(e1, e2) ->
       let expectArray typename = match last_chars typename 2 with
-        | "[]" ->  List.hd (split (regexp "\\[") typename)
+        | "[]" -> first_chars typename (String.length typename - 2)
         | _  -> raise (Failure "Not an array type") in
       let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
       let getArrayType (typ1, _) (typ2, _) =
