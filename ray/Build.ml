@@ -92,7 +92,7 @@ let getPubMethodType klass_data kname recvr methd arglist =
 
 let getInstanceMethodType klass_data kname recvr methd arglist =
   let argtypes = List.map fst arglist in
-  let section = [Ast.Publics; Ast.Protects; Ast.Privates] in
+  let section = [Ast.Privates; Ast.Protects; Ast.Publics] in
   match best_method klass_data recvr methd argtypes section with
     | None ->
       if recvr = "Object"
