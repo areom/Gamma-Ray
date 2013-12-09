@@ -43,15 +43,6 @@ let getIDType vname env klass_data kname =
         if (kname = cname || section <> Ast.Privates) then vtyp
         else raise (Failure("ID " ^ vname ^ " not in accessible scope"))
       | None -> raise (Failure("ID " ^ vname ^ " not found"))
-(*
-  if (StringMap.mem vname env)
-    then fst(StringMap.find vname env)
-    else match getInstanceType vname klass_data kname with
-     | Some((section, vtyp), cname) ->
-       if (kname = cname || section <> Ast.Privates) then vtyp
-       else raise (Failure "ID not in access scope")
-     | None -> raise (Failure "Id not found")
-*)
 
 (* Do a lookup on the instance variable for the current classdef and return
    its type else then recurse its ancestor *)
