@@ -21,12 +21,10 @@ let current_class = "_CurrentClassMarker_"
     variable to be found.
   *)
 let rec getInstanceType vname klass_data kname =
-  match class_var_lookup klass_data kname vname with
-    | Some (varmap) ->  Some(varmap, kname)
-    | None ->
-      if kname = "Object" then None
-      else let parent = StringMap.find kname klass_data.parents in
-        getInstanceType vname klass_data parent
+  match class_var_lookup klass_data kname vname, kname with
+    | Some(varmap), _ -> Some(varmap, kname)
+    | None, "Object" -> None
+    | _, _ -> getInstanceType vname klass_data (StringMap.find kname klass_data.parents)
 
 (**
     Get an Id's type - Not accessed through objects
@@ -66,32 +64,30 @@ let getLiteralType litparam = match litparam with
 
 let rec getAncestor klass_data recvr methd argtypelist section =
   let parent = StringMap.find recvr klass_data.parents in
-  match best_method klass_data parent methd argtypelist section with
-    | None -> if parent = "Object" then raise (Failure "Method not found")
-              else getAncestor klass_data parent methd argtypelist section
-    | Some(fdef) -> match fdef.returns with
+  match best_method klass_data parent methd argtypelist section, parent with
+    | None, "Object" -> raise(Failure "Method not found")
+    | None, _ -> getAncestor klass_data parent methd argtypelist section
+    | Some(fdef), _ -> match fdef.returns with
       | Some(retval) -> retval
       | None -> "Void"
 
 let getPubMethodType klass_data kname recvr methd arglist =
   let argtypes = List.map fst arglist in
   let section = [Ast.Publics] in
-  match best_method klass_data recvr methd argtypes section with
-    | None -> if recvr = "Object" then raise (Failure "Method not found")
-              else getAncestor klass_data recvr methd argtypes section
-    | Some(fdef) -> match fdef.returns with
+  match best_method klass_data recvr methd argtypes section, recvr with
+    | None, "Object" -> raise(Failure "Method not found")
+    | None, _ -> getAncestor klass_data recvr methd argtypes section
+    | Some(fdef), _ -> match fdef.returns with
       | Some(retval) -> retval
       | None -> "Void"
 
 let getInstanceMethodType klass_data kname recvr methd arglist =
   let argtypes = List.map fst arglist in
   let section = [Ast.Privates; Ast.Protects; Ast.Publics] in
-  match best_method klass_data recvr methd argtypes section with
-    | None ->
-      if recvr = "Object"
-        then raise (Failure "Method not found")
-        else getAncestor klass_data recvr methd argtypes (List.tl section)
-    | Some(fdef) -> match fdef.returns with
+  match best_method klass_data recvr methd argtypes section, recvr with
+    | None, "Object" -> raise(Failure "Method not found")
+    | None, _ -> getAncestor klass_data recvr methd argtypes (List.tl section)
+    | Some(fdef), _ -> match fdef.returns with
       | Some(retval) -> retval
       | None -> "Void"
 
