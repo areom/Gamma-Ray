@@ -92,19 +92,19 @@ let getInstanceMethodType klass_data kname recvr methd arglist =
 
 let rec eval klass_data kname env exp =
   let eval' = eval klass_data in
-  let eval_exprlist env' elist = List.map (eval' kname env') elist in
+  let eval_exprlist elist = List.map (eval' kname env) elist in
   match exp with
     | Ast.This -> (current_class, Sast.This)
     | Ast.Null -> (null_class, Sast.Null)
     | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
     | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
-    | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist env elist))
+    | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist elist))
     | Ast.Field(expr, mbr) ->
       let (recvr_type, _) as recvr = eval' kname env expr in
       (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr))
     | Ast.Invoc(expr, methd, elist) ->
       let (recvr_type, _) as recvr = eval' kname env expr in
-      let arglist = eval_exprlist env elist in
+      let arglist = eval_exprlist elist in
       let mtype = if recvr_type = current_class
         then getInstanceMethodType klass_data kname recvr_type methd arglist
         else getPubMethodType klass_data kname recvr_type methd arglist in
@@ -127,7 +127,7 @@ let rec eval klass_data kname env exp =
         | Ast.CombTest(_) -> ignore(isCompatible typ1 typ2); "Boolean" in
       (gettype op t1 t2, Sast.Binop(t1,op,t2))
     | Ast.Refine(s1, elist, soption) ->
-      let arglist = eval_exprlist env elist in
+      let arglist = eval_exprlist elist in
       let refinedtype = match soption with
         | Some (typ) -> typ
         | None -> "Void" in (*getMethodType env klass_data kname s1 arglist*)
