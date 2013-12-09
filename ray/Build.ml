@@ -67,7 +67,8 @@ let getLiteralType litparam = match litparam with
 let rec getAncestor klass_data recvr methd argtypelist section =
   let parent = StringMap.find recvr klass_data.parents in
   match best_method klass_data parent methd argtypelist section with
-    | None -> if parent = "Object" then raise (Failure "Method not found") else getAncestor klass_data parent methd argtypelist section
+    | None -> if parent = "Object" then raise (Failure "Method not found")
+              else getAncestor klass_data parent methd argtypelist section
     | Some(fdef) -> match fdef.returns with
       | Some(retval) -> retval
       | None -> "Void"
@@ -76,7 +77,8 @@ let getPubMethodType klass_data kname recvr methd arglist =
   let argtypes = List.map fst arglist in
   let section = [Ast.Publics] in
   match best_method klass_data recvr methd argtypes section with
-    | None -> if recvr = "Object" then raise (Failure "Method not found") else getAncestor klass_data recvr methd argtypes section
+    | None -> if recvr = "Object" then raise (Failure "Method not found")
+              else getAncestor klass_data recvr methd argtypes section
     | Some(fdef) -> match fdef.returns with
       | Some(retval) -> retval
       | None -> "Void"
