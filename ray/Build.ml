@@ -112,7 +112,7 @@ let rec eval klass_data kname env exp =
     | Ast.Assign(e1, e2) ->
       let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
       let type1 = fst(t1) and type2 = fst(t2) in
-      if (is_subtype klass_data type2 type1 = true)
+      if is_subtype klass_data type2 type1
         then (type1, Sast.Assign(t1, t2))
         else raise (Failure "Assigning to incompatible type")
     | Ast.Binop(e1,op,e2) ->
@@ -137,8 +137,9 @@ let rec eval klass_data kname env exp =
         | "[]" -> first_chars typename (String.length typename - 2)
         | _  -> raise (Failure "Not an array type") in
       let t1 = eval' kname env e1 and t2 = eval' kname env e2 in
-      let getArrayType (typ1, _) (typ2, _) =
-        if typ2 = "Integer" then expectArray typ1 else raise(Failure "Dereferencing invalid") in
+      let getArrayType (typ1, _) (typ2, _) = match typ2 with
+        | "Integer" -> expectArray typ1
+        | _ -> raise(Failure "Dereferencing invalid") in
       (getArrayType t1 t2, Sast.Deref(t1, t2))
     | Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
     | Ast.Unop(op, expr) -> let t1 = eval' kname env expr in
