@@ -53,7 +53,7 @@ let getFieldType recvr member klass_data cur_kname =
       if section = Ast.Publics then vtyp
       else if recvr = current_class then
         if section = Ast.Protects then vtyp
-        else if section = Ast.Privates && lookupclass = cname then vtyp
+        else if section = Ast.Privates && cname = cur_kname then vtyp
         else raise (Failure "Non-public members can only this as receiver")
      else raise (Failure "Access only public through instance")
     | None -> raise (Failure "Field unknown")
