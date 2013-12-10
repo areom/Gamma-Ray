@@ -180,49 +180,49 @@ let rec attach_bindings klass_data kname stmts initial_env =
   let eval_exprlist env elist = List.map (eval' env) elist in
 
   (* Helper function for building a predicate expression *)
-  let build_predicate env exp = match eval' env exp with
+  let build_predicate pred_env exp = match eval' pred_env exp with
     | ("Boolean", _) as evaled -> evaled
     | _ -> raise (Failure "Predicates must be boolean") in
 
   (* Helper function for building an optional expression *)
-  let opt_eval opt_expr env = match opt_expr with
+  let opt_eval opt_expr opt_env = match opt_expr with
     | None -> None
-    | Some(exp) -> Some(eval' env exp) in
+    | Some(exp) -> Some(eval' opt_env exp) in
 
   (* For each kind of statement, build the associated Sast statment *)
-  let build_ifstmt iflist env =
-    let build_block env (exp, slist) =
+  let build_ifstmt iflist if_env =
+    let build_block if_env (exp, slist) =
       let exprtyp = match exp with
         | None -> None
-        | Some exp -> Some(build_predicate env exp) in
-      (exprtyp, attach' slist env) in
-    Sast.If(List.map (build_block env) iflist, env) in
+        | Some exp -> Some(build_predicate if_env exp) in
+      (exprtyp, attach' slist if_env) in
+    Sast.If(List.map (build_block if_env) iflist, if_env) in
 
-  let build_whilestmt expr slist env =
-    let exprtyp = build_predicate env expr in
-    let stmts = attach' slist env in
-    Sast.While((exprtyp, stmts), env) in
+  let build_whilestmt expr slist while_env =
+    let exprtyp = build_predicate while_env expr in
+    let stmts = attach' slist while_env in
+    Sast.While((exprtyp, stmts), while_env) in
 
-  let build_declstmt vdef opt_expr env = Sast.Decl(vdef, opt_eval opt_expr env, env) in
-  let build_returnstmt opt_expr env = Sast.Return(opt_eval opt_expr env, env) in
-  let build_exprstmt expr env = Sast.Expr(eval' env expr, env) in
-  let build_superstmt expr_list env = Sast.Super(eval_exprlist env expr_list, env) in
+  let build_declstmt vdef opt_expr decl_env = Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env) in
+  let build_returnstmt opt_expr ret_env = Sast.Return(opt_eval opt_expr ret_env, ret_env) in
+  let build_exprstmt expr expr_env = Sast.Expr(eval' expr_env expr, expr_env) in
+  let build_superstmt expr_list super_env = Sast.Super(eval_exprlist super_env expr_list, super_env) in
 
   (* Ast statement -> (Sast.Statement, Environment Update Option) *)
-  let updater env = function
-    | Ast.While(expr, slist)   -> (build_whilestmt expr slist env, None)
-    | Ast.If(iflist)           -> (build_ifstmt iflist env, None)
-    | Ast.Decl(vdef, opt_expr) -> (build_declstmt vdef opt_expr env, Some(vdef))
-    | Ast.Expr(expr)           -> (build_exprstmt expr env, None)
-    | Ast.Return(opt_expr)     -> (build_returnstmt opt_expr env, None)
-    | Ast.Super(exprs)         -> (build_superstmt exprs env, None) in
+  let updater in_env = function
+    | Ast.While(expr, slist)   -> (build_whilestmt expr slist in_env, None)
+    | Ast.If(iflist)           -> (build_ifstmt iflist in_env, None)
+    | Ast.Decl(vdef, opt_expr) -> (build_declstmt vdef opt_expr in_env, Some(vdef))
+    | Ast.Expr(expr)           -> (build_exprstmt expr in_env, None)
+    | Ast.Return(opt_expr)     -> (build_returnstmt opt_expr in_env, None)
+    | Ast.Super(exprs)         -> (build_superstmt exprs in_env, None) in
 
   (* Function to fold a statement into a growing reverse list of Sast statements *)
-  let build_env (output, env) stmt =
-    let (node, update) = updater env stmt in
+  let build_env (output, acc_env) stmt =
+    let (node, update) = updater acc_env stmt in
     let updated_env = match update with
-      | None -> env
-      | Some((vtype, vname)) -> StringMap.add vname (vtype, Local) env in
+      | None -> acc_env
+      | Some((vtype, vname)) -> StringMap.add vname (vtype, Local) acc_env in
     (node::output, updated_env) in
 
-  List.rev (fst(List.fold_left build_env ([], env) stmts))
+  List.rev (fst(List.fold_left build_env ([], initial_env) stmts))
