@@ -186,6 +186,10 @@ let rec attach_bindings klass_data kname stmts env =
     | ("Boolean", _) as evaled -> evaled
     | _ -> raise (Failure "Predicates must be boolean") in
 
+  let opt_eval opt_expr env = match opt_expr with
+    | None -> None
+    | Some(exp) -> Some(eval klass_data kname env exp) in
+
   let build_ifstmt iflist env =
     let build_block env (exp, slist) =
       let exprtyp = match exp with
@@ -199,11 +203,7 @@ let rec attach_bindings klass_data kname stmts env =
     let stmts = attach_bindings klass_data kname slist env in
     Sast.While((exprtyp, stmts), env) in
 
-  let build_declstmt ((vtype, vname) as vdef) opt_expr env =
-    let sastexpr = match opt_expr with
-      | Some(exp) -> Some(eval klass_data kname env exp)
-      | None -> None in
-    Sast.Decl(vdef, sastexpr, env) in
+  let build_declstmt vdef opt_expr env = Sast.Decl(vdef, opt_eval opt_expr env, env) in
 
 (*
  * Build the environment (actually Sast) for every Ast statement,
