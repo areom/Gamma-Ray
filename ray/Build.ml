@@ -174,28 +174,33 @@ let rec eval klass_data kname env exp =
  * env : map of var declarations visible in the current scope   - > type: environment
 *)
 let rec attach_bindings klass_data kname stmts initial_env =
+  (* Calls that go easy on the eyes *)
   let eval' = eval klass_data kname in
+  let attach' = attach_bindings klass_data kname in
   let eval_exprlist env elist = List.map (eval' env) elist in
 
+  (* Helper function for building a predicate expression *)
   let build_predicate env exp = match eval' env exp with
     | ("Boolean", _) as evaled -> evaled
     | _ -> raise (Failure "Predicates must be boolean") in
 
+  (* Helper function for building an optional expression *)
   let opt_eval opt_expr env = match opt_expr with
     | None -> None
     | Some(exp) -> Some(eval' env exp) in
 
+  (* For each kind of statement, build the associated Sast statment *)
   let build_ifstmt iflist env =
     let build_block env (exp, slist) =
       let exprtyp = match exp with
         | None -> None
         | Some exp -> Some(build_predicate env exp) in
-      (exprtyp, attach_bindings klass_data kname slist env) in
+      (exprtyp, attach' slist env) in
     Sast.If(List.map (build_block env) iflist, env) in
 
   let build_whilestmt expr slist env =
     let exprtyp = build_predicate env expr in
-    let stmts = attach_bindings klass_data kname slist env in
+    let stmts = attach' slist env in
     Sast.While((exprtyp, stmts), env) in
 
   let build_declstmt vdef opt_expr env = Sast.Decl(vdef, opt_eval opt_expr env, env) in
@@ -203,12 +208,7 @@ let rec attach_bindings klass_data kname stmts initial_env =
   let build_exprstmt expr env = Sast.Expr(eval' env expr, env) in
   let build_superstmt expr_list env = Sast.Super(eval_exprlist env expr_list, env) in
 
-(*
- * Build the environment (actually Sast) for every Ast statement,
- * build the corressponding Sast.ssmt which is Ast.stmt * env
- * while updating the env in its scope if there was a new declaration
- * and for every Ast.expr, annotate it with type -> type, Ast.expr
- *)
+  (* Ast statement -> (Sast.Statement, Environment Update Option) *)
   let updater env = function
     | Ast.While(expr, slist)   -> (build_whilestmt expr slist env, None)
     | Ast.If(iflist)           -> (build_ifstmt iflist env, None)
@@ -217,6 +217,7 @@ let rec attach_bindings klass_data kname stmts initial_env =
     | Ast.Return(opt_expr)     -> (build_returnstmt opt_expr env, None)
     | Ast.Super(exprs)         -> (build_superstmt exprs env, None) in
 
+  (* Function to fold a statement into a growing reverse list of Sast statements *)
   let build_env (output, env) stmt =
     let (node, update) = updater env stmt in
     let updated_env = match update with
@@ -224,4 +225,4 @@ let rec attach_bindings klass_data kname stmts initial_env =
       | Some((vtype, vname)) -> StringMap.add vname (vtype, Local) env in
     (node::output, updated_env) in
 
-  (List.rev (fst(List.fold_left build_env ([],env) stmts)))
+  List.rev (fst(List.fold_left build_env ([], env) stmts))
