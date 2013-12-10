@@ -199,6 +199,12 @@ let rec attach_bindings klass_data kname stmts env =
     let stmts = attach_bindings klass_data kname slist env in
     Sast.While((exprtyp, stmts), env) in
 
+  let build_declstmt ((vtype, vname) as vdef) opt_expr env =
+    let sastexpr = match opt_expr with
+      | Some(exp) -> Some(eval klass_data kname env exp)
+      | None -> None in
+    Sast.Decl(vdef, sastexpr, env) in
+
 (*
  * Build the environment (actually Sast) for every Ast statement,
  * build the corressponding Sast.ssmt which is Ast.stmt * env
@@ -208,11 +214,7 @@ let rec attach_bindings klass_data kname stmts env =
   let build_env (output, env) stmt = match stmt with
     | Ast.While(expr, slist) -> ((build_whilestmt expr slist env)::output, env)
     | Ast.If (iflist) -> ((build_ifstmt iflist env)::output, env)
-    | Ast.Decl((vtype,vname),opt_expr) ->
-      let sastexpr = match opt_expr with
-        | Some exp -> Some(eval klass_data kname env exp)
-        | None -> None in
-      (Sast.Decl((vtype, vname), sastexpr , env)::output, (StringMap.add vname (vtype,Local) env))
+    | Ast.Decl((vtype, vname) as vdef, opt_expr) -> ((build_declstmt vdef opt_expr env)::output, (StringMap.add vname (vtype, Local) env))
     | Ast.Expr(expr) -> (Sast.Expr((eval klass_data kname env expr), env)::output, env)
     | Ast.Return(opt_expr) ->
       let sastexpr = match opt_expr with
