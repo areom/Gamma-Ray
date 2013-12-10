@@ -58,3 +58,12 @@ let free_vars bound stmts =
       get_free_exprs free bound todo rest in
 
   get_free_vars StringSet.empty [(bound, Left(stmts))]
+
+let free_vars_func bound func =
+  let params = formal_vars func in
+  free_vars (StringSet.union bound params) func.body
+
+let free_vars_funcs bound funcs =
+  let sets = List.map (free_vars_func bound) funcs in
+  List.fold_left StringSet.union StringSet.empty sets
+
