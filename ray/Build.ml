@@ -194,6 +194,11 @@ let rec attach_bindings klass_data kname stmts env =
       (exprtyp, attach_bindings klass_data kname slist env) in
     Sast.If(List.map (build_block env) iflist, env) in
 
+  let build_whilestmt expr slist env =
+    let exprtyp = build_predicate env expr in
+    let stmts = attach_bindings klass_data kname slist env in
+    Sast.While((exprtyp, stmts), env) in
+
 (*
  * Build the environment (actually Sast) for every Ast statement,
  * build the corressponding Sast.ssmt which is Ast.stmt * env
@@ -201,13 +206,7 @@ let rec attach_bindings klass_data kname stmts env =
  * and for every Ast.expr, annotate it with type -> type, Ast.expr
  *)
   let build_env (output, env) stmt = match stmt with
-    | Ast.While(expr, slist) ->
-      let exprtyp =
-        let e1 = eval klass_data kname env expr in
-        match fst(e1) with
-          | "Boolean" -> e1
-          | _ -> raise (Failure "While expects Boolean") in
-      (Sast.While(((exprtyp), attach_bindings klass_data kname slist env), env)::output, env)
+    | Ast.While(expr, slist) -> ((build_whilestmt expr slist env)::output, env)
     | Ast.If (iflist) -> ((build_ifstmt iflist env)::output, env)
     | Ast.Decl((vtype,vname),opt_expr) ->
       let sastexpr = match opt_expr with
