@@ -185,10 +185,9 @@ let rec attach_bindings klass_data kname stmts env =
     let build_block env (exp, slist) =
       let exprtyp = match exp with
         | None -> None
-        | Some exp -> let checktype (typ, exp) =
-          if typ = "Boolean" then (typ, exp)
-          else raise (Failure "Predicates must be boolean") in
-          Some(checktype (eval klass_data kname env exp)) in
+        | Some exp -> match eval klass_data kname env exp with
+          | ("Boolean", _) as evaled -> Some(evaled)
+          | _ -> raise (Failure "Predicates must be boolean") in
       (exprtyp, attach_bindings klass_data kname slist env) in
     Sast.If(List.map (build_block env) iflist, env) in
 
