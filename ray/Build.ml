@@ -206,18 +206,31 @@ let rec attach_bindings klass_data kname stmts env =
   let build_declstmt vdef opt_expr env = Sast.Decl(vdef, opt_eval opt_expr env, env) in
   let build_returnstmt opt_expr env = Sast.Return(opt_eval opt_expr env, env) in
 
+  let build_exprstmt expr env =
+    let evaled = eval klass_data kname env expr in
+    Sast.Expr(evaled, env) in
+
+  let build_superstmt expr_list env = Sast.Super(eval_exprlist env expr_list, env) in
+
 (*
  * Build the environment (actually Sast) for every Ast statement,
  * build the corressponding Sast.ssmt which is Ast.stmt * env
  * while updating the env in its scope if there was a new declaration
  * and for every Ast.expr, annotate it with type -> type, Ast.expr
  *)
-  let build_env (output, env) stmt = match stmt with
-    | Ast.While(expr, slist) -> ((build_whilestmt expr slist env)::output, env)
-    | Ast.If (iflist) -> ((build_ifstmt iflist env)::output, env)
-    | Ast.Decl((vtype, vname) as vdef, opt_expr) -> ((build_declstmt vdef opt_expr env)::output, (StringMap.add vname (vtype, Local) env))
-    | Ast.Expr(expr) -> (Sast.Expr((eval klass_data kname env expr), env)::output, env)
-    | Ast.Return(opt_expr) -> ((build_returnstmt opt_expr env)::output, env)
-    | Ast.Super(expr_list) -> (Sast.Super(eval_exprlist env expr_list,env)::output, env) in
-  (List.rev (fst(List.fold_left build_env ([],env) stmts)))
+  let updater env = function
+    | Ast.While(expr, slist)   -> (build_whilestmt expr slist env, None)
+    | Ast.If(iflist)           -> (build_ifstmt iflist env, None)
+    | Ast.Decl(vdef, opt_expr) -> (build_declstmt vdef opt_expr env, Some(vdef))
+    | Ast.Expr(expr)           -> (build_exprstmt expr env, None)
+    | Ast.Return(opt_expr)     -> (build_returnstmt opt_expr env, None)
+    | Ast.Super(exprs)         -> (build_superstmt exprs env, None) in
 
+  let build_env (output, env) stmt =
+    let (node, update) = updater env stmt in
+    let updated_env = match update with
+      | None -> env
+      | Some((vtype, vname)) -> StringMap.add vname (vtype, Local) env in
+    (node::output, updated_env) in
+
+  (List.rev (fst(List.fold_left build_env ([],env) stmts)))
