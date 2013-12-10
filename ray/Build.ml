@@ -173,22 +173,17 @@ let rec eval klass_data kname env exp =
  * stmts : list of Ast statements inside a member function of kname -> type: Ast.stmt list
  * env : map of var declarations visible in the current scope   - > type: environment
 *)
-let rec attach_bindings klass_data kname stmts env =
-  let eval_exprlist env' elist = List.map (eval klass_data kname env') elist in
-  (* build_ifstmt iflist env ->
-     iflist: Ast.if
-     env : enviroment in its scope
-     Builds a Sast If, env -> evaluates expressions and annotates type
-     binds env to the statement list
-  *)
+let rec attach_bindings klass_data kname stmts initial_env =
+  let eval' = eval klass_data kname in
+  let eval_exprlist env elist = List.map (eval' env) elist in
 
-  let build_predicate env' exp = match eval klass_data kname env exp with
+  let build_predicate env exp = match eval' env exp with
     | ("Boolean", _) as evaled -> evaled
     | _ -> raise (Failure "Predicates must be boolean") in
 
   let opt_eval opt_expr env = match opt_expr with
     | None -> None
-    | Some(exp) -> Some(eval klass_data kname env exp) in
+    | Some(exp) -> Some(eval' env exp) in
 
   let build_ifstmt iflist env =
     let build_block env (exp, slist) =
@@ -205,11 +200,7 @@ let rec attach_bindings klass_data kname stmts env =
 
   let build_declstmt vdef opt_expr env = Sast.Decl(vdef, opt_eval opt_expr env, env) in
   let build_returnstmt opt_expr env = Sast.Return(opt_eval opt_expr env, env) in
-
-  let build_exprstmt expr env =
-    let evaled = eval klass_data kname env expr in
-    Sast.Expr(evaled, env) in
-
+  let build_exprstmt expr env = Sast.Expr(eval' env expr, env) in
   let build_superstmt expr_list env = Sast.Super(eval_exprlist env expr_list, env) in
 
 (*
