@@ -43,7 +43,7 @@ var_def = (string * string)
 and sstmt =
   | Decl of var_def * expr option * environment
   | If of (expr option * sstmt list) list * environment
-  | While of (expr * sstmt list) * environment
+  | While of expr * sstmt list * environment
   | Expr of expr * environment
   | Return of expr option * environment
   | Super of expr list * environment

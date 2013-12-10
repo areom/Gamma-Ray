@@ -201,7 +201,7 @@ let rec attach_bindings klass_data kname stmts initial_env =
   let build_whilestmt expr slist while_env =
     let exprtyp = build_predicate while_env expr in
     let stmts = attach' slist while_env in
-    Sast.While((exprtyp, stmts), while_env) in
+    Sast.While(exprtyp, stmts, while_env) in
 
   let build_declstmt vdef opt_expr decl_env = Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env) in
   let build_returnstmt opt_expr ret_env = Sast.Return(opt_eval opt_expr ret_env, ret_env) in
