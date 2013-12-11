@@ -3,7 +3,7 @@ open Klass
 
 let args lst = Format.sprintf "(%s)" (String.concat ", " lst)
 let asig (name, formals) = Format.sprintf "%s %s" name (args formals)
-let aref (host, name, formals) = Format.sprintf "%s.%s" host (asig (name, formals))
+let aref (name, formals) = asig (name, formals)
 
 let dupvar (klass, vars) = match vars with
   | [var] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " is multiply declared"
