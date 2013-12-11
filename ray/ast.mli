@@ -27,10 +27,7 @@ type combtest = And | Or | Nand | Nor | Xor | Not
 (** All three sets of binary operators *)
 type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
 
-(**
-    The set expressions:
-        This
-*)
+(** The various types of expressions we can have. *)
 type expr =
     This
   | Null
@@ -57,26 +54,19 @@ and stmt =
   | Return of expr option
   | Super of expr list
 
-(** We have four different kinds of callable code blocks:
-    - main: only has formals, body (name / static / host known)
-    - init: only has formals, body (name / static / host known)
-    - refine: has host, name, formals, body (static known)
-    - method: has name, formals, body (host / static known)
-*)
-
 (** Three access levels, the refinements, and the main function *)
 and class_section = Publics | Protects | Privates | Refines | Mains
 
-(** The basic function definition *)
+(** We have four different kinds of callable code blocks: main, init, refine, method. *)
 and func_def = {
-  returns : string option;  (** A return type *)
-  host    : string option;  (** A host class *)
-  name    : string;         (** The function name *)
-  static  : bool;           (** If the function is static *)
-  formals : var_def list;   (** A list of all formal parameters of the function *)
-  body    : stmt list;      (** A list of statements that form the function body *)
-  section : class_section;  (** A sementic tag of the class section in which the function lives *)
-  inklass : string;         (** A semantic tag of the class in which the function lives *)
+  returns : string option;  (** A return type (method/refine) *)
+  host    : string option;  (** A host class (refine) *)
+  name    : string;         (** The function name (all) *)
+  static  : bool;           (** If the function is static (main) *)
+  formals : var_def list;   (** A list of all formal parameters of the function (all) *)
+  body    : stmt list;      (** A list of statements that form the function body (all) *)
+  section : class_section;  (** A sementic tag of the class section in which the function lives (all) *)
+  inklass : string;         (** A semantic tag of the class in which the function lives (all) *)
 }
 
 (** A member is either a variable or some sort of function *)
