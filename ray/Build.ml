@@ -8,6 +8,8 @@ let env = StringMap.empty
 
 (*ADD MORE CHECKS*)
 
+let env_update mode (vtype, vname) = StringMap.add vname (vtype, mode)
+
 let current_class = "_CurrentClassMarker_"
 let null_class = "_Null_"
 
@@ -222,7 +224,50 @@ let rec attach_bindings klass_data kname stmts initial_env =
     let (node, update) = updater acc_env stmt in
     let updated_env = match update with
       | None -> acc_env
-      | Some((vtype, vname)) -> StringMap.add vname (vtype, Local) acc_env in
+      | Some(vdef) -> env_update Local vdef acc_env in
     (node::output, updated_env) in
 
   List.rev (fst(List.fold_left build_env ([], initial_env) stmts))
+
+
+let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
+  let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
+  let sast_func : Sast.func_def =
+    { returns = func.returns;
+      host = func.host;
+      name = func.name;
+      formals = func.formals;
+      static = func.static;
+      body = attach_bindings klass_data kname func.body with_params;
+      section = func.section;
+      inklass = func.inklass; } in
+  sast_func
+
+let ast_mem_to_sast_mem klass_data kname (mem : Ast.member_def) initial_env =
+  let change func = ast_func_to_sast_func klass_data kname func initial_env in
+  let transformed : Sast.member_def = match mem with
+    | Ast.VarMem(v) -> Sast.VarMem(v)
+    | Ast.MethodMem(m) -> Sast.MethodMem(change m)
+    | Ast.InitMem(m) -> Sast.InitMem(change m) in
+  transformed
+
+let ast_to_sast klass_data (ast_klass : Ast.class_def) =
+  let s : Ast.class_sections_def = ast_klass.sections in
+  let env = StringMap.empty in
+
+  let mems = List.map (fun m -> ast_mem_to_sast_mem klass_data ast_klass.klass m env) in
+  let funs = List.map (fun f -> ast_func_to_sast_func klass_data ast_klass.klass f env) in
+
+  let sections : Sast.class_sections_def =
+    { publics = mems s.publics;
+      protects = mems s.protects;
+      privates = mems s.privates;
+      refines = funs s.refines;
+      mains = funs s.mains } in
+
+  let sast_klass : Sast.class_def =
+    { klass = ast_klass.klass;
+      parent = ast_klass.parent;
+      sections = sections } in
+
+  sast_klass
