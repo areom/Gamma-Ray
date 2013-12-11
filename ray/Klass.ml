@@ -192,7 +192,7 @@ let is_tree_hierarchy data =
     Add the class (class name - string) to definition (class - class_def)
     map to a class_data record.
     @param data A class_data record to update
-    @klasses A list of parsed classes
+    @param klasses A list of parsed classes
     @return data but with the class map added given klasses
   *)
 let build_class_map data klasses =
