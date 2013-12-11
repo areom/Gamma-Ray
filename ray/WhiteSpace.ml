@@ -11,7 +11,8 @@ let wsfail msg = raise(Failure(msg))
 (**
     Only allow spacing that is at the start of a line
     @param program A program as a list of tokens
-    @return A program that is easier to parse as whitespace(?)
+    @return a list of tokens where the only white space is indentation, newlines,
+     and colons (which count as a newline as it must be followed by them)
 *)
 let indenting_space program =
   let rec space_indenting rtokens = function
@@ -66,7 +67,11 @@ let trim_lines program =
       | token::rest -> lines_trim rest (token::rtokens) in
   lines_trim program []
 
-(** Remove consecutive newlines *)
+(**
+    Remove consecutive newlines
+    @param program A program as a list of tokens
+    @return A program without consecutive newlines
+  *)
 let squeeze_lines program =
   let rec lines_squeeze tokens rtokens =
     match tokens with
@@ -85,10 +90,11 @@ let spacing = function
   | SPACE(n)::rest -> (n, rest)
   | list           -> (0, list)
 
-(** Remove spaces, newlines, and colons but semantically note their presence.
-    @param program A full program
+(**
+    Remove spaces, newlines, and colons but semantically note their presence.
+    @param program A full program (transformed by the above pipeline)
     @return a list of triples, one for each line. Each triple's first item is
-    the number of spaces at the beginning of the line; the second item are the
+    the number of spaces at the beginning of the line; the second item is the
     tokens in the line; the third is whether the line ended in a colon.
  *)
 let tokens_to_lines program =
@@ -112,7 +118,10 @@ let tokens_to_lines program =
   lines_from_tokens [] [] program
 
 (**
-    Merge line continuatons from the above
+    Merge line continuatons given output from tokens_to_lines.
+    Line n+1 continues n if n does not end in a colon and n+1 is more
+    indented than n (or if line n is a continuation and they are both
+    equally indented).
     @param program_lines The individual lines of the program
     @return The lines of the program with whitespace collapsed
 *)
@@ -129,7 +138,7 @@ let merge_lines program_lines =
     Check if a given line needs a semicolon at the end
 *)
 let rec needs_semi = function
-  | [] -> true              (* Null case*)
+  | [] -> true              (* General base case *)
   | RBRACE::[] -> false     (* The end of bodies do not require semicolons *)
   | SEMI::[] -> false       (* A properly terminated line does not require an additional semicolon *)
   | _::rest -> needs_semi rest (* Go through *)
@@ -142,10 +151,10 @@ let rec needs_semi = function
     @return A list of blocks
  *)
 let block_merge lines =
-  let braced = function
+  let add_semi = function
     | (n, toks, true) -> (n, toks, true, false)
     | (n, toks, false) -> (n, toks, false, needs_semi toks) in
-  let lines = List.map braced lines in
+  let lines = List.map add_semi lines in
   let rec merge_blocks rblocks = function
     | (n1, line1, false, s1)::(n2, line2, colon, s2)::rest when n1 = n2 ->
       let newline = line1 @ (if s1 then [SEMI] else []) @ line2 in
@@ -154,7 +163,7 @@ let block_merge lines =
     | [] -> List.rev rblocks in
   merge_blocks [] lines
 
-(** Make sure every line is terminated with a semi-colon *)
+(** Make sure every line is terminated with a semi-colon when necessary *)
 let terminate_blocks blocks =
   let rec block_terminate rblocks = function
     | (n, toks, false)::rest ->
