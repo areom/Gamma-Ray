@@ -1,10 +1,10 @@
 open Parser
 
-(** Convert a whitespace file into a brace file. Yes, this module is the opposite of descriptively named. *)
+(** Convert a whitespace file into a brace file. *)
 
 (**
-Gracefully tell the programmer that they done goofed
-@param msg The descriptive error message to convey to the programmer
+    Gracefully tell the programmer that they done goofed
+    @param msg The descriptive error message to convey to the programmer
 *)
 let wsfail msg = raise(Failure(msg))
 

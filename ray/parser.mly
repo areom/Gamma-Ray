@@ -1,7 +1,7 @@
 %{
 open Ast
 
-(** Let's parse up this bad mofo *)
+(** Parser that reads from the scanner and produces an AST. *)
 
 (** Set a single function to belong to a certain section *)
 let set_func_section_to sect f = { f with section = sect }

@@ -4,6 +4,10 @@ module StringSet = Set.Make(String)
 module StringMap = Map.Make(String)
 
 (**
+    A place for StringSet and StringMap to live.
+  *)
+
+(**
   Convenience type to make reading table types easier. A lookup_table
   is a primary key -> second key -> value map (i.e. the values of the
   first StringMap are themselves StringMap maps...

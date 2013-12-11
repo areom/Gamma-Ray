@@ -1,6 +1,8 @@
 open Ast
 open Klass
 
+(** Functions to be used with testing in the interpreter (or test scripts we write later) *)
+
 let get_example_path dir example = String.concat Filename.dir_sep ["test"; "tests"; "Brace"; dir; example]
 
 let get_example_scan dir example =

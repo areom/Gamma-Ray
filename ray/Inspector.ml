@@ -1,7 +1,9 @@
 open Parser
 open Ast
 
-(** A easy way to see what the compiler is doing *)
+(**
+    Provides functionality for examining values used in the compilation pipeline.
+  *)
 
 (* TOKEN stuff *)
 (** Convert a given token to a string representation for output *)
@@ -142,10 +144,12 @@ let descan = function
   | SLIT(s) -> s
   | EOF -> "eof"
 
-(** Build a list of tokens ala parser
+(**
+    Given a lexing function and a lexing buffer, consume tokesn until
+    the end of file is reached. Return the generated tokens.
     @param lexfun A function that takes a lexbuf and returns a token
     @param lexbuf A lexographical buffer from Lexing
-    @return A list of tokens parsed from the buffer
+    @return A list of scanned tokens
 *)
 let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
   let rec list_tokens rtokens =
@@ -155,21 +159,22 @@ let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
   list_tokens []
 
 (**
-    Use the token_list function to parse a source
-    @param source A channel to buffer
+    Scan a list of tokens from an input file.
+    @param source A channel to get tokens from
     @return A list of tokens taken from a source
 *)
 let from_channel source = token_list Scanner.token (Lexing.from_channel source)
 
 (**
-    Print out one of our list of tokens. Does this need to be recursive?
+    Print a list of tokens to stdout.
     @param tokens A list of tokens
     @return Only returns a unit
 *)
-let rec print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
+let print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
 
 (**
-    Print out the important predicates to whitespace style interpretation
+    Used to print out de-whitespacing lines which consist of a number (indentation), a list
+    of tokens (the line), and whether there is a colon at the end of the line.
     @return Only returns a unit
 *)
 let print_token_line = function
@@ -186,7 +191,7 @@ let print_token_line = function
 let pprint_token_list header toks = print_string header ; print_token_list toks ; print_newline ()
 
 (**
-    Print out a series of important predicates to whitespace style interpreation for a set of lines
+    Print out de-whitespacing lines (see print_token_line) for various lines, but with a header.
     @param header A nonsemantic string to preface our list
     @param lines A list of line representations (number of spaces, if it ends in a colon, a list of tokens)
     @return Only returns a unit

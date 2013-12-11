@@ -3,17 +3,14 @@ open Sast
 open Ast
 open Util
 
-(**
-  Take a collection of Sast class_defs and deanonymize them --
-  This means we need to go from [Sast.class_def] -> class_data -> [Ast.class_def] * [Sast.class_def]
-  The first item in the return are the deanonymized classes; the second item is the updated input list
-  (i.e. the same as the param but with the anonymous objects removed).
- *)
+(** Take a collection of Sast class_defs and deanonymize them. *)
 
+
+(** The data needed to deanonymize a list of classes and store the results. *)
 type anon_state = {
-  labeler : int lookup_map ;
-  deanon : Ast.class_def list ;
-  clean : Sast.class_def list
+  labeler : int lookup_map ;    (** Label deanonymized classes *)
+  deanon : Ast.class_def list ; (** List of Ast.class_def classes that are deanonymized. *)
+  clean : Sast.class_def list   (** List of clean Sast.class_def classes *)
 }
 
 (**
