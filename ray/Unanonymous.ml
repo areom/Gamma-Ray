@@ -185,7 +185,7 @@ let empty_deanon_state = {
 let deanonymize klass_data sast_klasses =
   let rec run_deanon init_state data asts sasts = match asts, sasts with
     | [], [] -> Left((init_state, data))
-    | klass::rest, _ -> (match Klass.append_leaf_class_node data klass with
+    | klass::rest, _ -> (match Klass.append_leaf data klass with
       | Left(data) ->
         let sast_klass = Build.ast_to_sast data klass in
         run_deanon init_state data rest (sast_klass::sasts)
