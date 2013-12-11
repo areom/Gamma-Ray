@@ -56,10 +56,10 @@ and func_def = {
   static  : bool;
   formals : var_def list;
   body    : sstmt list;
-  section : class_section;  (* Makes things easier later *)
+  section : Ast.class_section;  (* Makes things easier later *)
+  inklass : string;
 }
 
-and class_section = Publics | Protects | Privates | Refines | Mains
 (* A member is either a variable or some sort of function *)
 type member_def = VarMem of var_def | MethodMem of func_def | InitMem of func_def
 
