@@ -268,6 +268,13 @@ let full_signature_string func =
 
 (**
     Map function collisions to the type used for collection that information.
+    This lets us have a `standard' form of method / refinement collisions and so
+    we can easily build up a list of them.
+    @param aklass the class we are currently examining
+    @param funcs a list of funcs colliding in aklass
+    @param reqhost are we requiring a host (compiler error if no host and true)
+    @return a tuple representing the collisons - (class name, collision tuples)
+     where collision tuples are ([host.]name, formals)
   *)
 let build_collisions aklass funcs reqhost =
   let to_collision func =
@@ -618,6 +625,73 @@ let build_class_data klasses
   |-> append_ancestor
   |-> append_distance
 
+let append_leaf_classes aklass data =
+  let updated = StringMap.add aklass.klass aklass data.classes in
+  if StringMap.mem aklass.klass data.classes
+    then Right(DuplicateClasses([aklass.klass]))
+    else Left({ data with classes = updated })
+let append_leaf_tree aklass data =
+  (* If we assume data is valid and data has aklass's parent then we should be fine *)
+  let parent = klass_to_parent aklass in
+  if StringMap.mem parent data.classes
+    then Left(data)
+    else Right(HierarchyIssue("Appending a leaf without a known parent."))
+let append_leaf_children aklass data =
+  let parent = klass_to_parent aklass in
+  let updated = add_map_list parent aklass.klass data.children in
+  Left({ data with children = updated })
+let append_leaf_parent aklass data =
+  let parent = klass_to_parent aklass in
+  let updated = StringMap.add aklass.klass parent data.parents in
+  Left({ data with parents = updated })
+let append_leaf_variables aklass data = match build_var_map aklass with
+  | Left(vars) ->
+    let updated = StringMap.add aklass.klass vars data.variables in
+    Left({ data with variables = updated })
+  | Right(collisions) -> Right(DuplicateVariables([(aklass.klass, collisions)]))
+let append_leaf_methods aklass data = match build_method_map aklass with
+  | Left(meths) ->
+    let updated = StringMap.add aklass.klass meths data.methods in
+    Left({ data with methods = updated })
+  | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass collisions false]))
+let append_leaf_refines aklass data = match build_refinement_map aklass with
+  | Left(refs) ->
+    let updated = StringMap.add aklass.klass refs data.refines in
+    Left({ data with refines = updated })
+  | Right(collisions) -> Right(ConflictingRefinements([build_collisions aklass collisions true]))
+let append_leaf_mains aklass data = match aklass.sections.mains with
+  | [] -> Left(data)
+  | [main] ->
+    let updated = StringMap.add aklass.klass main data.mains in
+    Left({ data with mains = updated })
+  | _ -> Right(MultipleMains([aklass.klass]))
+let append_leaf_ancestor aklass data =
+  let parent = klass_to_parent aklass in
+  let ancestors = aklass.klass::(StringMap.find parent data.ancestors) in
+  let updated = StringMap.add aklass.klass ancestors data.ancestors in
+  Left({ data with ancestors = updated })
+let append_leaf_distance aklass data =
+  let ancestors = StringMap.find aklass.klass data.ancestors in
+  let distance = build_distance aklass.klass ancestors in
+  let updated = StringMap.add aklass.klass distance data.distance in
+  Left({ data with distance = updated })
+
+let append_leaf data aklass =
+      Left(data)
+  |-> append_leaf_classes aklass
+  |-> append_leaf_tree aklass
+  |-> append_leaf_children aklass
+  |-> append_leaf_parent aklass
+  |-> append_leaf_variables aklass
+  |-> append_leaf_methods aklass
+  |-> append_leaf_refines aklass
+  |-> append_leaf_mains aklass
+  |-> append_leaf_ancestor aklass
+  |-> append_leaf_distance aklass
+
+(**
+    Print class data out to stdout.
+  *)
 let print_class_data data =
   let id x = x in
   let from_list lst = Format.sprintf "[%s]" (String.concat ", " lst) in
@@ -667,83 +741,3 @@ let print_class_data data =
   map_printer data.ancestors "Ancestors" from_list;
   print_newline ();
   table_printer data.distance "Distance" string_of_int
-
-
-let append_leaf_classes aklass data =
-  let updated = StringMap.add aklass.klass aklass data.classes in
-  if StringMap.mem aklass.klass data.classes
-    then Right(DuplicateClasses([aklass.klass]))
-    else Left({ data with classes = updated })
-
-let append_leaf_tree aklass data =
-  (* If we assume data is valid and data has aklass's parent then we should be fine *)
-  let parent = klass_to_parent aklass in
-  if StringMap.mem parent data.classes
-    then Left(data)
-    else Right(HierarchyIssue("Appending a leaf without a known parent."))
-
-let append_leaf_children aklass data =
-  let parent = klass_to_parent aklass in
-  let updated = add_map_list parent aklass.klass data.children in
-  Left({ data with children = updated })
-
-let append_leaf_parent aklass data =
-  let parent = klass_to_parent aklass in
-  let updated = StringMap.add aklass.klass parent data.parents in
-  Left({ data with parents = updated })
-
-let append_leaf_variables aklass data = match build_var_map aklass with
-  | Left(vars) ->
-    let updated = StringMap.add aklass.klass vars data.variables in
-    Left({ data with variables = updated })
-  | Right(collisions) -> Right(DuplicateVariables([(aklass.klass, collisions)]))
-
-(*
-  | ConflictingMethods of (string * (string * string list) list) list
-  | ConflictingRefinements of (string * (string * string * string list) list) list
-  | MultipleMains of string list
-*)
-
-let append_leaf_methods aklass data = match build_method_map aklass with
-  | Left(meths) ->
-    let updated = StringMap.add aklass.klass meths data.methods in
-    Left({ data with methods = updated })
-  | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass collisions false]))
-
-let append_leaf_refines aklass data = match build_refinement_map aklass with
-  | Left(refs) ->
-    let updated = StringMap.add aklass.klass refs data.refines in
-    Left({ data with refines = updated })
-  | Right(collisions) -> Right(ConflictingRefinements([build_collisions aklass collisions true]))
-
-let append_leaf_mains aklass data = match aklass.sections.mains with
-  | [] -> Left(data)
-  | [main] ->
-    let updated = StringMap.add aklass.klass main data.mains in
-    Left({ data with mains = updated })
-  | _ -> Right(MultipleMains([aklass.klass]))
-
-let append_leaf_ancestor aklass data =
-  let parent = klass_to_parent aklass in
-  let ancestors = aklass.klass::(StringMap.find parent data.ancestors) in
-  let updated = StringMap.add aklass.klass ancestors data.ancestors in
-  Left({ data with ancestors = updated })
-
-let append_leaf_distance aklass data =
-  let ancestors = StringMap.find aklass.klass data.ancestors in
-  let distance = build_distance aklass.klass ancestors in
-  let updated = StringMap.add aklass.klass distance data.distance in
-  Left({ data with distance = updated })
-
-let append_leaf_class_node data aklass =
-      Left(data)
-  |-> append_leaf_classes aklass
-  |-> append_leaf_tree aklass
-  |-> append_leaf_children aklass
-  |-> append_leaf_parent aklass
-  |-> append_leaf_variables aklass
-  |-> append_leaf_methods aklass
-  |-> append_leaf_refines aklass
-  |-> append_leaf_mains aklass
-  |-> append_leaf_ancestor aklass
-  |-> append_leaf_distance aklass
