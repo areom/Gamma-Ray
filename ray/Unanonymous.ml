@@ -62,7 +62,7 @@ let deanon_expr_detail init_state env expr_deets =
           mains = []; } } in
 
   let deanon_freedefs funcs env =
-    let freeset = FreeVariables.free_vars_funcs StringSet.empty funcs in
+    let freeset = Variables.free_vars_funcs StringSet.empty funcs in
     let freevars = List.sort compare (StringSet.elements freeset) in
     let unknown = List.filter (fun v -> not (StringMap.mem v env)) freevars in
     let add_type v = let (t, _) = StringMap.find v env in (t, v) in

@@ -1,5 +1,5 @@
 open Ast
-open FreeVariables
+open Variables
 open StringModules
 
 let rec get_vars_formals = function

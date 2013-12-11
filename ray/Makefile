@@ -22,19 +22,20 @@ compile:
 	ocamlc -c -g streams.ml
 	ocamlc -c -g canonical.ml
 	ocamlc -c -g Debug.ml
-	ocamlc -c -g FreeVariables.ml
+	ocamlc -c -g Variables.ml
 	ocamlc -c -g freevars.ml
 	ocamlc -c -g Sast.ml
 	ocamlc -c -g Build.ml
+	ocamlc -c -g Unanonymous.ml
 	#Make the tools
 	ocamlc -g -o tools/prettify scanner.cmo parser.cmo Inspector.cmo Pretty.cmo WhiteSpace.cmo prettify.cmo
 	ocamlc -g -o tools/inspect scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
 	ocamlc -g -o tools/streams scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo streams.cmo
 	ocamlc -g -o tools/canonical scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo
-	ocamlc -g -o tools/freevars scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo Klass.cmo Debug.cmo FreeVariables.cmo freevars.cmo 
-	ocamlc -g -o tools/classinfo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo Klass.cmo classinfo.cmo 
+	ocamlc -g -o tools/freevars scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo Klass.cmo Debug.cmo Variables.cmo freevars.cmo
+	ocamlc -g -o tools/classinfo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo Klass.cmo classinfo.cmo
 
-docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml inspect.ml prettify.ml streams.ml canonical.ml Debug.ml FreeVariables.ml freevars.ml 
+docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml Debug.ml Variables.ml Unanonymous.ml
 docgen = ./doc/.docgen
 
 docs:
