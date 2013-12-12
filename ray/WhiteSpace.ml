@@ -3,17 +3,17 @@ open Parser
 (** Convert a whitespace file into a brace file. *)
 
 (**
-        Gracefully tell the programmer that they done goofed
-        @param msg The descriptive error message to convey to the programmer
-*)
+    Gracefully tell the programmer that they done goofed
+    @param msg The descriptive error message to convey to the programmer
+  *)
 let wsfail msg = raise(Failure(msg))
 
 (**
-        Only allow spacing that is at the start of a line
-        @param program A program as a list of tokens
-        @return a list of tokens where the only white space is indentation, newlines,
-          and colons (which count as a newline as it must be followed by them)
-*)
+    Only allow spacing that is at the start of a line
+    @param program A program as a list of tokens
+    @return a list of tokens where the only white space is indentation, newlines,
+    and colons (which count as a newline as it must be followed by them)
+  *)
 let indenting_space program =
     let rec space_indenting rtokens = function
         | NEWLINE::SPACE(n)::rest -> space_indenting (SPACE(n)::NEWLINE::rtokens) rest
@@ -26,10 +26,10 @@ let indenting_space program =
         | _ -> wsfail "Indenting should have left a NEWLINE at the start of program; did not."
 
 (**
-        Between LBRACE and RBRACE we ignore spaces and newlines; colons are errors in this context.
-        It's not necessary that this be done after the above, but it is recommended.
-        @param program A program in the form of a list of tokens
-        @return A slightly slimmer program
+    Between LBRACE and RBRACE we ignore spaces and newlines; colons are errors in this context.
+    It's not necessary that this be done after the above, but it is recommended.
+    @param program A program in the form of a list of tokens
+    @return A slightly slimmer program
   *)
 let despace_brace program =
     let rec brace_despace depth tokens rtokens last =
@@ -54,10 +54,10 @@ let despace_brace program =
     brace_despace 0 program [] 0
 
 (**
-        Remove empty indentation -- SPACE followed by COLON or NEWLINE
-        @param program A program as a list of tokens
-        @return A program without superfluous indentation
-*)
+    Remove empty indentation -- SPACE followed by COLON or NEWLINE
+    @param program A program as a list of tokens
+    @return A program without superfluous indentation
+  *)
 let trim_lines program =
     let rec lines_trim tokens rtokens =
         match tokens with
@@ -68,10 +68,10 @@ let trim_lines program =
     lines_trim program []
 
 (**
-        Remove consecutive newlines
-        @param program A program as a list of tokens
-        @return A program without consecutive newlines
-    *)
+    Remove consecutive newlines
+    @param program A program as a list of tokens
+    @return A program without consecutive newlines
+  *)
 let squeeze_lines program =
     let rec lines_squeeze tokens rtokens =
         match tokens with
@@ -91,11 +91,11 @@ let spacing = function
     | list           -> (0, list)
 
 (**
-        Remove spaces, newlines, and colons but semantically note their presence.
-        @param program A full program (transformed by the above pipeline)
-        @return a list of triples, one for each line. Each triple's first item is
-        the number of spaces at the beginning of the line; the second item is the
-        tokens in the line; the third is whether the line ended in a colon.
+    Remove spaces, newlines, and colons but semantically note their presence.
+    @param program A full program (transformed by the above pipeline)
+    @return a list of triples, one for each line. Each triple's first item is
+    the number of spaces at the beginning of the line; the second item is the
+    tokens in the line; the third is whether the line ended in a colon.
   *)
 let tokens_to_lines program =
     let rec lines_from_tokens rline rlines = function
@@ -118,13 +118,13 @@ let tokens_to_lines program =
     lines_from_tokens [] [] program
 
 (**
-        Merge line continuatons given output from tokens_to_lines.
-        Line n+1 continues n if n does not end in a colon and n+1 is more
-        indented than n (or if line n is a continuation and they are both
-        equally indented).
-        @param program_lines The individual lines of the program
-        @return The lines of the program with whitespace collapsed
-*)
+    Merge line continuatons given output from tokens_to_lines.
+    Line n+1 continues n if n does not end in a colon and n+1 is more
+    indented than n (or if line n is a continuation and they are both
+    equally indented).
+    @param program_lines The individual lines of the program
+    @return The lines of the program with whitespace collapsed
+  *)
 let merge_lines program_lines =
     let rec lines_merge rlines = function
         | ((n1, _, _) as line1)::((n2, _, _) as line2)::rest when n1 >= n2 -> lines_merge (line1::rlines) (line2::rest)
@@ -135,8 +135,8 @@ let merge_lines program_lines =
     lines_merge [] program_lines
 
 (**
-        Check if a given line needs a semicolon at the end
-*)
+    Check if a given line needs a semicolon at the end
+  *)
 let rec needs_semi = function
     | [] -> true              (* General base case *)
     | RBRACE::[] -> false     (* The end of bodies do not require semicolons *)
@@ -144,11 +144,11 @@ let rec needs_semi = function
     | _::rest -> needs_semi rest (* Go through *)
 
 (**
-        Build a block. Consecutive lines of the same indentation with only the last ending
-        in a colon are a `block'. Blocks are just `lines' merged together but joined with
-        a semi colon when necessary.
-        @param lines The full set of lines
-        @return A list of blocks
+    Build a block. Consecutive lines of the same indentation with only the last ending
+    in a colon are a `block'. Blocks are just `lines' merged together but joined with
+    a semi colon when necessary.
+    @param lines The full set of lines
+    @return A list of blocks
   *)
 let block_merge lines =
     let add_semi = function
@@ -180,10 +180,11 @@ let rec arrange n stack rtokens =
         | top::rest when n <= top -> arrange n rest (RBRACE::rtokens)
         | _ -> (stack, rtokens)
 
-(** Take results of pipeline and finally adds braces. If blocks are merged
-        then either consecutive lines differ in scope or there are colons.
-        so now everything should be easy peasy (lemon squeezy).
-*)
+(**
+     Take results of pipeline and finally adds braces. If blocks are merged
+    then either consecutive lines differ in scope or there are colons.
+    so now everything should be easy peasy (lemon squeezy).
+  *)
 let space_to_brace = function
     | [] -> []
     | linelist -> let rec despace_enbrace stack rtokens = function

@@ -14,15 +14,15 @@ let current_class = "_CurrentClassMarker_"
 let null_class = "_Null_"
 
 (**
-        Get the type of an instance variable data for a given variable name
-        and class name given a class_data record.
-        @param vname The variable being sought
-        @param klass_data The class_data record
-        @param kname The class we are looking in
-        @return Either Some(section, klass) where vname is an instance variable
-        in the variable table (map) for the class (klass), or None if there is no
-        variable to be found.
-    *)
+    Get the type of an instance variable data for a given variable name
+    and class name given a class_data record.
+    @param vname The variable being sought
+    @param klass_data The class_data record
+    @param kname The class we are looking in
+    @return Either Some(section, klass) where vname is an instance variable
+    in the variable table (map) for the class (klass), or None if there is no
+    variable to be found.
+  *)
 let rec getInstanceType vname klass_data kname =
     match class_var_lookup klass_data kname vname, kname with
         | Some(varmap), _ -> Some(varmap, kname)
@@ -30,12 +30,12 @@ let rec getInstanceType vname klass_data kname =
         | _, _ -> getInstanceType vname klass_data (StringMap.find kname klass_data.parents)
 
 (**
-        Get an Id's type - Not accessed through objects
-        Therefore, it can be a local variable visible in the current scope i.e., present inside env
-        It can be an instance variable in the current class of any access scope
-        Or it can be an instance variable which is either protected or public in any of its ancestor
-        We just get to the closest ancestor
-    *)
+    Get an Id's type - Not accessed through objects
+    Therefore, it can be a local variable visible in the current scope i.e., present inside env
+    It can be an instance variable in the current class of any access scope
+    Or it can be an instance variable which is either protected or public in any of its ancestor
+    We just get to the closest ancestor
+  *)
 let getIDType vname env klass_data kname =
     match map_lookup vname env with
         | Some((vtyp, _)) -> vtyp
@@ -46,7 +46,7 @@ let getIDType vname env klass_data kname =
             | None -> raise (Failure("ID " ^ vname ^ " not found"))
 
 (* Do a lookup on the instance variable for the current classdef and return
-      its type else then recurse its ancestor *)
+   its type else then recurse its ancestor *)
 let getFieldType recvr member klass_data cur_kname =
     let lookupclass = if recvr = current_class then cur_kname else recvr in
     match getInstanceType member klass_data lookupclass with
@@ -169,12 +169,12 @@ let rec eval klass_data kname env exp =
 
 
 (*
-  * attach_bindings : Build the Sast, by annotating the expressions with type and statements with env
-  * klass_data : global class data record -> type: class_data
-  * kname : class name -> type: string
-  * stmts : list of Ast statements inside a member function of kname -> type: Ast.stmt list
-  * env : map of var declarations visible in the current scope   - > type: environment
-*)
+ * attach_bindings : Build the Sast, by annotating the expressions with type and statements with env
+ * klass_data : global class data record -> type: class_data
+ * kname : class name -> type: string
+ * stmts : list of Ast statements inside a member function of kname -> type: Ast.stmt list
+ * env : map of var declarations visible in the current scope   - > type: environment
+ *)
 let rec attach_bindings klass_data kname stmts initial_env =
     (* Calls that go easy on the eyes *)
     let eval' = eval klass_data kname in

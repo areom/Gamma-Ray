@@ -1,9 +1,7 @@
 open Parser
 open Ast
 
-(**
-        Provides functionality for examining values used in the compilation pipeline.
-    *)
+(** Provides functionality for examining values used in the compilation pipeline. *)
 
 (* TOKEN stuff *)
 (** Convert a given token to a string representation for output *)
@@ -145,12 +143,12 @@ let descan = function
     | EOF -> "eof"
 
 (**
-        Given a lexing function and a lexing buffer, consume tokesn until
-        the end of file is reached. Return the generated tokens.
-        @param lexfun A function that takes a lexbuf and returns a token
-        @param lexbuf A lexographical buffer from Lexing
-        @return A list of scanned tokens
-*)
+    Given a lexing function and a lexing buffer, consume tokesn until
+    the end of file is reached. Return the generated tokens.
+    @param lexfun A function that takes a lexbuf and returns a token
+    @param lexbuf A lexographical buffer from Lexing
+    @return A list of scanned tokens
+  *)
 let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
     let rec list_tokens rtokens =
         match (lexfun lexbuf) with
@@ -159,43 +157,43 @@ let token_list (lexfun : Lexing.lexbuf -> token) (lexbuf : Lexing.lexbuf) =
     list_tokens []
 
 (**
-        Scan a list of tokens from an input file.
-        @param source A channel to get tokens from
-        @return A list of tokens taken from a source
-*)
+    Scan a list of tokens from an input file.
+    @param source A channel to get tokens from
+    @return A list of tokens taken from a source
+  *)
 let from_channel source = token_list Scanner.token (Lexing.from_channel source)
 
 (**
-        Print a list of tokens to stdout.
-        @param tokens A list of tokens
-        @return Only returns a unit
-*)
+    Print a list of tokens to stdout.
+    @param tokens A list of tokens
+    @return Only returns a unit
+  *)
 let print_token_list tokens = print_string (String.concat " " (List.map token_to_string tokens))
 
 (**
-        Used to print out de-whitespacing lines which consist of a number (indentation), a list
-        of tokens (the line), and whether there is a colon at the end of the line.
-        @return Only returns a unit
-*)
+    Used to print out de-whitespacing lines which consist of a number (indentation), a list
+    of tokens (the line), and whether there is a colon at the end of the line.
+    @return Only returns a unit
+  *)
 let print_token_line = function
     | (space, toks, colon) ->
         print_string ("(" ^ string_of_int space ^ "," ^ string_of_bool colon ^ ") ");
         print_token_list toks
 
 (**
-        Print out a list of tokens with a specific header and some extra margins
-        @param header A nonsemantic string to preface our list
-        @param toks A list of tokens
-        @return Only returns a unit
-*)
+    Print out a list of tokens with a specific header and some extra margins
+    @param header A nonsemantic string to preface our list
+    @param toks A list of tokens
+    @return Only returns a unit
+  *)
 let pprint_token_list header toks = print_string header ; print_token_list toks ; print_newline ()
 
 (**
-        Print out de-whitespacing lines (see print_token_line) for various lines, but with a header.
-        @param header A nonsemantic string to preface our list
-        @param lines A list of line representations (number of spaces, if it ends in a colon, a list of tokens)
-        @return Only returns a unit
-*)
+    Print out de-whitespacing lines (see print_token_line) for various lines, but with a header.
+    @param header A nonsemantic string to preface our list
+    @param lines A list of line representations (number of spaces, if it ends in a colon, a list of tokens)
+    @return Only returns a unit
+  *)
 let pprint_token_lines header lines =
     let spaces = String.make (String.length header) ' ' in
     let rec lines_printer prefix = function
@@ -207,10 +205,7 @@ let pprint_token_lines header lines =
         | [] -> () in
     lines_printer header lines
 
-(**
-        The majority of the following functions are relatively direct AST to string operations
-*)
-
+(** The majority of the following functions are relatively direct AST to string operations *)
 
 (* Useful for both sAST and AST *)
 let _id x = x

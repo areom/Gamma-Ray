@@ -1,19 +1,15 @@
 open Ast
 
-(**
-        Various utility functions
-*)
+(** Various utility functions *)
 
 (* Types *)
 (**
-        Paramaterized variable typing for building binary ASTs
-        @see <http://caml.inria.fr/pub/docs/oreilly-book/html/book-ora016.html#toc19> For more details on paramterized typing
+    Paramaterized variable typing for building binary ASTs
+    @see <http://caml.inria.fr/pub/docs/oreilly-book/html/book-ora016.html#toc19> For more details on paramterized typing
 *)
 type ('a, 'b) either = Left of 'a | Right of 'b
 
-(**
-        Split a list of 'a 'b either values into a pair of 'a list and 'b list
-    *)
+(** Split a list of 'a 'b either values into a pair of 'a list and 'b list *)
 let either_split eithers =
     let rec split_eithers (left, right) = function
         | [] -> (List.rev left, List.rev right)
@@ -21,9 +17,7 @@ let either_split eithers =
         | (Right(b))::rest -> split_eithers (left, b::right) rest in
     split_eithers ([], []) eithers
 
-(**
-        Reduce a list of options to the values in the Some constructors
-*)
+(** Reduce a list of options to the values in the Some constructors *)
 let filter_option list =
     let rec do_filter rlist = function
         | [] -> List.rev rlist
@@ -47,12 +41,12 @@ let rec lexical_compare list1 list2 = match list1, list2 with
     | (x::xs), (y::ys) -> if x < y then -1 else if x > y then 1 else lexical_compare xs ys
 
 (**
-        Loop through a list and find all the items that are minimum with respect to the total
-        ordering cmp. (If an item is found to be a minimum, any item that is found to
-        be equal to the item is in the returned list.) Note can return any size list.
-        @param cmp A comparator function
-        @param alist A list of items
-        @return A list of one or more items deemed to be the minimum by cmp.
+    Loop through a list and find all the items that are minimum with respect to the total
+    ordering cmp. (If an item is found to be a minimum, any item that is found to
+    be equal to the item is in the returned list.) Note can return any size list.
+    @param cmp A comparator function
+    @param alist A list of items
+    @return A list of one or more items deemed to be the minimum by cmp.
 *)
 let find_all_min cmp alist =
     let rec min_find found items = match found, items with
@@ -65,10 +59,10 @@ let find_all_min cmp alist =
     min_find [] alist
 
 (**
-        Either monad stuffage
-        @param value A monad
-        @param func A function to run on a monad
-        @return The result of func if we're on the left side, or the error if we're on the right
+    Either monad stuffage
+    @param value A monad
+    @param func A function to run on a monad
+    @return The result of func if we're on the left side, or the error if we're on the right
 *)
 let (|->) value func =
     match value with
@@ -76,9 +70,9 @@ let (|->) value func =
         | Right(problem) -> Right(problem)
 
 (**
-        Return the length of a block -- i.e. the total number of statements (recursively) in it
-        @param stmt_list A list of stmt type objects
-        @return An int encoding the length of a block
+    Return the length of a block -- i.e. the total number of statements (recursively) in it
+    @param stmt_list A list of stmt type objects
+    @return An int encoding the length of a block
 *)
 let get_statement_count stmt_list =
     let rec do_count stmts blocks counts = match stmts, blocks with

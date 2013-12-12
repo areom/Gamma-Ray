@@ -14,12 +14,12 @@ type anon_state = {
 }
 
 (**
-        Given the current state, get a label for the class and update the
-        state to be ready for the next time we need a label.
-        @param klass the name of a class (string)
-        @param state anon_state value
-        @return (label, new state)
-    *)
+    Given the current state, get a label for the class and update the
+    state to be ready for the next time we need a label.
+    @param klass the name of a class (string)
+    @param state anon_state value
+    @return (label, new state)
+  *)
 let get_label klass state =
     let (n, labeler) = match map_lookup klass state.labeler with
         | None -> (0, StringMap.add klass 0 state.labeler)
@@ -27,15 +27,15 @@ let get_label klass state =
     (Format.sprintf "anon_%s_%d" klass n, { state with labeler = labeler })
 
 (**
-        Given the initial anon_state, an environment, and an expr_detail, remove all
-        anonymous object instantiations from the expr and replace them with the
-        instantiation of a newly constructed class. This returns a changed expr_detail
-        value and an updated state -- i.e. maybe a new ast class is added to it.
-        @param init_state anon_state value
-        @param env an environment (like those attached to statements in sAST)
-        @param expr_deets an expr_detail to transform
-        @return (new expr detail, updated state)
-    *)
+    Given the initial anon_state, an environment, and an expr_detail, remove all
+    anonymous object instantiations from the expr and replace them with the
+    instantiation of a newly constructed class. This returns a changed expr_detail
+    value and an updated state -- i.e. maybe a new ast class is added to it.
+    @param init_state anon_state value
+    @param env an environment (like those attached to statements in sAST)
+    @param expr_deets an expr_detail to transform
+    @return (new expr detail, updated state)
+  *)
 let deanon_expr_detail init_state env expr_deets =
     let deanon_init formals klass : Ast.func_def =
         let assigner (_, vname) = Ast.Expr(Ast.Assign(Ast.Field(Ast.This, vname), Ast.Id(vname))) in
@@ -79,28 +79,28 @@ let deanon_expr_detail init_state env expr_deets =
         | _ -> (expr_deets, init_state)
 
 (**
-        Update an type-tagged sAST expression to be deanonymized.
-        Returns the deanonymized expr and a possibly updated anon_state
-        @param init_state anon_state value
-        @param env an environment like those attached to stmts in the sAST
-        @param t the type of the expr_detail exp
-        @param exp an expression detail
-        @return ((t, exp'), state') where exp' is exp but deanonymized and
-          state' is an updated version of init_state
-    *)
+    Update an type-tagged sAST expression to be deanonymized.
+    Returns the deanonymized expr and a possibly updated anon_state
+    @param init_state anon_state value
+    @param env an environment like those attached to stmts in the sAST
+    @param t the type of the expr_detail exp
+    @param exp an expression detail
+    @return ((t, exp'), state') where exp' is exp but deanonymized and
+    state' is an updated version of init_state
+  *)
 let deanon_expr init_state env (t, exp) = 
     let (deets, state) = deanon_expr_detail init_state env exp in
     ((t, deets), state)
 
 (**
-        Deanonymize a list of expressions maintaining the state properly throughout.
-        Returns the list of expressions (deanonymized) and the updated state.
-        @param init_state an anon_state value
-        @param env an environment like those attached to statments (sAST)
-        @param list a list of expressions (sAST exprs)
-        @return (list', state') where list' is the deanonymized list and
-          state' is the updated state
-    *)
+    Deanonymize a list of expressions maintaining the state properly throughout.
+    Returns the list of expressions (deanonymized) and the updated state.
+    @param init_state an anon_state value
+    @param env an environment like those attached to statments (sAST)
+    @param list a list of expressions (sAST exprs)
+    @return (list', state') where list' is the deanonymized list and
+    state' is the updated state
+  *)
 let deanon_exprs init_state env list =
     let folder (rexprs, state) expr =
         let (deets, state) = deanon_expr state env expr in
@@ -109,12 +109,12 @@ let deanon_exprs init_state env list =
     (List.rev rexprs, state)
 
 (**
-        Deanonymize a statement.
-        Returns the deanonymized statement and the updated state.
-        @param input_state an anon_state value
-        @param stmt a statement to deanonymize
-        @return (stmt', state') the statement and state, updated.
-    *)
+    Deanonymize a statement.
+    Returns the deanonymized statement and the updated state.
+    @param input_state an anon_state value
+    @param stmt a statement to deanonymize
+    @return (stmt', state') the statement and state, updated.
+  *)
 let rec deanon_stmt input_state stmt =
     let deanon_decl init_state env = function
         | (vdef, Some(expr)) ->
@@ -164,13 +164,13 @@ let rec deanon_stmt input_state stmt =
         | Sast.Super(args, env) -> deanon_super input_state env args
 
 (**
-        Update an entire list of statements to be deanonymized.
-        Maintains the update to the state throughout the computation.
-        Returns a deanonymized list of statements and an updated state.
-        @param init_state an anon_state value
-        @param stmts a list of statements
-        @return (stmts', state') the updated statements and state
-    *)
+    Update an entire list of statements to be deanonymized.
+    Maintains the update to the state throughout the computation.
+    Returns a deanonymized list of statements and an updated state.
+    @param init_state an anon_state value
+    @param stmts a list of statements
+    @return (stmts', state') the updated statements and state
+  *)
 and deanon_stmts init_state stmts =
     let folder (rstmts, state) stmt =
         let (stmt, state) = deanon_stmt state stmt in
@@ -179,24 +179,24 @@ and deanon_stmts init_state stmts =
     (List.rev rstmts, state)
 
 (**
-        Deanonymize the body of a function.
-        Return the updated function and updated state.
-        @param init_state an anon_state value
-        @param func a func_def (sAST)
-        @return (func', state') the updated function and state
-    *)
+    Deanonymize the body of a function.
+    Return the updated function and updated state.
+    @param init_state an anon_state value
+    @param func a func_def (sAST)
+    @return (func', state') the updated function and state
+  *)
 let deanon_func init_state (func : Sast.func_def) =
     let (stmts, state) = deanon_stmts init_state func.body in
     ({ func with body = stmts }, state)
 
 (**
-        Deanonymize an entire list of functions, threading the state
-        throughout and maintaining the changes. Returns the list of
-        functions, updated, and the updated state.
-        @param init_state an anon_state value
-        @param funcs a list of functions
-        @return (funcs', state') the updated functions and state
-    *)
+    Deanonymize an entire list of functions, threading the state
+    throughout and maintaining the changes. Returns the list of
+    functions, updated, and the updated state.
+    @param init_state an anon_state value
+    @param funcs a list of functions
+    @return (funcs', state') the updated functions and state
+  *)
 let deanon_funcs init_state funcs =
     let folder (rfuncs, state) func =
         let (func, state) = deanon_func state func in
@@ -205,12 +205,12 @@ let deanon_funcs init_state funcs =
     (List.rev funcs, state)
 
 (**
-        Deanonymize an Sast member_def
-        Returns the deanonymized member and a possibly updated state.
-        @param init_state an anon_state value
-        @param mem a member to deanonymize
-        @return (mem', state') the updated member and state
-    *)
+    Deanonymize an Sast member_def
+    Returns the deanonymized member and a possibly updated state.
+    @param init_state an anon_state value
+    @param mem a member to deanonymize
+    @return (mem', state') the updated member and state
+  *)
 let deanon_member init_state mem = match mem with
     | Sast.MethodMem(f) ->
         let (func, state) = deanon_func init_state f in
@@ -221,12 +221,12 @@ let deanon_member init_state mem = match mem with
     | mem -> (mem, init_state)
 
 (**
-        Deanonymize a list of members.  Return the deanonymized list
-        and a possibly updated state.
-        @param init_state an anon_state value
-        @param members a list of members to deanonymize
-        @return (mems', state') the updated members and state
-    *)
+    Deanonymize a list of members.  Return the deanonymized list
+    and a possibly updated state.
+    @param init_state an anon_state value
+    @param members a list of members to deanonymize
+    @return (mems', state') the updated members and state
+  *)
 let deanon_memlist (init_state : anon_state) (members : Sast.member_def list) : (Sast.member_def list * anon_state) =
     let folder (rmems, state) mem =
         let (mem, state) = deanon_member state mem in
@@ -235,12 +235,12 @@ let deanon_memlist (init_state : anon_state) (members : Sast.member_def list) : 
     (List.rev rmems, state)
 
 (**
-        Deanonymize an entire class. Return the deanonymized class
-        and an updated state.
-        @param init_state an anon_state value
-        @param aklass an sAST class to deanonymize
-        @return (class', state') the udpated class and state.
-    *)
+    Deanonymize an entire class. Return the deanonymized class
+    and an updated state.
+    @param init_state an anon_state value
+    @param aklass an sAST class to deanonymize
+    @return (class', state') the udpated class and state.
+  *)
 let deanon_class init_state (aklass : Sast.class_def) =
     let s = aklass.sections in
     let (publics, state) = deanon_memlist init_state s.publics in
@@ -258,9 +258,7 @@ let deanon_class init_state (aklass : Sast.class_def) =
     let cleaned = { aklass with sections = sections } in
     { state with clean = cleaned::state.clean }
 
-(**
-        A startng state for deanonymization.
-    *)
+(** A startng state for deanonymization. *)
 let empty_deanon_state = {
     labeler = StringMap.empty;
     deanon = [];
@@ -268,21 +266,21 @@ let empty_deanon_state = {
 }
 
 (**
-        Given global class information and parsed and tagged classes,
-        deanonymize the classes. This will add more classes to the
-        global data, which will be updated accordingly.
-        @param klass_data global class_data info
-        @param sast_klasses tagged sAST class list
-        @return If everything goes okay with updating the global data
-          for each deanonymization, then left((state', data')) will be
-          returned where state' contains all (including newly created)
-          sAST classes in its clean list and data' has been updated to
-          reflect any new classes. If anything goes wrong, Right(issue)
-          is returned, where the issue is just as in building the global
-          class_data info to begin with, but now specific to what goes
-          on in deanonymization (i.e. restricted to those restricted
-          classes themselves).
-    *)
+    Given global class information and parsed and tagged classes,
+    deanonymize the classes. This will add more classes to the
+    global data, which will be updated accordingly.
+    @param klass_data global class_data info
+    @param sast_klasses tagged sAST class list
+    @return If everything goes okay with updating the global data
+    for each deanonymization, then left((state', data')) will be
+    returned where state' contains all (including newly created)
+    sAST classes in its clean list and data' has been updated to
+    reflect any new classes. If anything goes wrong, Right(issue)
+    is returned, where the issue is just as in building the global
+    class_data info to begin with, but now specific to what goes
+    on in deanonymization (i.e. restricted to those restricted
+    classes themselves).
+  *)
 let deanonymize klass_data sast_klasses =
     let rec run_deanon init_state data asts sasts = match asts, sasts with
         | [], [] ->

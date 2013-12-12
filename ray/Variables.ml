@@ -2,20 +2,14 @@ open Ast
 open Util
 open StringModules
 
-(**
-        Module for getting sets of variables
-    *)
+(** Module for getting sets of variables *)
 
-(**
-        Get the formal variables of a function
-    *)
+(** Get the formal variables of a function *)
 let formal_vars func =
     let add_param set (_, v) = StringSet.add v set in
     List.fold_left add_param StringSet.empty func.formals
 
-(**
-        Get the free variables of a list of statements
-    *)
+(** Get the free variables of a list of statements *)
 let free_vars bound stmts =
     let rec get_free_vars free = function
         | [] -> free
@@ -69,16 +63,12 @@ let free_vars bound stmts =
 
     get_free_vars StringSet.empty [(bound, Left(stmts))]
 
-(**
-        Get the free variables in a function.
-    *)
+(** Get the free variables in a function. *)
 let free_vars_func bound func =
     let params = formal_vars func in
     free_vars (StringSet.union bound params) func.body
 
-(**
-        Get the free variables in a whole list of functions.
-    *)
+(** Get the free variables in a whole list of functions. *)
 let free_vars_funcs bound funcs =
     let sets = List.map (free_vars_func bound) funcs in
     List.fold_left StringSet.union StringSet.empty sets
