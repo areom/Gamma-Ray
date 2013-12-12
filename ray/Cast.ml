@@ -1,7 +1,7 @@
-type varkind = Instance | Local
+(*type varkind = Instance | Local
 
 type environment = (string * varkind) Map.Make(String).t
-
+*)
 type cexpr_detail =
     | This
     | Null
@@ -31,11 +31,11 @@ and
 cvar_def = (string * string)
 
 and cstmt =
-    | Decl of cvar_def * cexpr option * environment
-    | If of (cexpr option * cstmt list) list * environment
-    | While of cexpr * cstmt list * environment
-    | Expr of cexpr * environment
-    | Return of cexpr option * environment
+    | Decl of cvar_def * cexpr option * Sast.environment
+    | If of (cexpr option * cstmt list) list * Sast.environment
+    | While of cexpr * cstmt list * Sast.environment
+    | Expr of cexpr * Sast.environment
+    | Return of cexpr option * Sast.environment
 (*    | Super of expr list * environment*)
 (*
 
