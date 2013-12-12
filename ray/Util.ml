@@ -92,16 +92,16 @@ let get_statement_count stmt_list =
 
 (** Make a base 62 counter (alphanums) *)
 let uid_counter digits =
-  let counter = String.make digits '0' in
-  let inc () =
-    let i = ref (digits - 1) in
-    while (!i >= 0) && (String.get counter (!i) = 'z') do
-      String.set counter (!i) '0' ;
-      i := !i - 1
-    done ;
-    String.set counter (!i) (match String.get counter (!i) with
-      | '9' -> 'A'
-      | 'Z' -> 'a'
-      | c -> char_of_int (int_of_char c + 1));
-    String.copy counter in
-  inc
+    let counter = String.make digits '0' in
+    let inc () =
+        let i = ref (digits - 1) in
+        while (!i >= 0) && (String.get counter (!i) = 'z') do
+            String.set counter (!i) '0' ;
+            i := !i - 1
+        done ;
+        String.set counter (!i) (match String.get counter (!i) with
+            | '9' -> 'A'
+            | 'Z' -> 'a'
+            | c -> char_of_int (int_of_char c + 1));
+        String.copy counter in
+    inc
