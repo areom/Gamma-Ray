@@ -11,8 +11,9 @@ and c_expr_detail sastexp =
     | Sast.Null              -> Cast.Null
     | Sast.Id(vname)         -> Cast.Id(vname)
     | Sast.Literal(lit)      -> Cast.Literal(lit)
-    | Sast.Assign(e1, e2)    -> Cast.Assign( sast_to_castexpr e1, sast_to_castexpr e2)
+    | Sast.Assign(e1, e2)    -> Cast.Assign(sast_to_castexpr e1, sast_to_castexpr e2)
     | Sast.Deref(e1, e2)     -> Cast.Deref(sast_to_castexpr e1, sast_to_castexpr e2)
+    | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr e1, e2)
     | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr expr)
     | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr e1, op, sast_to_castexpr e2)
     | _                      -> Cast.Null (* To avoid warning*)

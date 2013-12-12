@@ -12,8 +12,9 @@ type cexpr_detail =
     | Literal of Ast.lit
     | Assign of cexpr * cexpr  (* memory := data -- whether memory is good is a semantic issue *)
     | Deref of cexpr * cexpr (* road[pavement] *)
-(*
-    | Field of expr * string (* road.pavement *)
+
+    | Field of cexpr * string (* road.pavement *)
+(*		
     | Invoc of expr * string * expr list (* receiver.method(args) *)
 *) 
    | Unop of Ast.op * cexpr (* !x *)
