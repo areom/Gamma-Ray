@@ -5,7 +5,7 @@ compile:
 	ocamllex scanner.mll
 	ocamlyacc parser.mly
 
-	#Build up the source compilation
+	#BuildSast up the source compilation
 	ocamlc -c -g ast.mli
 	ocamlc -c -g parser.mli
 	ocamlc -c -g scanner.ml
@@ -25,7 +25,7 @@ compile:
 	ocamlc -c -g Variables.ml
 	ocamlc -c -g freevars.ml
 	ocamlc -c -g Sast.ml
-	ocamlc -c -g Build.ml
+	ocamlc -c -g BuildSast.ml
 	ocamlc -c -g Unanonymous.ml
 	#Make the tools
 	ocamlc -g -o tools/prettify scanner.cmo parser.cmo Inspector.cmo Pretty.cmo WhiteSpace.cmo prettify.cmo
