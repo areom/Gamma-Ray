@@ -39,7 +39,7 @@ let get_label klass state =
 let deanon_expr_detail init_state env expr_deets =
     let deanon_init formals klass : Ast.func_def =
         let assigner (_, vname) = Ast.Expr(Ast.Assign(Ast.Field(Ast.This, vname), Ast.Id(vname))) in
-            { returns = None;
+            {   returns = None;
                 host = None;
                 name = "init";
                 static = false;
@@ -49,10 +49,10 @@ let deanon_expr_detail init_state env expr_deets =
                 inklass = klass; } in
 
         let deanon_klass freedefs klass parent refines =
-            { klass = klass;
+            {   klass = klass;
                 parent = Some(parent);
                 sections =
-                { privates = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs;
+                {   privates = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs;
                     protects = [];
                     publics = [InitMem(deanon_init freedefs klass)];
                     refines = refines;
@@ -248,22 +248,20 @@ let deanon_class init_state (aklass : Sast.class_def) =
     let (privates, state) = deanon_memlist state s.privates in
     let (refines, state) = deanon_funcs state s.refines in
     let (mains, state) = deanon_funcs state s.mains in
-    let sections : Sast.class_sections_def = {
-        publics = publics;
-        protects = protects;
-        privates = privates;
-        refines = refines;
-        mains = mains
-    } in
+    let sections : Sast.class_sections_def =
+        {   publics = publics;
+            protects = protects;
+            privates = privates;
+            refines = refines;
+            mains = mains } in
     let cleaned = { aklass with sections = sections } in
     { state with clean = cleaned::state.clean }
 
 (** A startng state for deanonymization. *)
-let empty_deanon_state = {
-    labeler = StringMap.empty;
-    deanon = [];
-    clean = [];
-}
+let empty_deanon_state =
+    {   labeler = StringMap.empty;
+        deanon = [];
+        clean = []; }
 
 (**
     Given global class information and parsed and tagged classes,

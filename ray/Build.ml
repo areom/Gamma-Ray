@@ -233,7 +233,7 @@ let rec attach_bindings klass_data kname stmts initial_env =
 let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
     let sast_func : Sast.func_def =
-        { returns = func.returns;
+        {   returns = func.returns;
             host = func.host;
             name = func.name;
             formals = func.formals;
@@ -259,14 +259,14 @@ let ast_to_sast klass_data (ast_klass : Ast.class_def) =
     let funs = List.map (fun f -> ast_func_to_sast_func klass_data ast_klass.klass f env) in
 
     let sections : Sast.class_sections_def =
-        { publics = mems s.publics;
+        {   publics = mems s.publics;
             protects = mems s.protects;
             privates = mems s.privates;
             refines = funs s.refines;
             mains = funs s.mains } in
 
     let sast_klass : Sast.class_def =
-        { klass = ast_klass.klass;
+        {   klass = ast_klass.klass;
             parent = ast_klass.parent;
             sections = sections } in
 
