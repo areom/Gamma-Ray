@@ -10,21 +10,10 @@ open Util
 type anon_state = {
     labeler : int lookup_map ;    (** Label deanonymized classes *)
     deanon : Ast.class_def list ; (** List of Ast.class_def classes that are deanonymized. *)
-    clean : Sast.class_def list   (** List of clean Sast.class_def classes *)
+    clean : Sast.class_def list ; (** List of clean Sast.class_def classes *)
+    data : Klass.class_data ;     (** A class_data record used for typing *)
+    current : string ;            (** The class that is currently being examined *)
 }
-
-(**
-    Given the current state, get a label for the class and update the
-    state to be ready for the next time we need a label.
-    @param klass the name of a class (string)
-    @param state anon_state value
-    @return (label, new state)
-  *)
-let get_label klass state =
-    let (n, labeler) = match map_lookup klass state.labeler with
-        | None -> (0, StringMap.add klass 0 state.labeler)
-        | Some(n) -> (n+1, StringMap.add klass (n+1) state.labeler) in
-    (Format.sprintf "anon_%s_%d" klass n, { state with labeler = labeler })
 
 (**
     Given the initial anon_state, an environment, and an expr_detail, remove all
@@ -37,40 +26,64 @@ let get_label klass state =
     @return (new expr detail, updated state)
   *)
 let deanon_expr_detail init_state env expr_deets =
+    let get_label state klass =
+        let (n, labeler) = match map_lookup klass state.labeler with
+            | None -> (0, StringMap.add klass 0 state.labeler)
+            | Some(n) -> (n+1, StringMap.add klass (n+1) state.labeler) in
+        (Format.sprintf "anon_%s_%d" klass n, { state with labeler = labeler }) in
+
+    let get_var_type state env var_name =
+        match map_lookup var_name env with
+            | Some(vinfo) -> Some(fst vinfo)
+            | None -> match Klass.class_field_lookup state.data state.current var_name with
+                | Some((_, vtype, _)) -> Some(vtype)
+                | _ -> None in
+
     let deanon_init formals klass : Ast.func_def =
         let assigner (_, vname) = Ast.Expr(Ast.Assign(Ast.Field(Ast.This, vname), Ast.Id(vname))) in
-            {   returns = None;
-                host = None;
-                name = "init";
-                static = false;
-                formals = formals;
-                body = List.map assigner formals;
-                section = Publics;
-                inklass = klass; } in
+        {   returns = None;
+            host = None;
+            name = "init";
+            static = false;
+            formals = formals;
+            body = List.map assigner formals;
+            section = Publics;
+            inklass = klass; } in
 
-        let deanon_klass freedefs klass parent refines =
-            {   klass = klass;
-                parent = Some(parent);
-                sections =
-                {   privates = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs;
-                    protects = [];
-                    publics = [InitMem(deanon_init freedefs klass)];
-                    refines = refines;
-                    mains = []; } } in
+    let deanon_klass freedefs klass parent refines =
+        {   klass = klass;
+            parent = Some(parent);
+            sections =
+            {   privates = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs;
+                protects = [];
+                publics = [InitMem(deanon_init freedefs klass)];
+                refines = refines;
+                mains = []; } } in
 
-    let deanon_freedefs funcs env =
+    let deanon_freedefs state env funcs = 
         let freeset = Variables.free_vars_funcs StringSet.empty funcs in
         let freevars = List.sort compare (StringSet.elements freeset) in
-        let unknown = List.filter (fun v -> not (StringMap.mem v env)) freevars in
-        let add_type v = let (t, _) = StringMap.find v env in (t, v) in
-        match unknown with
-            | [] -> List.map add_type freevars
-            | _ -> raise(Failure("Unknown variables " ^ String.concat ", " unknown ^ " within anonymous object definition.")) in
+
+        let none_snd = function
+          | (None, v) -> Some(v)
+          | _ -> None in
+        let some_fst = function
+          | (Some(t), v) -> Some((t, v))
+          | _ -> None in
+        let add_type v = (get_var_type state env v, v) in
+
+        let typed = List.map add_type freevars in
+        let unknowns = List.map none_snd typed in
+        let knowns = List.map some_fst typed in
+
+        match Util.filter_option unknowns with
+            | [] -> Util.filter_option knowns
+            | vs -> raise(Failure("Unknown variables " ^ String.concat ", " vs ^ " within anonymous object definition.")) in
 
     match expr_deets with
         | Sast.Anonymous(klass, args, refines) ->
-            let (newklass, state) = get_label klass init_state in
-            let freedefs = deanon_freedefs refines env in
+            let (newklass, state) = get_label init_state klass in
+            let freedefs = deanon_freedefs state env refines in
             let ast_class = deanon_klass freedefs newklass klass refines in
             let args = List.map (fun (t, v) -> (t, Sast.Id(v))) freedefs in
             let instance = Sast.NewObj(newklass, args) in
@@ -243,7 +256,8 @@ let deanon_memlist (init_state : anon_state) (members : Sast.member_def list) : 
   *)
 let deanon_class init_state (aklass : Sast.class_def) =
     let s = aklass.sections in
-    let (publics, state) = deanon_memlist init_state s.publics in
+    let state = { init_state with current = aklass.klass } in
+    let (publics, state) = deanon_memlist state s.publics in
     let (protects, state) = deanon_memlist state s.protects in
     let (privates, state) = deanon_memlist state s.privates in
     let (refines, state) = deanon_funcs state s.refines in
@@ -255,13 +269,15 @@ let deanon_class init_state (aklass : Sast.class_def) =
             refines = refines;
             mains = mains } in
     let cleaned = { aklass with sections = sections } in
-    { state with clean = cleaned::state.clean }
+    { state with clean = cleaned::state.clean ; current = "" }
 
 (** A startng state for deanonymization. *)
-let empty_deanon_state =
+let empty_deanon_state data =
     {   labeler = StringMap.empty;
         deanon = [];
-        clean = []; }
+        clean = [];
+        data = data;
+        current = ""; }
 
 (**
     Given global class information and parsed and tagged classes,
@@ -280,18 +296,19 @@ let empty_deanon_state =
     classes themselves).
   *)
 let deanonymize klass_data sast_klasses =
-    let rec run_deanon init_state data asts sasts = match asts, sasts with
+    let rec run_deanon init_state asts sasts = match asts, sasts with
         | [], [] ->
-            Left((init_state, data))
+            Left(init_state)
 
         | [], klass::rest ->
             let state = deanon_class init_state klass in
-            run_deanon state data state.deanon rest
+            run_deanon state state.deanon rest
 
-        | klass::rest, _ -> match Klass.append_leaf data klass with
+        | klass::rest, _ -> match Klass.append_leaf init_state.data klass with
             | Left(data) ->
                 let sast_klass = Build.ast_to_sast data klass in
-                run_deanon init_state data rest (sast_klass::sasts)
+                let state = { init_state with data = data } in
+                run_deanon state rest (sast_klass::sasts)
             | Right(issue) -> Right(issue) in
 
-    run_deanon empty_deanon_state klass_data [] sast_klasses
+    run_deanon (empty_deanon_state klass_data) [] sast_klasses
