@@ -58,6 +58,7 @@ and func_def = {
     body    : sstmt list;
     section : Ast.class_section;  (* Makes things easier later *)
     inklass : string;
+    uid     : string;
 }
 
 (* A member is either a variable or some sort of function *)
