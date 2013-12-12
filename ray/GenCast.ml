@@ -31,12 +31,12 @@ and cstmt sstmt =
         | None     -> None
     in
 					
-		let rec getiflist iflist =
-		    match iflist with
-				  []                   -> []
-				| [(optexpr, slist)]   -> [(getoptexpr optexpr, cstmtlist slist)]
-				| (optexpr, slist)::tl -> (getoptexpr optexpr, cstmtlist slist):: getiflist tl    
-		in
+    let rec getiflist iflist =
+        match iflist with
+	      []                   -> []
+		| [(optexpr, slist)]   -> [(getoptexpr optexpr, cstmtlist slist)]
+		| (optexpr, slist)::tl -> (getoptexpr optexpr, cstmtlist slist):: getiflist tl    
+	in
 
     match sstmt with
       Sast.Decl(var_def, optexpr, env) -> Cast.Decl(var_def, getoptexpr optexpr, env)
