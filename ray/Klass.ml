@@ -388,6 +388,23 @@ let class_var_lookup data klass_name var_name =
         | _ -> None
 
 (**
+    Given a class_data record, a class_name, and a variable name, lookup the class in the hierarchy
+    that provides access to that variable from within that class (i.e. private in that class or
+    public / protected in an ancestor).
+    @param data A class_data record.
+    @param klass_name The name of a class (string)
+    @param var_name The name of a variable variable (string).
+    @return (class (string), type (string), class_section) option (None if not found).
+  *)
+let class_field_lookup data klass_name var_name =
+    let var_lookup klass = class_var_lookup data klass var_name in
+    let rec lookup klass sections = match var_lookup klass, klass with
+        | Some((sect, vtype)), _ when List.mem sect sections -> Some((klass, vtype, sect))
+        | _, "Object" -> None
+        | _, _ -> lookup (StringMap.find klass data.parents) [Publics; Protects] in
+    lookup klass_name [Publics; Protects; Privates]
+
+(**
     Given a class_data record, a class name, and a method name, lookup all the methods in the
     given class with that name.
     @param data A class_data record
