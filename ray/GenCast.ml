@@ -2,13 +2,13 @@
 let c_expr_detail sastexp =
 	
 	match sastexp with
-	This ->
-	| Null ->
-	| Id   ->
-	| Literal ->
-	| Assign ->
-	| Unop  ->
-	| Binop ->
+	  Sast.This ->             
+	| Sast.Null ->
+	| Sast.Id(vname)   ->    
+	| Sast.Literal(lit) ->
+	| Sast.Assign(e1, e2) ->
+	| Sast.Unop(op, expr)  ->
+	| Sast.Binop(e1, op, e2) ->
 
 let sast_to_castexpr sast_expr = 
 
