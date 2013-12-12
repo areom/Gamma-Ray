@@ -60,7 +60,7 @@ let deanon_expr_detail init_state env expr_deets =
                 refines = refines;
                 mains = []; } } in
 
-    let deanon_freedefs state env funcs = 
+    let deanon_freedefs state env funcs =
         let freeset = Variables.free_vars_funcs StringSet.empty funcs in
         let freevars = List.sort compare (StringSet.elements freeset) in
 
@@ -101,7 +101,7 @@ let deanon_expr_detail init_state env expr_deets =
     @return ((t, exp'), state') where exp' is exp but deanonymized and
     state' is an updated version of init_state
   *)
-let deanon_expr init_state env (t, exp) = 
+let deanon_expr init_state env (t, exp) =
     let (deets, state) = deanon_expr_detail init_state env exp in
     ((t, deets), state)
 
