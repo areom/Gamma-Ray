@@ -90,3 +90,18 @@ let get_statement_count stmt_list =
                 do_count rest (ifstmts @ blocks) (counts + 1) in
     do_count stmt_list [] 0
 
+(** Make a base 62 counter (alphanums) *)
+let uid_counter digits = String.make digits '0'
+
+(** Increment a base 62 counter. Note that the value is changed, so earlier references are clobbered. *)
+let uid_inc counter =
+  let i = ref (String.length counter - 1) in
+  while (!i >= 0) && (String.get counter (!i) = 'z') do
+    String.set counter (!i) '0' ;
+    i := !i - 1
+  done ;
+  String.set counter (!i) (match String.get counter (!i) with
+    | '9' -> 'A'
+    | 'Z' -> 'a'
+    | c -> char_of_int (int_of_char c + 1)) ;
+  counter
