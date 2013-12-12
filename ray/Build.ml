@@ -25,7 +25,7 @@ let null_class = "_Null_"
   *)
 let rec getInstanceType vname klass_data kname =
     match class_var_lookup klass_data kname vname, kname with
-        | Some(varmap), _ -> Some(varmap, kname)
+        | Some(varinfo), _ -> Some(varinfo, kname)
         | None, "Object" -> None
         | _, _ -> getInstanceType vname klass_data (StringMap.find kname klass_data.parents)
 
