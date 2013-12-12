@@ -32,12 +32,12 @@ type expr_detail =
     | Refine of string * expr list * string option
     | Refinable of string (* refinable *)
 
-and  
+and
 
 expr = string * expr_detail
 
-and 
-  
+and
+
 var_def = (string * string)
 
 and sstmt =
@@ -71,7 +71,7 @@ type class_sections_def = {
     refines  : func_def list;
     mains    : func_def list;
 }
-	
+
 (* Just pop init and main in there? *)
 type class_def = {
     klass    : string;
