@@ -149,7 +149,7 @@ let rec eval klass_data kname env exp =
     let get_unop op expr = match op with
         | Ast.Arithmetic(Neg) -> let (typ, _) as evaled = eval' expr in (typ, Sast.Unop(op, evaled))
         | Ast.CombTest(Not) -> ("Boolean", Sast.Unop(op, eval' expr))
-        | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_op op ^ " given.")) in
+        | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_ast_op op ^ " given.")) in
 
     match exp with
         | Ast.This -> (current_class, Sast.This)
