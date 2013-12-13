@@ -161,7 +161,8 @@ callable:
         formals = $1;
         body    = $2;
         section = Privates;
-        inklass = "" } }
+        inklass = "";
+        uid     = UID.uid_counter () } }
 
 /* Statements */
 stmt_block:

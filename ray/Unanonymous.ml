@@ -48,7 +48,8 @@ let deanon_expr_detail init_state env expr_deets =
             formals = formals;
             body = List.map assigner formals;
             section = Publics;
-            inklass = klass; } in
+            inklass = klass;
+            uid = UID.uid_counter () } in
 
     let deanon_klass freedefs klass parent refines =
         {   klass = klass;

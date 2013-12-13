@@ -229,9 +229,6 @@ let rec attach_bindings klass_data kname stmts initial_env =
 
     List.rev (fst(List.fold_left build_env ([], initial_env) stmts))
 
-
-let func_id_counter = Util.uid_counter 8
-
 let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
     let sast_func : Sast.func_def =
@@ -243,7 +240,7 @@ let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
             body = attach_bindings klass_data kname func.body with_params;
             section = func.section;
             inklass = func.inklass;
-            uid = func_id_counter(); } in
+            uid = func.uid; } in
     sast_func
 
 let ast_mem_to_sast_mem klass_data kname (mem : Ast.member_def) initial_env =
