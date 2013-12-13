@@ -285,7 +285,7 @@ and inspect_ast_class_section (sect : Ast.class_section) = match sect with
     | Refines  -> "Refines"
     | Mains    -> "Mains"
 and inspect_ast_func_def (func : Ast.func_def) =
-    Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s, section = %s, inklass = %s }"
+    Printf.sprintf "{ returns = %s, host = %s, name = %s, static = %B, formals = %s, body = %s, section = %s, inklass = %s, uid = %s }"
     (inspect_opt _id func.returns)
     (inspect_opt _id func.host)
     func.name
@@ -294,6 +294,7 @@ and inspect_ast_func_def (func : Ast.func_def) =
     (inspect_str_list inspect_ast_stmt func.body)
     (inspect_ast_class_section func.section)
     func.inklass
+    func.uid
 
 let inspect_ast_member_def (mem : Ast.member_def) = match mem with
     | VarMem(vmem) -> Printf.sprintf "VarMem(%s)" (inspect_ast_var_def vmem)

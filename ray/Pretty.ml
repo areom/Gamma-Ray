@@ -82,7 +82,7 @@ and class_section = function
     | Privates -> "Privates"
     | Refines  -> "Refines"
     | Mains    -> "Mains"
-and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s,\n%sinklass = %s\n%s}"
+and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s,\n%sname = %s,\n%sstatic = %B,\n%sformals = %s,\n%sbody = %s,\n%ssection = %s,\n%sinklass = %s,\n%suid = %s\n%s}"
     (indent (depth-1))
     (indent depth)
     (pp_opt _id func.returns)
@@ -100,6 +100,8 @@ and pp_func_def depth func = Printf.sprintf "\n%s{\n%sreturns = %s,\n%shost = %s
     (class_section func.section)
     (indent depth)
     func.inklass
+    (indent depth)
+    func.uid
     (indent (depth-1))
 
 let pp_member_def depth = function
