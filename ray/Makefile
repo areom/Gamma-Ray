@@ -27,6 +27,8 @@ compile:
 	ocamlc -c -g Sast.ml
 	ocamlc -c -g BuildSast.ml
 	ocamlc -c -g Unanonymous.ml
+	ocamlc -c -g Cast.ml
+	ocamlc -c -g GenCast.ml
 	#Make the tools
 	ocamlc -g -o tools/prettify UID.cmo scanner.cmo parser.cmo Inspector.cmo Pretty.cmo WhiteSpace.cmo prettify.cmo
 	ocamlc -g -o tools/inspect UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo

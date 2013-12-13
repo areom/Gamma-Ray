@@ -74,23 +74,23 @@ let rec getAncestor klass_data recvr methd argtypelist section =
     match best_method klass_data parent methd argtypelist section, parent with
         | None, "Object" -> raise(Failure "Method not found")
         | None, _ -> getAncestor klass_data parent methd argtypelist section
-        | Some(fdef), _ -> getRetType fdef
+        | Some(fdef), _ -> (*getRetType*) fdef
 
-let getPubMethodType klass_data recvr methd arglist =
+let getPubMethod(*Type*) klass_data recvr methd arglist =
     let argtypes = List.map fst arglist in
     let section = [Ast.Publics] in
     match best_method klass_data recvr methd argtypes section, recvr with
         | None, "Object" -> raise(Failure "Method not found")
         | None, _ -> getAncestor klass_data recvr methd argtypes section
-        | Some(fdef), _ -> getRetType fdef
+        | Some(fdef), _ -> (*getRetType*) fdef
 
-let getInstanceMethodType klass_data recvr methd arglist =
+let getInstanceMethod(*Type*) klass_data recvr methd arglist =
     let argtypes = List.map fst arglist in
     let section = [Ast.Privates; Ast.Protects; Ast.Publics] in
     match best_method klass_data recvr methd argtypes section, recvr with
         | None, "Object" -> raise(Failure "Method not found")
         | None, _ -> getAncestor klass_data recvr methd argtypes (List.tl section)
-        | Some(fdef), _ -> getRetType fdef
+        | Some(fdef), _ -> (*getRetType*) fdef
 
 let rec eval klass_data kname env exp =
     let eval' expr = eval klass_data kname env expr in
@@ -103,10 +103,10 @@ let rec eval klass_data kname env exp =
     let get_invoc expr methd elist =
         let (recvr_type, _) as recvr = eval' expr in
         let arglist = eval_exprlist elist in
-        let mtype = if recvr_type = current_class
-            then getInstanceMethodType klass_data recvr_type methd arglist
-            else getPubMethodType klass_data recvr_type methd arglist in
-            (mtype, Sast.Invoc(recvr, methd, arglist)) in
+        let mfdef(*mtype*) = if recvr_type = current_class
+            then getInstanceMethod(*Type*) klass_data recvr_type methd arglist
+            else getPubMethod(*Type*) klass_data recvr_type methd arglist in
+            (getRetType mfdef (*mtype*), Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
 
     let get_assign e1 e2 =
         let (t1, t2) = (eval' e1, eval' e2) in

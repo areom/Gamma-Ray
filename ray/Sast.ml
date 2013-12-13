@@ -26,7 +26,7 @@ type expr_detail =
     | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
     | Deref of expr * expr (* road[pavement] *)
     | Field of expr * string (* road.pavement *)
-    | Invoc of expr * string * expr list (* receiver.method(args) *)
+    | Invoc of expr * string * expr list * string (* receiver.method(args) * bestmethod_uid  *)
     | Unop of Ast.op * expr (* !x *)
     | Binop of expr * Ast.op * expr (* x + y *)
     | Refine of string * expr list * string option
