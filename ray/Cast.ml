@@ -14,7 +14,7 @@ type cexpr_detail =
     | Deref of cexpr * cexpr (* road[pavement] *)
 
     | Field of cexpr * string (* road.pavement *)
-    | Invoc of string * string * cexpr list (*Invoc(receivertype, functionname, args) *)
+    | Invoc of cexpr * string * cexpr list (*Invoc(receiver, functionname, args) *)
     | Unop of Ast.op * cexpr (* !x *)
     | Binop of cexpr * Ast.op * cexpr (* x + y *)
 (* 
