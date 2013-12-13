@@ -3,6 +3,8 @@
 let rec sast_to_castexpr sast_expr =
     (fst sast_expr, c_expr_detail (snd sast_expr) )
 
+and sast_to_castexprlist explist  = List.map sast_to_castexpr explist
+
 (*Conver the sast expr_detail to cast_expr detail*)
 and c_expr_detail sastexp =
 
@@ -16,6 +18,7 @@ and c_expr_detail sastexp =
     | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr e1, e2)
     | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr expr)
     | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr e1, op, sast_to_castexpr e2)
+    | Sast.Invoc(recv, fname, args) -> Cast.Invoc(fst recv, fname (*newfname*), sast_to_castexprlist args) 
     | _                      -> Cast.Null (* To avoid warning*)
 
 
