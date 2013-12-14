@@ -38,7 +38,7 @@ and cstmt =
     | Super of cexpr list * Sast.environment
 
 
-and cfunc_def = {
+and cfunc = {
     returns : string option;
     uid     : string;
     static  : bool;
@@ -47,7 +47,7 @@ and cfunc_def = {
 }
 	
 (* The bare minimum for a struct represention *)
-type class_def = {
+type class_struct = {
     klass     : string list; (* It's important to know all the possible classes, in ascending order up to Object. The first one becomes the name. *)
     refines   : string list; (* The uids of all the refinements *)
     variables : cvar_def list;
