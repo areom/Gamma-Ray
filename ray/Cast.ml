@@ -36,19 +36,17 @@ and cstmt =
     | Expr of cexpr * Sast.environment
     | Return of cexpr option * Sast.environment
     | Super of cexpr list * Sast.environment
-(*
+
 
 and cfunc_def = {
     returns : string option;
-    host    : string option;
-    name    : string;
+    uid     : string;
     static  : bool;
     formals : cvar_def list;
-    body    : sstmt list;
-    section : Ast.class_section;  (* Makes things easier later *)
-    inklass : string;
+    body    : cstmt list;
 }
 
+(*
 (* A member is either a variable or some sort of function *)
 type member_def = VarMem of cvar_def | MethodMem of func_def | InitMem of func_def
 
