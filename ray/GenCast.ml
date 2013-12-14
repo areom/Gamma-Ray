@@ -50,8 +50,13 @@ and cstmt sstmt =
     | Sast.Super(exprlist, env)       -> Cast.Super(sast_to_castexprlist exprlist, env)
     | _                                -> raise (Failure "Yet to implement all statement")
 
-let sast_to_castfunc func =
-    let cast_func : Cast.cfunc_def =
+(**
+    Trim up the sast func_def to the cast cfunc_def
+    @param func It's a sast func_def. Woo.
+    @return It's a cast cfunc_def. Woo.
+*)
+let sast_to_cast_func func =
+    let cast_func : Cast.cfunc =
         {
             return = func.return;
             uid = func.uid;
@@ -61,3 +66,16 @@ let sast_to_castfunc func =
         } in
     cast_func
 
+(**
+    Pull apart a Sast.class_def
+    @param cdef A sast class_def
+    @return An ordered pair of the cast class_def and its functions serialized
+*)
+let sast_to_cast_cdef cdef =
+    let cast_cdef : Cast.class_struct =
+        {
+            klass     = cdef.klass;
+            refines   = flatten_refines cdef.sections.refines;
+            variables = flatten_variables cdef.sections;
+        } in
+    cast_cdef
