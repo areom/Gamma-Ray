@@ -45,26 +45,14 @@ and cfunc_def = {
     formals : cvar_def list;
     body    : cstmt list;
 }
-
-(*
-(* A member is either a variable or some sort of function *)
-type member_def = VarMem of cvar_def | MethodMem of func_def | InitMem of func_def
-
-(* Things that can go in a class *)
-type class_sections_def = {
-    privates : member_def list;
-    protects : member_def list;
-    publics  : member_def list;
-    refines  : func_def list;
-    mains    : func_def list;
-}
 	
-(* Just pop init and main in there? *)
+(* The bare minimum for a struct represention *)
 type class_def = {
-    klass    : string;
-    parent   : string option;
-    sections : class_sections_def;
+    klass     : string list; (* It's important to know all the possible classes, in ascending order up to Object. The first one becomes the name. *)
+    refines   : string list; (* The uids of all the refinements *)
+    variables : cvar_def list;
 }
 
-type program = class_def list
-*)
+type program_entry = class_def | cfunc_def | main_invoke
+
+type program = program_entry list

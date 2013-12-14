@@ -49,3 +49,6 @@ and cstmt sstmt =
     | Sast.Return(optexpr,env)         -> Cast.Return(getoptexpr optexpr, env)
     | Sast.Super(exprlist, env)       -> Cast.Super(sast_to_castexprlist exprlist, env)
     | _                                -> raise (Failure "Yet to implement all statement")
+
+let flatten_cast sast =
+    
