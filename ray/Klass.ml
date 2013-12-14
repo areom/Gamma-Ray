@@ -761,6 +761,20 @@ let print_class_data data =
                                       (count Refines funcs) (count Mains funcs)
                                       (count Privates vars) (count Protects vars) (count Publics vars) in
 
+    let print_list list =
+        let rec list_printer spaces endl space = function
+            | [] -> if endl then () else print_newline ()
+            | list when spaces = 0 -> print_string "\t"; list_printer 8 false false list
+            | list when spaces > 60 -> print_newline (); list_printer 0 true false list
+            | item::rest ->
+              if space then print_string " " else ();
+              print_string item;
+              list_printer (spaces + String.length item) false true rest in
+        list_printer 0 true false list in
+
+    Printf.printf "Types:\n";
+    print_list (StringSet.elements data.known);
+    print_newline ();
     map_printer data.classes "Classes" class_printer;
     print_newline ();
     map_printer data.parents "Parents" id;
