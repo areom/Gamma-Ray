@@ -46,7 +46,7 @@ and sstmt =
     | While of expr * sstmt list * environment
     | Expr of expr * environment
     | Return of expr option * environment
-    | Super of expr list * environment
+    | Super of expr list *string * environment (**arglist, uidof super init, env**)
 
 
 and func_def = {

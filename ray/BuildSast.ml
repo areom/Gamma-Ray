@@ -92,6 +92,7 @@ let getInstanceMethod(*Type*) klass_data recvr methd arglist =
         | None, _ -> getAncestor klass_data recvr methd argtypes (List.tl section)
         | Some(fdef), _ -> (*getRetType*) fdef
 
+
 let rec eval klass_data kname env exp =
     let eval' expr = eval klass_data kname env expr in
     let eval_exprlist elist = List.map eval' elist in
@@ -190,6 +191,16 @@ let rec attach_bindings klass_data kname stmts initial_env =
     let attach' = attach_bindings klass_data kname in
     let eval_exprlist env elist = List.map (eval' env) elist in
 
+    let rec get_superinit kname arglist =
+        let parent = StringMap.find kname klass_data.parents in
+        let argtypes = List.map fst arglist in
+        match best_method klass_data parent "init" argtypes [Ast.Publics] with
+            | None       -> if kname != "Object" then
+                                 get_superinit parent arglist
+                            else
+                                 raise(Failure "Cannot find super init")
+            | Some(fdef) -> fdef.uid in
+
     (* Helper function for building a predicate expression *)
     let build_predicate pred_env exp = match eval' pred_env exp with
         | ("Boolean", _) as evaled -> evaled
@@ -217,8 +228,10 @@ let rec attach_bindings klass_data kname stmts initial_env =
     let build_declstmt vdef opt_expr decl_env = Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env) in
     let build_returnstmt opt_expr ret_env = Sast.Return(opt_eval opt_expr ret_env, ret_env) in
     let build_exprstmt expr expr_env = Sast.Expr(eval' expr_env expr, expr_env) in
-    let build_superstmt expr_list super_env = Sast.Super(eval_exprlist super_env expr_list, super_env) in
-
+    let build_superstmt expr_list super_env =
+        let arglist = eval_exprlist super_env expr_list in
+        Sast.Super(arglist, get_superinit kname arglist, super_env)
+    in
     (* Ast statement -> (Sast.Statement, Environment Update Option) *)
     let updater in_env = function
         | Ast.While(expr, slist)   -> (build_whilestmt expr slist in_env, None)
