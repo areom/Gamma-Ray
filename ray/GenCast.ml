@@ -1,3 +1,5 @@
+open Sast
+open Cast
 
 (*Convert the sast expr to cast expr*)
 let rec sast_to_castexpr sast_expr =
@@ -55,23 +57,34 @@ and cstmt sstmt =
     @param func It's a sast func_def. Woo.
     @return It's a cast cfunc_def. Woo.
 *)
-let sast_to_cast_func func =
-    let cast_func : Cast.cfunc =
+let sast_to_cast_func (func : Sast.func_def) =
+    let (cast_func : Cast.cfunc) =
         {
-            return = func.return;
+            returns = func.returns;
             uid = func.uid;
             formals = func.formals;
             static = func.static;
             body = cstmtlist func.body;
         } in
     cast_func
-
+(**
 (**
     Pull apart a Sast.class_def
     @param cdef A sast class_def
     @return An ordered pair of the cast class_def and its functions serialized
 *)
 let sast_to_cast_cdef cdef =
+    let flatten_refines refines =
+      
+    in
+
+    let rec flatten_section_variables section =
+        match refines with
+        | Sast.VarMem(v)::rest ->  
+        | [] 
+        | 
+    in
+
     let cast_cdef : Cast.class_struct =
         {
             klass     = cdef.klass;
@@ -79,3 +92,4 @@ let sast_to_cast_cdef cdef =
             variables = flatten_variables cdef.sections;
         } in
     cast_cdef
+*)
