@@ -107,6 +107,11 @@ let rec eval klass_data kname env exp =
             then getInstanceMethod(*Type*) klass_data recvr_type methd arglist
             else getPubMethod(*Type*) klass_data recvr_type methd arglist in
             (getRetType mfdef (*mtype*), Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
+    
+    let get_init kname exprlist =
+        let arglist = eval_exprlist exprlist in
+        let mfdef = List.hd (class_method_lookup klass_data kname "init") in
+        (kname, Sast.NewObj(kname, arglist, mfdef.uid)) in
 
     let get_assign e1 e2 =
         let (t1, t2) = (eval' e1, eval' e2) in
@@ -156,7 +161,7 @@ let rec eval klass_data kname env exp =
         | Ast.Null -> (null_class, Sast.Null)
         | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
         | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
-        | Ast.NewObj(s1, elist) -> (s1, Sast.NewObj(s1, eval_exprlist elist))
+        | Ast.NewObj(s1, elist) -> get_init s1 elist
         | Ast.Field(expr, mbr) -> get_field expr mbr
         | Ast.Invoc(expr, methd, elist) -> get_invoc expr methd elist
         | Ast.Assign(e1, e2) -> get_assign e1 e2
