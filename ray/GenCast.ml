@@ -67,29 +67,35 @@ let sast_to_cast_func (func : Sast.func_def) =
             body = cstmtlist func.body;
         } in
     cast_func
-(**
+
 (**
     Pull apart a Sast.class_def
     @param cdef A sast class_def
     @return An ordered pair of the cast class_def and its functions serialized
 *)
-let sast_to_cast_cdef cdef =
+let sast_to_cast_cdef (cdef : Sast.class_def) =
+    (** Flatten out our refine list into uids *)
     let flatten_refines refines =
-      
+        List.map (fun (x : Sast.func_def) -> x.uid) refines 
     in
 
+    (** Pick out variable members *)
     let rec flatten_section_variables section =
-        match refines with
-        | Sast.VarMem(v)::rest ->  
-        | [] 
-        | 
+        match section with
+        | Sast.VarMem(v)::rest -> v::(flatten_section_variables rest)
+        | [] -> []
+        | _::rest -> (flatten_section_variables rest) 
+    in
+    let flatten_variables sections =
+        (flatten_section_variables sections.privates)
+        @ (flatten_section_variables sections.protects)
+        @ (flatten_section_variables sections.publics)
     in
 
     let cast_cdef : Cast.class_struct =
         {
-            klass     = cdef.klass;
+            klass     = cdef.klass::[];
             refines   = flatten_refines cdef.sections.refines;
             variables = flatten_variables cdef.sections;
         } in
     cast_cdef
-*)
