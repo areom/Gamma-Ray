@@ -110,7 +110,11 @@ let rec eval klass_data kname env exp =
     
     let get_init kname exprlist =
         let arglist = eval_exprlist exprlist in
-        let mfdef = List.hd (class_method_lookup klass_data kname "init") in
+        let argtypes = List.map fst arglist in
+        let mfdef =
+        match best_method klass_data kname "init" argtypes [Ast.Publics] with 
+            | None       -> raise(Failure "Constructor not found")
+            | Some(fdef) -> fdef in
         (kname, Sast.NewObj(kname, arglist, mfdef.uid)) in
 
     let get_assign e1 e2 =
