@@ -50,5 +50,14 @@ and cstmt sstmt =
     | Sast.Super(exprlist, env)       -> Cast.Super(sast_to_castexprlist exprlist, env)
     | _                                -> raise (Failure "Yet to implement all statement")
 
-let flatten_cast sast =
-    
+let sast_to_castfunc func =
+    let cast_func : Cast.cfunc_def =
+        {
+            return = func.return;
+            uid = func.uid;
+            formals = func.formals;
+            static = func.static;
+            body = cstmtlist func.body;
+        } in
+    cast_func
+

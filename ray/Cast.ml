@@ -53,6 +53,8 @@ type class_def = {
     variables : cvar_def list;
 }
 
+type main_invoke = MainInvoke of string (* UID really *)
+
 type program_entry = class_def | cfunc_def | main_invoke
 
 type program = program_entry list
