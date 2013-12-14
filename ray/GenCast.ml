@@ -49,8 +49,9 @@ and cstmt sstmt =
     | Sast.If(iflist, env)             -> Cast.If(getiflist iflist, env)
     | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr expr, cstmtlist sstmtlist, env)
     | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr exp, env)
-    | Sast.Return(optexpr,env)         -> Cast.Return(getoptexpr optexpr, env)
-    | Sast.Super(exprlist, env)       -> Cast.Super(sast_to_castexprlist exprlist, env)
+    | Sast.Return(optexpr, env)         -> Cast.Return(getoptexpr optexpr, env)
+    | Sast.Super(args, fuid, env)       -> (*Cast.Super(sast_to_castexprlist args, env)*)
+ 					 Cast.Expr(("Void",Cast.Invoc(("This",Cast.This), "f_"^fuid^"_init" ,sast_to_castexprlist args)), env)
   (*  
     | _                                -> raise (Failure "Yet to implement all statement") 
   *)
