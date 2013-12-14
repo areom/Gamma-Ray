@@ -52,14 +52,19 @@ let deanon_expr_detail init_state env expr_deets =
             uid = UID.uid_counter () } in
 
     let deanon_klass freedefs klass parent refines =
-        {   klass = klass;
-            parent = Some(parent);
-            sections =
-            {   privates = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs;
+        let init = deanon_init freedefs klass in
+        let vars = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs in
+        let sections =
+            {   privates = vars;
                 protects = [];
-                publics = [InitMem(deanon_init freedefs klass)];
+                publics = [InitMem(init)];
                 refines = refines;
-                mains = []; } } in
+                mains = []; } in
+        let theklass =
+            {   klass = klass;
+                parent = Some(parent);
+                sections = sections } in
+        (init.uid, theklass) in
 
     let deanon_freedefs state env funcs =
         let freeset = Variables.free_vars_funcs StringSet.empty funcs in
@@ -85,9 +90,9 @@ let deanon_expr_detail init_state env expr_deets =
         | Sast.Anonymous(klass, args, refines) ->
             let (newklass, state) = get_label init_state klass in
             let freedefs = deanon_freedefs state env refines in
-            let ast_class = deanon_klass freedefs newklass klass refines in
+            let (init_id, ast_class) = deanon_klass freedefs newklass klass refines in
             let args = List.map (fun (t, v) -> (t, Sast.Id(v))) freedefs in
-            let instance = Sast.NewObj(newklass, args) in
+            let instance = Sast.NewObj(newklass, args, init_id) in
             let state = { state with deanon = ast_class::state.deanon } in
             (instance, state)
         | _ -> (expr_deets, init_state)
