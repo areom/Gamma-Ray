@@ -110,8 +110,9 @@ let section_string section = match section with
     @param aklass The class to explore
     @return A list of ordered pairs representing different sections,
     the first item of each pair is the type of the section, the second
-    is a map of the variables. Note that this only returns pairs for
-    Publics, Protects, and Privates as the others cannot have variables
+    is a list of the variables defs (type, name). Note that this only
+    returns pairs for Publics, Protects, and Privates as the others
+    cannot have variables
   *)
 let klass_to_variables aklass =
     let vars members = fst (either_split (List.map member_split members)) in
@@ -123,7 +124,7 @@ let klass_to_variables aklass =
     @param aklass The class to explore
     @return A list of ordered pairs representing different sections,
     the first item of each pair is the type of the section, the second
-    is a map of the methods. Note that this only returns the methods
+    is a list of the methods. Note that this only returns the methods
     in Publics, Protects, or Privates as the other sections don't have
     `normal' methods in them
   *)
@@ -507,6 +508,20 @@ let class_method_lookup data klass_name func_name =
         | _ -> []
 
 (**
+    Verifies that each class is able to be instantiated.
+    @param data A class_data record
+    @return Either the data is returned in Left or a list of uninstantiable classes in Right
+  *)
+let verify_instantiable data =
+    let uninstantiable klass =
+        let inits = class_method_lookup data klass "init" in
+        not (List.exists (fun func -> func.section <> Privates) inits) in
+    let klasses = StringSet.elements data.known in
+    match List.filter uninstantiable klasses with
+        | [] -> Left(data)
+        | bad -> Right(bad)
+
+(**
     Given a class and a list of its ancestors, build a map detailing the distance
     between the class and any of its ancestors. The distance is the number of hops
     one must take to get from the given class to the ancestor. The distance between
@@ -673,6 +688,7 @@ type class_data_error
     | DuplicateVariables of (string * string list) list
     | DuplicateFields of (string * (string * string) list) list
     | ConflictingMethods of (string * (string * string list) list) list
+    | Uninstantiable of string list
     | ConflictingRefinements of (string * (string * string list) list) list
     | MultipleMains of string list
 
@@ -695,6 +711,9 @@ let test_fields data = match check_field_collisions data with
 let append_methods data = match build_class_method_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingMethods(collisions))
+let test_init data = match verify_instantiable data with
+    | Left(data) -> Left(data)
+    | Right(bad) -> Right(Uninstantiable(bad))
 let append_refines data = match build_class_refinement_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingRefinements(collisions))
@@ -710,7 +729,7 @@ let build_class_data klasses = seq (initial_data klasses)
 let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; append_methods ;
-      append_refines ; append_mains ]
+      test_init ; append_refines ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -739,11 +758,28 @@ let append_leaf_variables aklass data = match build_var_map aklass with
         let updated = StringMap.add aklass.klass vars data.variables in
         Left({ data with variables = updated })
     | Right(collisions) -> Right(DuplicateVariables([(aklass.klass, collisions)]))
+let append_leaf_test_fields aklass data =
+    let folder collisions var = match class_field_lookup data (klass_to_parent aklass) var with
+        | Some((_, _, Privates)) -> collisions
+        | Some((ancestor, _, section)) -> (ancestor, var)::collisions
+        | _ -> collisions in
+    let variables = List.flatten (List.map snd (klass_to_variables aklass)) in
+    let varnames = List.map snd variables in
+    match List.fold_left folder [] varnames with
+        | [] -> Left(data)
+        | collisions -> Right(DuplicateFields([(aklass.klass, collisions)]))
 let append_leaf_methods aklass data = match build_method_map aklass with
     | Left(meths) ->
         let updated = StringMap.add aklass.klass meths data.methods in
         Left({ data with methods = updated })
     | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass collisions false]))
+let append_leaf_instantiable aklass data =
+    let is_init mem = match mem with
+        | InitMem(_) -> true
+        | _ -> false in
+    if List.exists is_init (aklass.sections.protects) then Left(data)
+    else if List.exists is_init (aklass.sections.publics) then Left(data)
+    else Right(Uninstantiable([aklass.klass]))
 let append_leaf_refines aklass data = match build_refinement_map aklass with
     | Left(refs) ->
         let updated = StringMap.add aklass.klass refs data.refines in
@@ -772,6 +808,14 @@ let append_leaf data aklass =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
           append_leaf_variables ; append_leaf_methods ; append_leaf_refines ; append_leaf_mains ;
           append_leaf_ancestor ; append_leaf_distance ] in
+    seq (Left(data)) (List.map with_klass actions)
+
+let append_leaf_test data aklass =
+    let with_klass f = f aklass in
+    let actions =
+        [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
+          append_leaf_variables ; append_leaf_test_fields ; append_leaf_methods ; append_leaf_instantiable ;
+          append_leaf_refines ; append_leaf_mains ; append_leaf_ancestor ; append_leaf_distance ] in
     seq (Left(data)) (List.map with_klass actions)
 
 (**
