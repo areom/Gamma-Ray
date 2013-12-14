@@ -243,6 +243,7 @@ let initialize_class_data klasses =
         if StringSet.mem aklass.klass set
             then (set, StringSet.add aklass.klass collisions)
             else (StringSet.add aklass.klass set, collisions) in
+    let klasses = BuiltIns.built_in_classes @ klasses in
     let build_classes map aklass = StringMap.add aklass.klass aklass map in
     let (known, collisions) = List.fold_left build_known (StringSet.empty, StringSet.empty) klasses in
     let classes = List.fold_left build_classes StringMap.empty klasses in
