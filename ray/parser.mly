@@ -162,7 +162,8 @@ callable:
         body    = $2;
         section = Privates;
         inklass = "";
-        uid     = UID.uid_counter () } }
+        uid     = UID.uid_counter ();
+        builtin = false } }
 
 /* Statements */
 stmt_block:

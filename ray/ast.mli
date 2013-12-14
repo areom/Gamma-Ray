@@ -68,6 +68,7 @@ and func_def = {
   section : class_section;  (** A sementic tag of the class section in which the function lives (all) *)
   inklass : string;         (** A semantic tag of the class in which the function lives (all) *)
   uid     : string;         (** A string for referencing this -- should be maintained in transformations to later ASTs *)
+  builtin : bool;           (** Whether or not the function is built in (uid should have _ in it then) *)
 }
 
 (** A member is either a variable or some sort of function *)

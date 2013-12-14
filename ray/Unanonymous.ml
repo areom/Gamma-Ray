@@ -49,7 +49,8 @@ let deanon_expr_detail init_state env expr_deets =
             body = List.map assigner formals;
             section = Publics;
             inklass = klass;
-            uid = UID.uid_counter () } in
+            uid = UID.uid_counter ();
+            builtin = false } in
 
     let deanon_klass freedefs klass parent refines =
         let init = deanon_init freedefs klass in
