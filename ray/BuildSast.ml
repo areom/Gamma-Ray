@@ -194,11 +194,8 @@ let rec attach_bindings klass_data kname stmts initial_env =
     let rec get_superinit kname arglist =
         let parent = StringMap.find kname klass_data.parents in
         let argtypes = List.map fst arglist in
-        match best_method klass_data parent "init" argtypes [Ast.Publics] with
-            | None       -> if kname != "Object" then
-                                 get_superinit parent arglist
-                            else
-                                 raise(Failure "Cannot find super init")
+        match best_method klass_data parent "init" argtypes [Ast.Publics; Ast.Protects] with
+            | None       -> raise(Failure "Cannot find super init")
             | Some(fdef) -> fdef.uid in
 
     (* Helper function for building a predicate expression *)
