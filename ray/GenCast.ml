@@ -18,7 +18,7 @@ and c_expr_detail sastexp =
     | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr e1, e2)
     | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr expr)
     | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr e1, op, sast_to_castexpr e2)
-    | Sast.Invoc(recv, fname, args,fuid) -> Cast.Invoc(sast_to_castexpr recv, "f_"^fuid^fname, sast_to_castexprlist args) 
+    | Sast.Invoc(recv, fname, args, fuid) -> Cast.Invoc(sast_to_castexpr recv, "f_"^fuid^fname, sast_to_castexprlist args) 
     | _                      -> Cast.Null (* To avoid warning*)
 
 
@@ -47,4 +47,5 @@ and cstmt sstmt =
     | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr expr, cstmtlist sstmtlist, env)
     | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr exp, env)
     | Sast.Return(optexpr,env)         -> Cast.Return(getoptexpr optexpr, env)
+    | Sast.Super(exprlist, env)       -> Cast.Super(sast_to_castexprlist exprlist, env)
     | _                                -> raise (Failure "Yet to implement all statement")

@@ -35,7 +35,7 @@ and cstmt =
     | While of cexpr * cstmt list * Sast.environment
     | Expr of cexpr * Sast.environment
     | Return of cexpr option * Sast.environment
-(*    | Super of expr list * environment*)
+    | Super of cexpr list * Sast.environment
 (*
 
 and cfunc_def = {
