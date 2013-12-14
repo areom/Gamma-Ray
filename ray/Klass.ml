@@ -80,6 +80,7 @@ let empty_data : class_data = {
     @return The name of the parent object
   *)
 let klass_to_parent aklass = match aklass with
+    | { klass = "Object" } -> raise(Invalid_argument("Cannot get parent of the root"))
     | { parent = None; _ } -> "Object"
     | { parent = Some(aklass); _ } -> aklass
 
@@ -259,7 +260,9 @@ let initialize_class_data klasses =
     @return data but with the children.
   *)
 let build_children_map data =
-    let map_builder map aklass = add_map_list (klass_to_parent aklass) aklass.klass map in
+    let map_builder map aklass = match aklass.klass with
+        | "Object" -> map
+        | _ -> add_map_list (klass_to_parent aklass) aklass.klass map in
     let children_map = map_classes data map_builder in
     { data with children = children_map }
 
@@ -271,7 +274,9 @@ let build_children_map data =
     @return data but with the parent map updated.
   *)
 let build_parent_map data =
-    let map_builder map aklass = StringMap.add (aklass.klass) (klass_to_parent aklass) map in
+    let map_builder map aklass = match aklass.klass with
+        | "Object" -> map
+        | _ -> StringMap.add (aklass.klass) (klass_to_parent aklass) map in
     let parent_map = map_classes data map_builder in
     { data with parents = parent_map }
 
@@ -486,7 +491,6 @@ let check_field_collisions data =
         StringMap.fold (check_vars aklass) vars (fields, []) in
 
     let dfs_explorer aklass fields collisions =
-        Printf.fprintf stderr "Exploring class %s" aklass;
         match check_class_vars aklass fields with
             | (fields, []) -> (fields, collisions)
             | (fields, cols) -> (fields, (aklass, cols)::collisions) in
@@ -849,10 +853,13 @@ let print_class_data data =
                                   "\t\t(%d/%d/%d) methods -- private, protected, public (non-inherited)\n" ^^
                                   "\t\t(%d/%d/%d) fields -- private, protected, public (non-inherited)\n" ^^
                                   "\t\t%d refinements, %d mains" in
-        Format.sprintf format cdef.klass (klass_to_parent cdef)
-                                      (count Privates funcs) (count Protects funcs) (count Publics funcs)
-                                      (count Refines funcs) (count Mains funcs)
-                                      (count Privates vars) (count Protects vars) (count Publics vars) in
+        let parent = match cdef.klass with
+            | "Object" -> "----"
+            | _ -> klass_to_parent cdef in
+        Format.sprintf format cdef.klass parent
+            (count Privates funcs) (count Protects funcs) (count Publics funcs)
+            (count Refines funcs) (count Mains funcs)
+            (count Privates vars) (count Protects vars) (count Publics vars) in
 
     let print_list list =
         let rec list_printer spaces endl space = function
