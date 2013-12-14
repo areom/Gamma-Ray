@@ -15,6 +15,7 @@ compile:
 	ocamlc -c -g Pretty.ml
 	ocamlc -c -g Util.ml
 	ocamlc -c -g StringModules.ml
+	ocamlc -c -g BuiltIns.ml
 	ocamlc -c -g Klass.ml
 	ocamlc -c -g classinfo.ml
 	ocamlc -c -g inspect.ml
@@ -34,10 +35,10 @@ compile:
 	ocamlc -g -o tools/inspect UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
 	ocamlc -g -o tools/streams UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo streams.cmo
 	ocamlc -g -o tools/canonical UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo
-	ocamlc -g -o tools/freevars UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo Klass.cmo Debug.cmo Variables.cmo freevars.cmo
-	ocamlc -g -o tools/classinfo UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo Klass.cmo classinfo.cmo
+	ocamlc -g -o tools/freevars UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo Debug.cmo Variables.cmo freevars.cmo
+	ocamlc -g -o tools/classinfo UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo classinfo.cmo
 
-docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml Klass.ml Debug.ml Variables.ml Unanonymous.ml UID.ml
+docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml BuiltIns.ml Klass.ml Debug.ml Variables.ml Unanonymous.ml UID.ml
 docgen = ./doc/.docgen
 
 docs:
