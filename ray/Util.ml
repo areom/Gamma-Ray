@@ -69,6 +69,12 @@ let (|->) value func =
         | Left(v) -> func(v)
         | Right(problem) -> Right(problem)
 
+(** Sequence a bunch of monadic actions together, piping results together *)
+let rec seq init actions = match init, actions with
+    | Right(issue), _ -> Right(issue)
+    | Left(data), [] -> Left(data)
+    | Left(data), act::ions -> seq (act data) ions
+
 (**
     Return the length of a block -- i.e. the total number of statements (recursively) in it
     @param stmt_list A list of stmt type objects
