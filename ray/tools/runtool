@@ -32,4 +32,4 @@ if [ ! -e "tools/${tool}" ] ; then
 fi
 
 test -e "tools/${tool}"
-cat "test/tests/${type}/${dir}/${file}" | "tools/${tool}"
+cat "test/tests/${type}/${dir}/${file}" | "tools/${tool}" "$@"
