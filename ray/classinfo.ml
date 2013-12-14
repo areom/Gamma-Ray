@@ -9,6 +9,10 @@ let dupvar (klass, vars) = match vars with
     | [var] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " is multiply declared"
     | _ -> "Class " ^ klass ^ " has multiply declared variables: [" ^ (String.concat ", " vars) ^ "]"
 
+let dupfield (klass, fields) = match fields with
+    | [(ancestor, var)] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " was declared in ancestor " ^ ancestor ^ "."
+    | _ -> "Class " ^ klass ^ " has instance variables declared in ancestors: [" ^ String.concat ", " (List.map (fun (a, v) -> v ^ " in " ^ a) fields) ^ "]"
+
 let dupmeth (klass, meths) =
     match meths with
         | [(name, formals)] -> Format.sprintf "Class %s's method %s has multiple implementations taking %s" klass name (args formals)
@@ -25,6 +29,7 @@ let errstr = function
         | [klass] -> "Multiple classes named " ^ klass
         | _ -> "Multiple classes share the names [" ^ (String.concat ", " klasses) ^ "]")
     | DuplicateVariables(list) -> String.concat "\n" (List.map dupvar list)
+    | DuplicateFields(list) -> String.concat "\n" (List.map dupfield list)
     | ConflictingMethods(list) -> String.concat "\n" (List.map dupmeth list)
     | ConflictingRefinements(list) -> String.concat "\n" (List.map dupref list)
     | MultipleMains(klasses) -> (match klasses with
@@ -34,7 +39,8 @@ let errstr = function
 let _ =
     let tokens = Inspector.from_channel stdin in
     let classes = Parser.cdecls (WhiteSpace.lextoks tokens) (Lexing.from_string "") in
-    match Klass.build_class_data classes with
+    let builder = if (Array.length Sys.argv = 1) then Klass.build_class_data else Klass.build_class_data_test in
+    match builder classes with
         | Left(data) -> Klass.print_class_data data; exit(0)
         | Right(issue) -> Printf.fprintf stderr "%s" (errstr issue); exit(1)
 

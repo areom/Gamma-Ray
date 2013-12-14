@@ -207,6 +207,27 @@ let fold_classes data folder init =
 let map_classes data folder = fold_classes data folder StringMap.empty
 
 (**
+    Recursively explore the tree starting at the root, accumulating errors
+    in a list as we go. The explorer function should take the current class
+    the current state, the current errors and return a new state / errors
+    pair (updating state when possible if there are errors for further
+    accumulation). This is the state that will be passed to all children,
+    and the errors will accumulate across all children.
+    @param data A class_data record value
+    @param explore Something that goes from the current node to a new state/error pair
+    @init_state the initial state of the system
+    @init_error the initial errors of the system
+    @return The final accumulated errors
+  *)
+let dfs_errors data explore init_state init_error =
+    let rec recurse aklass state errors =
+        let (state, errors) = explore aklass state errors in
+        let explore_kids errors child = recurse child state errors in
+        let children = map_lookup_list aklass data.children in
+        List.fold_left explore_kids errors children in
+    recurse "Object" init_state init_error
+
+(**
     Given a list of classes, build an initial class_data object with
     the known and classes fields set appropriately. If there are any
     duplicate class names a StringSet of the collisions will then be
@@ -443,6 +464,36 @@ let class_field_lookup data klass_name var_name =
     lookup klass_name [Publics; Protects; Privates]
 
 (**
+    Given a class_data record, verify that there are no double declarations of instance
+    variables as you go up the tree. This means that no two classes along the same root
+    leaf path can have the same public / protected variables, and a private cannot be
+    a public/protected variable of an ancestor.
+    @param data A class_data record.
+    @return Left(data) if everything was okay or Right(collisions) where collisions is
+    a list of pairs of collision information - first item class, second item a list of
+    colliding variables for that class (name, ancestor where they collide)
+  *)
+let check_field_collisions data =
+    let check_vars aklass var (section, _) (fields, collisions) = match map_lookup var fields, section with
+        | Some(ancestor), _ -> (fields, (ancestor, var)::collisions)
+        | None, Privates -> (fields, collisions)
+        | None, _ -> (StringMap.add var aklass fields, collisions) in
+
+    let check_class_vars aklass fields =
+        let vars = StringMap.find aklass data.variables in
+        StringMap.fold (check_vars aklass) vars (fields, []) in
+
+    let dfs_explorer aklass fields collisions =
+        Printf.fprintf stderr "Exploring class %s" aklass;
+        match check_class_vars aklass fields with
+            | (fields, []) -> (fields, collisions)
+            | (fields, cols) -> (fields, (aklass, cols)::collisions) in
+
+    match dfs_errors data dfs_explorer StringMap.empty [] with
+        | [] -> Left(data)
+        | collisions -> Right(collisions)
+
+(**
     Given a class_data record, a class name, and a method name, lookup all the methods in the
     given class with that name.
     @param data A class_data record
@@ -620,6 +671,7 @@ type class_data_error
     = HierarchyIssue of string
     | DuplicateClasses of string list
     | DuplicateVariables of (string * string list) list
+    | DuplicateFields of (string * (string * string) list) list
     | ConflictingMethods of (string * (string * string list) list) list
     | ConflictingRefinements of (string * (string * string list) list) list
     | MultipleMains of string list
@@ -637,6 +689,9 @@ let append_distance data = Left(build_distance_map data)
 let append_variables data = match build_class_var_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(DuplicateVariables(collisions))
+let test_fields data = match check_field_collisions data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(DuplicateFields(collisions))
 let append_methods data = match build_class_method_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingMethods(collisions))
@@ -647,17 +702,15 @@ let append_mains data = match build_main_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(MultipleMains(collisions))
 
-let build_class_data klasses
-    =   initial_data klasses
-    |-> append_children
-    |-> append_parent
-    |-> test_tree
-    |-> append_ancestor
-    |-> append_distance
-    |-> append_variables
-    |-> append_methods
-    |-> append_refines
-    |-> append_mains
+let build_class_data klasses = seq (initial_data klasses)
+    [ append_children ; append_parent ; test_tree ; append_ancestor ;
+      append_distance ; append_variables ; append_methods ; append_refines ;
+      append_mains ]
+
+let build_class_data_test klasses = seq (initial_data klasses)
+    [ append_children ; append_parent ; test_tree ; append_ancestor ;
+      append_distance ; append_variables ; test_fields ; append_methods ;
+      append_refines ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -713,18 +766,13 @@ let append_leaf_distance aklass data =
     let updated = StringMap.add aklass.klass distance data.distance in
     Left({ data with distance = updated })
 
-let append_leaf data aklass
-    =   Left(data)
-    |-> append_leaf_known aklass
-    |-> append_leaf_classes aklass
-    |-> append_leaf_children aklass
-    |-> append_leaf_parent aklass
-    |-> append_leaf_variables aklass
-    |-> append_leaf_methods aklass
-    |-> append_leaf_refines aklass
-    |-> append_leaf_mains aklass
-    |-> append_leaf_ancestor aklass
-    |-> append_leaf_distance aklass
+let append_leaf data aklass =
+    let with_klass f = f aklass in
+    let actions =
+        [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
+          append_leaf_variables ; append_leaf_methods ; append_leaf_refines ; append_leaf_mains ;
+          append_leaf_ancestor ; append_leaf_distance ] in
+    seq (Left(data)) (List.map with_klass actions)
 
 (**
     Print class data out to stdout.
