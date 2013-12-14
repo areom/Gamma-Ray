@@ -40,10 +40,13 @@ let errstr = function
         | _ -> "Multiple classes have more than one main: [" ^ String.concat ", " klasses ^ "]")
 
 let _ =
-    let tokens = Inspector.from_channel stdin in
-    let classes = Parser.cdecls (WhiteSpace.lextoks tokens) (Lexing.from_string "") in
-    let builder = if (Array.length Sys.argv = 1) then Klass.build_class_data else Klass.build_class_data_test in
-    match builder classes with
-        | Left(data) -> Klass.print_class_data data; exit(0)
-        | Right(issue) -> Printf.fprintf stderr "%s" (errstr issue); exit(1)
-
+    try
+        Printexc.record_backtrace true;
+        let tokens = Inspector.from_channel stdin in
+        let classes = Parser.cdecls (WhiteSpace.lextoks tokens) (Lexing.from_string "") in
+        let builder = if (Array.length Sys.argv = 1) then Klass.build_class_data else Klass.build_class_data_test in
+        match builder classes with
+            | Left(data) -> Klass.print_class_data data; exit(0)
+            | Right(issue) -> Printf.fprintf stderr "%s\n" (errstr issue); exit(1)
+    with _ ->
+        Printexc.print_backtrace stderr
