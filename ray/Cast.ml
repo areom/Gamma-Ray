@@ -6,6 +6,7 @@ type cexpr_detail =
     | This
     | Null
     | Id of string
+    | NewObj of string * string * cexpr list (* ctype * fname * args *)
 (*    | NewObj of string * expr list
     | Anonymous of string * Ast.expr list * Ast.func_def list (* Evaluation is delayed *)
 *)

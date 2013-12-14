@@ -14,6 +14,7 @@ and c_expr_detail sastexp =
       Sast.This              -> Cast.This
     | Sast.Null              -> Cast.Null
     | Sast.Id(vname)         -> Cast.Id(vname)
+    | Sast.NewObj(classname, args, fuid) -> Cast.NewObj(classname, "f_"^fuid^"_init"^classname ,sast_to_castexprlist args)
     | Sast.Literal(lit)      -> Cast.Literal(lit)
     | Sast.Assign(e1, e2)    -> Cast.Assign(sast_to_castexpr e1, sast_to_castexpr e2)
     | Sast.Deref(e1, e2)     -> Cast.Deref(sast_to_castexpr e1, sast_to_castexpr e2)
@@ -50,7 +51,9 @@ and cstmt sstmt =
     | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr exp, env)
     | Sast.Return(optexpr,env)         -> Cast.Return(getoptexpr optexpr, env)
     | Sast.Super(exprlist, env)       -> Cast.Super(sast_to_castexprlist exprlist, env)
-    | _                                -> raise (Failure "Yet to implement all statement")
+  (*  
+    | _                                -> raise (Failure "Yet to implement all statement") 
+  *)
 
 (**
     Trim up the sast func_def to the cast cfunc_def
