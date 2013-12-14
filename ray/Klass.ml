@@ -6,6 +6,9 @@ open StringModules
 
 (** A full class record table as a type *)
 type class_data = {
+    (** A set of known class names *)
+    known : StringSet.t;
+
     (** A map that goes from class names to to class definition records *)
     classes : class_def lookup_map;
 
@@ -59,6 +62,7 @@ type class_data = {
 
 (** Construct an empty class_data object *)
 let empty_data : class_data = {
+    known = StringSet.empty;
     classes = StringMap.empty;
     parents = StringMap.empty;
     children = StringMap.empty;
@@ -88,7 +92,6 @@ let member_split mem = match mem with
     | VarMem(v) -> Left(v)
     | MethodMem(m) -> Right(m)
     | InitMem(i) -> Right(i)
-
 
 (**
     Stringify a section to be printed
@@ -137,99 +140,6 @@ let klass_to_methods aklass =
 let klass_to_functions aklass =
     let s = aklass.sections in
     (Refines, s.refines) :: (Mains, s.mains) :: klass_to_methods aklass
-
-(**
-    Add the parent (class name - string) -> children (class name -> string list)
-    map to a class_data record.
-    @param data A class_data record
-    @param klasses A list of parsed classes
-    @return data but with the children map updated given klasses.
-  *)
-let build_children_map data klasses =
-    let map_builder map aklass = add_map_list (klass_to_parent aklass) (aklass.klass) map in
-    let children_map = List.fold_left map_builder StringMap.empty klasses in
-    { data with children = children_map }
-
-(**
-    Add the child (class name - string) -> parent (class name - string) map to
-    a class_data record.
-    @param data A class_data record
-    @param klasses A list of parsed classes
-    @return data but with the children map added in given klasses
-  *)
-let build_parent_map data klasses =
-    let map_builder map aklass =
-        let parent = klass_to_parent aklass in
-        let child  = aklass.klass in
-        StringMap.add child parent map in
-    let parent_map = List.fold_left map_builder StringMap.empty klasses in
-    { data with parents = parent_map }
-
-(**
-    Validate that the parent map in a class_data record represents a tree rooted at object.
-    @param data a class_data record
-    @return An optional string (Some(string)) when there is an issue.
-  *)
-let is_tree_hierarchy data =
-    let rec from_object klass checked =
-        match map_lookup klass checked with
-            | Some(true) -> Left(checked)
-            | Some(false) -> Right("Cycle detected.")
-            | _ -> match map_lookup klass data.parents with
-                | None -> Right("Cannot find parent after building parent map: " ^ klass)
-                | Some(parent) -> match from_object parent (StringMap.add klass false checked) with
-                    | Left(updated) -> Left(StringMap.add klass true updated)
-                    | issue -> issue in
-    let folder klass _ = function
-        | Left(checked) -> from_object klass checked
-        | issue -> issue in
-    let checked = StringMap.add "Object" true StringMap.empty in
-    match StringMap.fold folder data.parents (Left(checked)) with
-        | Right(issue) -> Some(issue)
-        | _ -> None
-
-(**
-    Add the class (class name - string) to definition (class - class_def)
-    map to a class_data record.
-    @param data A class_data record to update
-    @param klasses A list of parsed classes
-    @return data but with the class map added given klasses
-  *)
-let build_class_map data klasses =
-    let map_builder map aklass = add_map_unique (aklass.klass) aklass map in
-    match build_map_track_errors map_builder klasses with
-        | Left(class_map) -> Left({ data with classes = class_map })
-        | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
-
-(**
-    For a given class, build a map of variable names to variable information.
-    If all instance variables are uniquely named, returns Left (map) where map
-    is  var name -> (class_section, type)  otherwise returns Right (collisions)
-    where collisions are the names of variables that are multiply declared.
-    @param aklass A parsed class
-    @return a map of instance variables in the class
-  *)
-let build_var_map aklass =
-    let add_var section map (typeId, varId) = add_map_unique varId (section, typeId) map in
-    let map_builder map (section, members) = List.fold_left (add_var section) map members in
-    build_map_track_errors map_builder (klass_to_variables aklass)
-
-(**
-    Add the class (class name - string) -> variable (var name - string) -> info (section/type
-    pair - class_section * string) table to a class_data record.
-    @param data A class_data record
-    @param klasses A list of parsed classes
-    @return Either a list of collisions (in Right) or the updated record (in Left).
-    Collisions are pairs (class name, collisions (var names) for that class)
-  *)
-let build_class_var_map data klasses =
-    let map_builder (klass_map, collision_list) aklass =
-        match build_var_map aklass with
-            | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
-            | Right(collisions) -> (klass_map, (aklass.klass, collisions)::collision_list) in
-    match build_map_track_errors map_builder klasses with
-        | Left(variable_map) -> Left({ data with variables = variable_map })
-        | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
 (**
     Return whether two function definitions have conflicting signatures
@@ -285,6 +195,135 @@ let build_collisions aklass funcs reqhost =
         (name, List.map fst func.formals) in
     (aklass.klass, List.map to_collision funcs)
 
+(** Fold over the values in a class_data record's classes map. *)
+let fold_classes data folder init =
+    let do_fold _ aklass result = folder result aklass in
+    StringMap.fold do_fold data.classes init
+
+(**
+    Fold over the values in a class_data record's classes map, but
+    enforce building up a StringMap.
+  *)
+let map_classes data folder = fold_classes data folder StringMap.empty
+
+(**
+    Given a list of classes, build an initial class_data object with
+    the known and classes fields set appropriately. If there are any
+    duplicate class names a StringSet of the collisions will then be
+    returned in Right, otherwise the data will be returned in Left.
+    @param klasses A list of classes
+    @return Left(data) which is a class_data record with the known
+    set filled with names or Right(collisions) which is a set of
+    collisions (StringSet.t)
+  *)
+let initialize_class_data klasses =
+    let build_known (set, collisions) aklass =
+        if StringSet.mem aklass.klass set
+            then (set, StringSet.add aklass.klass collisions)
+            else (StringSet.add aklass.klass set, collisions) in
+    let build_classes map aklass = StringMap.add aklass.klass aklass map in
+    let (known, collisions) = List.fold_left build_known (StringSet.empty, StringSet.empty) klasses in
+    let classes = List.fold_left build_classes StringMap.empty klasses in
+    if StringSet.is_empty collisions
+        then Left({ empty_data with known = known; classes = classes })
+        else Right(collisions)
+
+(**
+    Given an initialized class_data record, build the children map
+    from the classes that are stored within it.
+    The map is from parent to children list.
+    @param data A class_data record
+    @return data but with the children.
+  *)
+let build_children_map data =
+    let map_builder map aklass = add_map_list (klass_to_parent aklass) aklass.klass map in
+    let children_map = map_classes data map_builder in
+    { data with children = children_map }
+
+(**
+    Given an initialized class_Data record, build the parent map
+    from the classes that are stored within it.
+    The map is from child to parent.
+    @param data A class_data record
+    @return data but with the parent map updated.
+  *)
+let build_parent_map data =
+    let map_builder map aklass = StringMap.add (aklass.klass) (klass_to_parent aklass) map in
+    let parent_map = map_classes data map_builder in
+    { data with parents = parent_map }
+
+(**
+    Validate that the parent map in a class_data record represents a tree rooted at object.
+    @param data a class_data record
+    @return An optional string (Some(string)) when there is an issue.
+  *)
+let is_tree_hierarchy data =
+    let rec from_object klass checked =
+        match map_lookup klass checked with
+            | Some(true) -> Left(checked)
+            | Some(false) -> Right("Cycle detected.")
+            | _ -> match map_lookup klass data.parents with
+                | None -> Right("Cannot find parent after building parent map: " ^ klass)
+                | Some(parent) -> match from_object parent (StringMap.add klass false checked) with
+                    | Left(updated) -> Left(StringMap.add klass true updated)
+                    | issue -> issue in
+    let folder result aklass = match result with
+        | Left(checked) -> from_object aklass.klass checked
+        | issue -> issue in
+    let checked = StringMap.add "Object" true StringMap.empty in
+    match fold_classes data folder (Left(checked)) with
+        | Right(issue) -> Some(issue)
+        | _ -> None
+
+(**
+    Add the class (class name - string) -> ancestors (list of ancestors - string list) map to a
+    class_data record. Note that the ancestors go from `youngest' to `oldest' and so should start
+    with the given class (hd) and end with Object (last item in the list).
+    @param data The class_data record to update
+    @return An updated class_data record with the ancestor map added.
+  *)
+let build_ancestor_map data =
+    let rec ancestor_builder klass map =
+        if StringMap.mem klass map then map
+        else
+            let parent = StringMap.find klass data.parents in
+            let map = ancestor_builder parent map in
+            let ancestors = StringMap.find parent map in
+            StringMap.add klass (klass::ancestors) map in
+    let folder map aklass = ancestor_builder aklass.klass map in
+    let map = StringMap.add "Object" ["Object"] StringMap.empty in
+    let ancestor_map = fold_classes data folder map in
+    { data with ancestors = ancestor_map }
+
+(**
+    For a given class, build a map of variable names to variable information.
+    If all instance variables are uniquely named, returns Left (map) where map
+    is  var name -> (class_section, type)  otherwise returns Right (collisions)
+    where collisions are the names of variables that are multiply declared.
+    @param aklass A parsed class
+    @return a map of instance variables in the class
+  *)
+let build_var_map aklass =
+    let add_var section map (typeId, varId) = add_map_unique varId (section, typeId) map in
+    let map_builder map (section, members) = List.fold_left (add_var section) map members in
+    build_map_track_errors map_builder (klass_to_variables aklass)
+
+(**
+    Add the class (class name - string) -> variable (var name - string) -> info (section/type
+    pair - class_section * string) table to a class_data record.
+    @param data A class_data record
+    @return Either a list of collisions (in Right) or the updated record (in Left).
+    Collisions are pairs (class name, collisions (var names) for that class)
+  *)
+let build_class_var_map data =
+    let map_builder (klass_map, collision_list) (_, aklass) =
+        match build_var_map aklass with
+            | Left(var_map) -> (StringMap.add (aklass.klass) var_map klass_map, collision_list)
+            | Right(collisions) -> (klass_map, (aklass.klass, collisions)::collision_list) in
+    match build_map_track_errors map_builder (StringMap.bindings data.classes) with
+        | Left(variable_map) -> Left({ data with variables = variable_map })
+        | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
+
 (**
     Build a map of all the methods within a class, returing either a list of collisions
     (in Right) when there are conflicting signatures or the map (in Left) when there
@@ -306,17 +345,16 @@ let build_method_map aklass =
     collisions, the updated record is returned (in Left), otherwise the collision
     list is returned (in Right).
     @param data A class data record
-    @param klasses A list of parsed classes
     @return Either a list of collisions (in Right) or the updated record (in Left).
     Collisions are pairs (class name, colliding methods for that class). Methods collide
     if they have conflicting signatures (ignoring return type).
   *)
-let build_class_method_map data klasses =
-    let map_builder (klass_map, collision_list) aklass =
+let build_class_method_map data =
+    let map_builder (klass_map, collision_list) (_, aklass) =
         match build_method_map aklass with
-            | Left(method_map) -> (StringMap.add (aklass.klass) method_map klass_map, collision_list)
+            | Left(method_map) -> (StringMap.add aklass.klass method_map klass_map, collision_list)
             | Right(collisions) -> (klass_map, (build_collisions aklass collisions false)::collision_list) in
-    match build_map_track_errors map_builder klasses with
+    match build_map_track_errors map_builder (StringMap.bindings data.classes) with
         | Left(method_map) -> Left({ data with methods = method_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
@@ -347,12 +385,12 @@ let build_refinement_map aklass =
     @return either a list of collisions (in Right) or the updated record (in Left).
     Collisions are (class, (host, method, formals) list)
   *)
-let build_class_refinement_map data klasses =
-    let map_builder (klass_map, collision_list) aklass =
+let build_class_refinement_map data =
+    let map_builder (klass_map, collision_list) (_, aklass) =
         match build_refinement_map aklass with
             | Left(refinement_map) -> (StringMap.add aklass.klass refinement_map klass_map, collision_list)
             | Right(collisions) -> (klass_map, (build_collisions aklass collisions true)::collision_list) in
-    match build_map_track_errors map_builder klasses with
+    match build_map_track_errors map_builder (StringMap.bindings data.classes) with
         | Left(refinement_map) -> Left({ data with refines = refinement_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
@@ -364,12 +402,12 @@ let build_class_refinement_map data klasses =
     @param klasses A list of parsed classes
     @return Either the collisions (Right) or the updated record (Left)
   *)
-let build_main_map data klasses =
-    let add_klass (map, collisions) aklass = match aklass.sections.mains with
+let build_main_map data =
+    let add_klass (map, collisions) (_, aklass) = match aklass.sections.mains with
         | [] -> (map, collisions)
         | [main] -> (StringMap.add aklass.klass main map, collisions)
         | _ -> (map, aklass.klass :: collisions) in
-    match build_map_track_errors add_klass klasses with
+    match build_map_track_errors add_klass (StringMap.bindings data.classes) with
         | Left(main_map) -> Left({ data with mains = main_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
@@ -416,26 +454,6 @@ let class_method_lookup data klass_name func_name =
     match map_lookup klass_name data.methods with
         | Some(method_map) -> map_lookup_list func_name method_map
         | _ -> []
-
-(**
-    Add the class (class name - string) -> ancestors (list of ancestors - string list) map to a
-    class_data record. Note that the ancestors go from `youngest' to `oldest' and so should start
-    with the given class (hd) and end with Object (last item in the list).
-    @param data The class_data record to update
-    @return An updated class_data record with the ancestor map added.
-  *)
-let build_ancestor_map data =
-    let rec ancestor_builder klass map =
-        if StringMap.mem klass map then map
-        else
-            let parent = StringMap.find klass data.parents in
-            let map = ancestor_builder parent map in
-            let ancestors = StringMap.find parent map in
-            StringMap.add klass (klass::ancestors) map in
-    let folder klass _ map = ancestor_builder klass map in
-    let map = StringMap.add "Object" ["Object"] StringMap.empty in
-    let ancestor_map = StringMap.fold folder data.parents map in
-    { data with ancestors = ancestor_map }
 
 (**
     Given a class and a list of its ancestors, build a map detailing the distance
@@ -606,47 +624,49 @@ type class_data_error
     | ConflictingRefinements of (string * (string * string list) list) list
     | MultipleMains of string list
 
-let append_children klasses data = Left(build_children_map data klasses)
-let append_parent klasses data = Left(build_parent_map data klasses)
+let initial_data klasses = match initialize_class_data klasses with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(DuplicateClasses(StringSet.elements collisions))
+let append_children data = Left(build_children_map data)
+let append_parent data = Left(build_parent_map data)
 let test_tree data = match is_tree_hierarchy data with
     | None -> Left(data)
     | Some(problem) -> Right(HierarchyIssue(problem))
-let append_classes klasses data = match build_class_map data klasses with
-    | Left(data) -> Left(data)
-    | Right(collisions) -> Right(DuplicateClasses(collisions))
-let append_variables klasses data = match build_class_var_map data klasses with
-    | Left(data) -> Left(data)
-    | Right(collisions) -> Right(DuplicateVariables(collisions))
-let append_methods klasses data = match build_class_method_map data klasses with
-    | Left(data) -> Left(data)
-    | Right(collisions) -> Right(ConflictingMethods(collisions))
-let append_refines klasses data = match build_class_refinement_map data klasses with
-    | Left(data) -> Left(data)
-    | Right(collisions) -> Right(ConflictingRefinements(collisions))
-let append_mains klasses data = match build_main_map data klasses with
-    | Left(data) -> Left(data)
-    | Right(collisions) -> Right(MultipleMains(collisions))
 let append_ancestor data = Left(build_ancestor_map data)
 let append_distance data = Left(build_distance_map data)
+let append_variables data = match build_class_var_map data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(DuplicateVariables(collisions))
+let append_methods data = match build_class_method_map data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(ConflictingMethods(collisions))
+let append_refines data = match build_class_refinement_map data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(ConflictingRefinements(collisions))
+let append_mains data = match build_main_map data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(MultipleMains(collisions))
 
 let build_class_data klasses
-    =  Left(empty_data)
-    |-> append_children klasses
-    |-> append_parent klasses
+    =   initial_data klasses
+    |-> append_children
+    |-> append_parent
     |-> test_tree
-    |-> append_classes klasses
-    |-> append_variables klasses
-    |-> append_methods klasses
-    |-> append_refines klasses
-    |-> append_mains klasses
     |-> append_ancestor
     |-> append_distance
+    |-> append_variables
+    |-> append_methods
+    |-> append_refines
+    |-> append_mains
 
+let append_leaf_known aklass data =
+    let updated = StringSet.add aklass.klass data.known in
+    if StringSet.mem aklass.klass data.known
+        then Right(DuplicateClasses([aklass.klass]))
+        else Left({ data with known = updated })
 let append_leaf_classes aklass data =
     let updated = StringMap.add aklass.klass aklass data.classes in
-    if StringMap.mem aklass.klass data.classes
-        then Right(DuplicateClasses([aklass.klass]))
-        else Left({ data with classes = updated })
+    Left({ data with classes = updated })
 let append_leaf_tree aklass data =
     (* If we assume data is valid and data has aklass's parent then we should be fine *)
     let parent = klass_to_parent aklass in
@@ -693,10 +713,10 @@ let append_leaf_distance aklass data =
     let updated = StringMap.add aklass.klass distance data.distance in
     Left({ data with distance = updated })
 
-let append_leaf data aklass =
-            Left(data)
+let append_leaf data aklass
+    =   Left(data)
+    |-> append_leaf_known aklass
     |-> append_leaf_classes aklass
-    |-> append_leaf_tree aklass
     |-> append_leaf_children aklass
     |-> append_leaf_parent aklass
     |-> append_leaf_variables aklass
@@ -733,8 +753,8 @@ let print_class_data data =
         let vars = klass_to_variables cdef in
         let funcs = klass_to_functions cdef in
         let format = "class %s extends %s and has\n" ^^
-                                  "\t\t(%d/%d/%d) methods -- private, protected, public\n" ^^
-                                  "\t\t(%d/%d/%d) fields -- private, protected, public\n" ^^
+                                  "\t\t(%d/%d/%d) methods -- private, protected, public (non-inherited)\n" ^^
+                                  "\t\t(%d/%d/%d) fields -- private, protected, public (non-inherited)\n" ^^
                                   "\t\t%d refinements, %d mains" in
         Format.sprintf format cdef.klass (klass_to_parent cdef)
                                       (count Privates funcs) (count Protects funcs) (count Publics funcs)
@@ -747,14 +767,14 @@ let print_class_data data =
     print_newline ();
     map_printer data.children "Children" from_list;
     print_newline ();
-    table_printer data.variables "Fields" (fun (sect, t) -> Format.sprintf "%s %s" (section_string sect) t);
+    map_printer data.ancestors "Ancestors" from_list;
+    print_newline ();
+    table_printer data.distance "Distance" string_of_int;
+    print_newline ();
+    table_printer data.variables "Variables" (fun (sect, t) -> Format.sprintf "%s %s" (section_string sect) t);
     print_newline ();
     table_printer data.methods "Methods" func_list;
     print_newline ();
     table_printer data.refines "Refines" func_list;
     print_newline ();
     map_printer data.mains "Mains" full_signature_string;
-    print_newline ();
-    map_printer data.ancestors "Ancestors" from_list;
-    print_newline ();
-    table_printer data.distance "Distance" string_of_int
