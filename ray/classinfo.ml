@@ -31,6 +31,9 @@ let errstr = function
     | DuplicateVariables(list) -> String.concat "\n" (List.map dupvar list)
     | DuplicateFields(list) -> String.concat "\n" (List.map dupfield list)
     | ConflictingMethods(list) -> String.concat "\n" (List.map dupmeth list)
+    | Uninstantiable(klasses) -> (match klasses with
+        | [klass] -> "Class " ^ klass ^ " does not have a usable init."
+        | _ -> "Multiple classes are not instantiable: [" ^ String.concat ", " klasses ^ "]")
     | ConflictingRefinements(list) -> String.concat "\n" (List.map dupref list)
     | MultipleMains(klasses) -> (match klasses with
         | [klass] -> "Class " ^ klass ^ " has multiple mains defined."
