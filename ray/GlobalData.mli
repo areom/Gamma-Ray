@@ -1,6 +1,8 @@
 open Ast
 open StringModules
 
+(** Module to contain global class hierarchy type declarations *)
+
 (** A full class record table as a type *)
 type class_data = {
     (** A set of known class names *)

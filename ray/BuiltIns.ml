@@ -1,5 +1,7 @@
 open Ast
 
+(** Built in classes *)
+
 let built_in : Ast.func_def =
     { returns = None;
       host = None;
@@ -136,6 +138,7 @@ let class_float : Ast.class_def =
 
     { klass = name; parent = Some("Object"); sections = sections }
 
+(** The list of built in classes and their methods *)
 let built_in_classes =
   [ class_object; class_string; class_bool; class_int; class_float ]
 

@@ -4,7 +4,7 @@ open StringModules
 open GlobalData
 open Klass
 
-(** Approximates a class *)
+(** Build a class_data object. *)
 
 (** Construct an empty class_data object *)
 let empty_data : class_data = {
