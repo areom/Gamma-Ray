@@ -276,7 +276,7 @@ let deanon_class init_state (aklass : Sast.class_def) =
             refines = refines;
             mains = mains } in
     let cleaned = { aklass with sections = sections } in
-    { state with clean = cleaned::state.clean ; current = "" }
+    (state.deanon, { state with clean = cleaned::state.clean; current = ""; deanon = [] })
 
 (** A startng state for deanonymization. *)
 let empty_deanon_state data =
@@ -303,13 +303,21 @@ let empty_deanon_state data =
     classes themselves).
   *)
 let deanonymize klass_data sast_klasses =
+    let is_empty = function
+        | [] -> true
+        | _ -> false in
+
     let rec run_deanon init_state asts sasts = match asts, sasts with
+        (* Every sAST has been deanonymized, even the deanonymized ones converted into sASTs
+         * Every Ast has been sAST'd too. So we are done.
+         *)
         | [], [] ->
-            Left(init_state)
+            if is_empty init_state.deanon then Left((init_state.data, init_state.clean))
+            else raise(Failure("Deanonymization somehow did not recurse properly."))
 
         | [], klass::rest ->
-            let state = deanon_class init_state klass in
-            run_deanon state state.deanon rest
+            let (asts, state) = deanon_class init_state klass in
+            run_deanon state asts rest
 
         | klass::rest, _ -> match KlassData.append_leaf init_state.data klass with
             | Left(data) ->
