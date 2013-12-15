@@ -565,7 +565,7 @@ let check_ancestor_signatures data =
 
     let check_class_meths aklass parent_methods =
         let methods = StringMap.find aklass data.methods in
-        StringMap.fold skip_init methods (methods, []) in
+        StringMap.fold skip_init methods (parent_methods, []) in
 
     let dfs_explorer aklass methods collisions =
        match check_class_meths aklass methods with
