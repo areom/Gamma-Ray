@@ -787,8 +787,8 @@ let append_mains data = match build_main_map data with
 
 let build_class_data klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
-      append_distance ; append_variables ; append_methods ; append_refines ;
-      append_mains ]
+      append_distance ; append_variables ; test_fields ; append_methods ;
+      test_init ; append_refines ; append_mains ]
 
 let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
