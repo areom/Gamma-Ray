@@ -5,31 +5,38 @@ compile:
 	ocamllex scanner.mll
 	ocamlyacc parser.mly
 
-	ocamlc -c -g ast.mli
-	ocamlc -c -g UID.ml
-	ocamlc -c -g parser.mli
-	ocamlc -c -g scanner.ml
-	ocamlc -c -g parser.ml
-	ocamlc -c -g WhiteSpace.ml
-	ocamlc -c -g Inspector.ml
-	ocamlc -c -g Pretty.ml
+	ocamlc -c -g Ast.mli
 	ocamlc -c -g Util.ml
 	ocamlc -c -g StringModules.ml
+	ocamlc -c -g GlobalData.mli
+	ocamlc -c -g Klass.mli
+	ocamlc -c -g KlassData.mli
+	ocamlc -c -g UID.ml
 	ocamlc -c -g BuiltIns.ml
 	ocamlc -c -g Klass.ml
-	ocamlc -c -g classinfo.ml
-	ocamlc -c -g inspect.ml
-	ocamlc -c -g prettify.ml
-	ocamlc -c -g streams.ml
-	ocamlc -c -g canonical.ml
+	ocamlc -c -g KlassData.ml
 	ocamlc -c -g Debug.ml
 	ocamlc -c -g Variables.ml
-	ocamlc -c -g freevars.ml
 	ocamlc -c -g Sast.ml
 	ocamlc -c -g BuildSast.ml
 	ocamlc -c -g Unanonymous.ml
 	ocamlc -c -g Cast.ml
 	ocamlc -c -g GenCast.ml
+
+	ocamlc -c -g parser.mli
+	ocamlc -c -g scanner.ml
+	ocamlc -c -g parser.ml
+
+	ocamlc -c -g WhiteSpace.ml
+	ocamlc -c -g Inspector.ml
+	ocamlc -c -g Pretty.ml
+
+	ocamlc -c -g classinfo.ml
+	ocamlc -c -g inspect.ml
+	ocamlc -c -g prettify.ml
+	ocamlc -c -g streams.ml
+	ocamlc -c -g canonical.ml
+	ocamlc -c -g freevars.ml
 
 _tools:
 	#Make the tools
@@ -37,8 +44,8 @@ _tools:
 	ocamlc -g -o tools/inspect UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
 	ocamlc -g -o tools/streams UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo streams.cmo
 	ocamlc -g -o tools/canonical UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo canonical.cmo
-	ocamlc -g -o tools/freevars UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo Debug.cmo Variables.cmo freevars.cmo
-	ocamlc -g -o tools/classinfo UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo classinfo.cmo
+	ocamlc -g -o tools/freevars UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo freevars.cmo
+	ocamlc -g -o tools/classinfo UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo classinfo.cmo
 
 docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml BuiltIns.ml Klass.ml Debug.ml Variables.ml Unanonymous.ml UID.ml
 docgen = ./doc/.docgen

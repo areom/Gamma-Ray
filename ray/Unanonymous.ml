@@ -8,11 +8,11 @@ open Util
 
 (** The data needed to deanonymize a list of classes and store the results. *)
 type anon_state = {
-    labeler : int lookup_map ;    (** Label deanonymized classes *)
-    deanon : Ast.class_def list ; (** List of Ast.class_def classes that are deanonymized. *)
-    clean : Sast.class_def list ; (** List of clean Sast.class_def classes *)
-    data : Klass.class_data ;     (** A class_data record used for typing *)
-    current : string ;            (** The class that is currently being examined *)
+    labeler : int lookup_map ;      (** Label deanonymized classes *)
+    deanon : Ast.class_def list ;   (** List of Ast.class_def classes that are deanonymized. *)
+    clean : Sast.class_def list ;   (** List of clean Sast.class_def classes *)
+    data : GlobalData.class_data ;  (** A class_data record used for typing *)
+    current : string ;              (** The class that is currently being examined *)
 }
 
 (**
@@ -311,7 +311,7 @@ let deanonymize klass_data sast_klasses =
             let state = deanon_class init_state klass in
             run_deanon state state.deanon rest
 
-        | klass::rest, _ -> match Klass.append_leaf init_state.data klass with
+        | klass::rest, _ -> match KlassData.append_leaf init_state.data klass with
             | Left(data) ->
                 let sast_klass = BuildSast.ast_to_sast data klass in
                 let state = { init_state with data = data } in

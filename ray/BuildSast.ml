@@ -4,6 +4,7 @@ open Klass
 open Str
 open StringModules
 open Util
+open GlobalData
 
 let env = StringMap.empty
 

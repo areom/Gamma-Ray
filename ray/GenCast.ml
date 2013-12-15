@@ -3,6 +3,7 @@ open Sast
 open Cast
 open Klass
 open StringModules
+open GlobalData
 
 (*Convert the sast expr to cast expr*)
 let rec sast_to_castexpr sast_expr =
