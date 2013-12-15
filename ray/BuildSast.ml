@@ -41,19 +41,6 @@ let getRetType (fdef : Ast.func_def) = match fdef.returns with
     | Some(retval) -> retval
     | None -> "Void"
 
-let getPubMethod(*Type*) klass_data recvr methd arglist =
-    let argtypes = List.map fst arglist in
-    match Klass.best_inherited_method klass_data recvr methd argtypes false with
-        | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr ^ "."))
-        | Some(fdef) -> fdef
-
-let getInstanceMethod(*Type*) klass_data recvr methd arglist =
-    let argtypes = List.map fst arglist in
-    match Klass.best_inherited_method klass_data recvr methd argtypes true with
-        | None -> raise(Failure("Method " ^ methd ^ " not found ancestrally in " ^ recvr ^ "."))
-        | Some(fdef) -> fdef
-
-
 let rec eval klass_data kname env exp =
     let eval' expr = eval klass_data kname env expr in
     let eval_exprlist elist = List.map eval' elist in
@@ -66,10 +53,14 @@ let rec eval klass_data kname env exp =
     let get_invoc expr methd elist =
         let (recvr_type, _) as recvr = eval' expr in
         let arglist = eval_exprlist elist in
-        let mfdef(*mtype*) = if recvr_type = current_class
-            then getInstanceMethod(*Type*) klass_data recvr_type methd arglist
-            else getPubMethod(*Type*) klass_data recvr_type methd arglist in
-            (getRetType mfdef (*mtype*), Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
+        let this = (recvr_type = current_class) in
+        let recvr_type = if this then current_class else recvr_type in
+        let argtypes = List.map fst arglist in
+        let mfdef = match Klass.best_inherited_method klass_data recvr_type methd argtypes this with
+            | None when this -> raise(Failure("Method " ^ methd ^ " not found ancestrally in " ^ recvr_type ^ "."))
+            | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
+            | Some(fdef) -> fdef in
+        (getRetType mfdef, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
     
     let get_init kname exprlist =
         let arglist = eval_exprlist exprlist in
