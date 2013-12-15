@@ -1,4 +1,4 @@
-all: compile docs tools
+all: compile _tools _doc
 
 compile:
 	#Generate the lexer and parser
@@ -30,6 +30,8 @@ compile:
 	ocamlc -c -g Unanonymous.ml
 	ocamlc -c -g Cast.ml
 	ocamlc -c -g GenCast.ml
+
+_tools:
 	#Make the tools
 	ocamlc -g -o tools/prettify UID.cmo scanner.cmo parser.cmo Inspector.cmo Pretty.cmo WhiteSpace.cmo prettify.cmo
 	ocamlc -g -o tools/inspect UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo inspect.cmo
@@ -41,13 +43,13 @@ compile:
 docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml BuiltIns.ml Klass.ml Debug.ml Variables.ml Unanonymous.ml UID.ml
 docgen = ./doc/.docgen
 
-docs:
+_doc:
 	#Generate the documentation
 	mkdir -p doc
-	ocamldoc -dump $(docgen) -keep-code $(docsources)
-	ocamldoc -load $(docgen) -d doc -t "The Ray Compiler" -html -colorize-code -all-params
-	ocamldoc -load $(docgen) -dot -o "./doc/ray-modules.dot"
-	ocamldoc -load $(docgen) -dot -dot-types -o "./doc/ray-types.dot"
+	ocamldoc -hide-warnings -dump $(docgen) -keep-code $(docsources)
+	ocamldoc -hide-warnings -load $(docgen) -d doc -t "The Ray Compiler" -html -colorize-code -all-params
+	ocamldoc -hide-warnings -load $(docgen) -dot -o "./doc/ray-modules.dot"
+	ocamldoc -hide-warnings -load $(docgen) -dot -dot-types -o "./doc/ray-types.dot"
 
 clean:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml
