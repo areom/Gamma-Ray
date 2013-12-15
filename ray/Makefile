@@ -61,9 +61,12 @@ _doc:
 	ocamldoc -hide-warnings -load $(docgen) -dot -o "./doc/ray-modules.dot"
 	ocamldoc -hide-warnings -load $(docgen) -dot -dot-types -o "./doc/ray-types.dot"
 
-clean:
+bleach:
 	rm *.cmi *.cmo parser.ml parser.mli scanner.ml
 	rm -r ./doc
+
+clean:
+	rm *.cmi *.cmo parser.ml parser.mli scanner.ml
 
 cleantools:
 	rm tools/{prettify,inspect,streams,canonical,freevars,classinfo}
