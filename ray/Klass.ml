@@ -182,7 +182,7 @@ let full_signature_string func =
     Map function collisions to the type used for collection that information.
     This lets us have a `standard' form of method / refinement collisions and so
     we can easily build up a list of them.
-    @param aklass the class we are currently examining
+    @param aklass the class we are currently examining (class name -- string)
     @param funcs a list of funcs colliding in aklass
     @param reqhost are we requiring a host (compiler error if no host and true)
     @return a tuple representing the collisons - (class name, collision tuples)
@@ -195,7 +195,7 @@ let build_collisions aklass funcs reqhost =
             | None, _ -> func.name
             | Some(host), _ -> host ^ "." ^ func.name in
         (name, List.map fst func.formals) in
-    (aklass.klass, List.map to_collision funcs)
+    (aklass, List.map to_collision funcs)
 
 (** Fold over the values in a class_data record's classes map. *)
 let fold_classes data folder init =
@@ -381,7 +381,7 @@ let build_class_method_map data =
     let map_builder (klass_map, collision_list) (_, aklass) =
         match build_method_map aklass with
             | Left(method_map) -> (StringMap.add aklass.klass method_map klass_map, collision_list)
-            | Right(collisions) -> (klass_map, (build_collisions aklass collisions false)::collision_list) in
+            | Right(collisions) -> (klass_map, (build_collisions aklass.klass collisions false)::collision_list) in
     match build_map_track_errors map_builder (StringMap.bindings data.classes) with
         | Left(method_map) -> Left({ data with methods = method_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
@@ -417,7 +417,7 @@ let build_class_refinement_map data =
     let map_builder (klass_map, collision_list) (_, aklass) =
         match build_refinement_map aklass with
             | Left(refinement_map) -> (StringMap.add aklass.klass refinement_map klass_map, collision_list)
-            | Right(collisions) -> (klass_map, (build_collisions aklass collisions true)::collision_list) in
+            | Right(collisions) -> (klass_map, (build_collisions aklass.klass collisions true)::collision_list) in
     match build_map_track_errors map_builder (StringMap.bindings data.classes) with
         | Left(refinement_map) -> Left({ data with refines = refinement_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
@@ -545,6 +545,8 @@ let class_ancestor_method_lookup data klass_name method_name this =
 
 (**
     Check to make sure that we don't have conflicting signatures as we go down the class tree.
+    @param data A class_data record value
+    @return Left(data) if everything is okay, otherwise a list of (string
   *)
 let check_ancestor_signatures data =
     let check_sigs meth_name funcs (methods, collisions) =
@@ -834,7 +836,7 @@ let append_leaf_methods aklass data = match build_method_map aklass with
     | Left(meths) ->
         let updated = StringMap.add aklass.klass meths data.methods in
         Left({ data with methods = updated })
-    | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass collisions false]))
+    | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass.klass collisions false]))
 let append_leaf_instantiable aklass data =
     let is_init mem = match mem with
         | InitMem(_) -> true
@@ -846,7 +848,7 @@ let append_leaf_refines aklass data = match build_refinement_map aklass with
     | Left(refs) ->
         let updated = StringMap.add aklass.klass refs data.refines in
         Left({ data with refines = updated })
-    | Right(collisions) -> Right(ConflictingRefinements([build_collisions aklass collisions true]))
+    | Right(collisions) -> Right(ConflictingRefinements([build_collisions aklass.klass collisions true]))
 let append_leaf_mains aklass data = match aklass.sections.mains with
     | [] -> Left(data)
     | [main] ->
