@@ -752,7 +752,7 @@ let best_method data klass_name method_name actuals sections =
     match best_matching_signature data actuals methods with
         | [] -> None
         | [func] -> Some(func)
-        | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
+        | _ -> raise(Invalid_argument("Multiple methods named " ^ method_name ^ " of the same signature in " ^ klass_name ^ "; Compiler error."))
 
 let best_inherited_method data klass_name method_name actuals this =
     let methods = class_ancestor_method_lookup data klass_name method_name this in
