@@ -529,6 +529,21 @@ let class_method_lookup data klass_name func_name =
         | _ -> []
 
 (**
+    Given a class_data record, a class name, a method name, and whether the current context is
+    `this' (i.e. if we want private / protected / etc), then return all methods in the ancestry
+    of that class with that name (in the appropriate sections).
+  *)
+let class_ancestor_method_lookup data klass_name method_name this =
+    let (startsects, recsects) = if this then ([Publics; Protects; Publics], [Publics; Protects]) else ([Publics], [Publics]) in
+    let rec find_methods found aklass sects =
+        let accessible f = List.mem f.section sects in
+        let funcs = List.filter accessible (class_method_lookup data aklass method_name) in
+        let found = funcs @ found in
+        if aklass = "Object" then found
+        else find_methods found (StringMap.find aklass data.parents) recsects in
+    find_methods [] klass_name startsects
+
+(**
     Verifies that each class is able to be instantiated.
     @param data A class_data record
     @return Either the data is returned in Left or a list of uninstantiable classes in Right
