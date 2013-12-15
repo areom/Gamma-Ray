@@ -540,6 +540,7 @@ let class_ancestor_method_lookup data klass_name method_name this =
         let funcs = List.filter accessible (class_method_lookup data aklass method_name) in
         let found = funcs @ found in
         if aklass = "Object" then found
+        else if method_name = "init" then found
         else find_methods found (StringMap.find aklass data.parents) recsects in
     find_methods [] klass_name startsects
 
@@ -558,9 +559,13 @@ let check_ancestor_signatures data =
         let (known, collisions) = List.fold_left updater (apriori, collisions) funcs in
         (StringMap.add meth_name known methods, collisions) in
 
+    let skip_init meth_name funcs acc = match meth_name with
+        | "init" -> acc
+        | _ -> check_sigs meth_name funcs acc in
+
     let check_class_meths aklass parent_methods =
         let methods = StringMap.find aklass data.methods in
-        StringMap.fold check_sigs methods (methods, []) in
+        StringMap.fold skip_init methods (methods, []) in
 
     let dfs_explorer aklass methods collisions =
        match check_class_meths aklass methods with
