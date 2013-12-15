@@ -21,16 +21,15 @@ let lookup_type klass_data kname vname env = match map_lookup vname env with
         | Some((_, vtyp, _)) -> vtyp
         | None -> raise(Failure("ID " ^ vname ^ " not found in the ancestery of " ^ kname ^ " or in the environment."))
 
-
 (* Do a lookup on the instance variable for the current classdef and return
    its type else then recurse its ancestor *)
-let getFieldType recvr member klass_data cur_kname =
-    let this = (recvr = current_class) in
-    let recvr = if this then cur_kname else recvr in
-    match Klass.class_field_far_lookup klass_data recvr member this with
+let get_field_type klass_data receiver field context =
+    let this = (receiver = current_class) in
+    let receiver = if this then context else receiver in
+    match Klass.class_field_far_lookup klass_data receiver field this with
         | Left((_, vtyp, _)) -> vtyp
-        | Right(true) -> raise(Failure("Field " ^ member ^ " is not accessible in " ^ recvr ^ " from " ^ cur_kname ^ "."))
-        | Right(false) -> raise(Failure("Unknown field " ^ member ^ " in the ancestry of " ^ recvr ^ "."))
+        | Right(true) -> raise(Failure("Field " ^ field ^ " is not accessible in " ^ receiver ^ " from " ^ context ^ "."))
+        | Right(false) -> raise(Failure("Unknown field " ^ field ^ " in the ancestry of " ^ receiver ^ "."))
 
 let getLiteralType litparam = match litparam with
     | Ast.Int(i) -> "Integer"
@@ -72,7 +71,7 @@ let rec eval klass_data kname env exp =
 
     let get_field expr mbr =
         let (recvr_type, _) as recvr = eval' expr in
-        let field_type = getFieldType recvr_type mbr klass_data kname in
+        let field_type = get_field_type klass_data recvr_type mbr kname in
         (field_type, Sast.Field(recvr, mbr)) in
 
     let get_invoc expr methd elist =
