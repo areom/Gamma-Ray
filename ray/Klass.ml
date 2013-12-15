@@ -182,7 +182,7 @@ let full_signature_string func =
     Map function collisions to the type used for collection that information.
     This lets us have a `standard' form of method / refinement collisions and so
     we can easily build up a list of them.
-    @param aklass the class we are currently examining
+    @param aklass the class we are currently examining (class name -- string)
     @param funcs a list of funcs colliding in aklass
     @param reqhost are we requiring a host (compiler error if no host and true)
     @return a tuple representing the collisons - (class name, collision tuples)
@@ -195,7 +195,7 @@ let build_collisions aklass funcs reqhost =
             | None, _ -> func.name
             | Some(host), _ -> host ^ "." ^ func.name in
         (name, List.map fst func.formals) in
-    (aklass.klass, List.map to_collision funcs)
+    (aklass, List.map to_collision funcs)
 
 (** Fold over the values in a class_data record's classes map. *)
 let fold_classes data folder init =
@@ -381,7 +381,7 @@ let build_class_method_map data =
     let map_builder (klass_map, collision_list) (_, aklass) =
         match build_method_map aklass with
             | Left(method_map) -> (StringMap.add aklass.klass method_map klass_map, collision_list)
-            | Right(collisions) -> (klass_map, (build_collisions aklass collisions false)::collision_list) in
+            | Right(collisions) -> (klass_map, (build_collisions aklass.klass collisions false)::collision_list) in
     match build_map_track_errors map_builder (StringMap.bindings data.classes) with
         | Left(method_map) -> Left({ data with methods = method_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
@@ -417,7 +417,7 @@ let build_class_refinement_map data =
     let map_builder (klass_map, collision_list) (_, aklass) =
         match build_refinement_map aklass with
             | Left(refinement_map) -> (StringMap.add aklass.klass refinement_map klass_map, collision_list)
-            | Right(collisions) -> (klass_map, (build_collisions aklass collisions true)::collision_list) in
+            | Right(collisions) -> (klass_map, (build_collisions aklass.klass collisions true)::collision_list) in
     match build_map_track_errors map_builder (StringMap.bindings data.classes) with
         | Left(refinement_map) -> Left({ data with refines = refinement_map })
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
@@ -532,6 +532,12 @@ let class_method_lookup data klass_name func_name =
     Given a class_data record, a class name, a method name, and whether the current context is
     `this' (i.e. if we want private / protected / etc), then return all methods in the ancestry
     of that class with that name (in the appropriate sections).
+    @param data A class_data record value
+    @param klass_name The name of a class.
+    @param method_name The name of a method to look up
+    @param this search mode -- true means public/protected/private and then public/protected,
+    false is always public
+    @return A list of methods with the given name.
   *)
 let class_ancestor_method_lookup data klass_name method_name this =
     let (startsects, recsects) = if this then ([Publics; Protects; Publics], [Publics; Protects]) else ([Publics], [Publics]) in
@@ -540,11 +546,14 @@ let class_ancestor_method_lookup data klass_name method_name this =
         let funcs = List.filter accessible (class_method_lookup data aklass method_name) in
         let found = funcs @ found in
         if aklass = "Object" then found
+        else if method_name = "init" then found
         else find_methods found (StringMap.find aklass data.parents) recsects in
     find_methods [] klass_name startsects
 
 (**
     Check to make sure that we don't have conflicting signatures as we go down the class tree.
+    @param data A class_data record value
+    @return Left(data) if everything is okay, otherwise a list of (string
   *)
 let check_ancestor_signatures data =
     let check_sigs meth_name funcs (methods, collisions) =
@@ -556,14 +565,18 @@ let check_ancestor_signatures data =
         let (known, collisions) = List.fold_left updater (apriori, collisions) funcs in
         (StringMap.add meth_name known methods, collisions) in
 
+    let skip_init meth_name funcs acc = match meth_name with
+        | "init" -> acc
+        | _ -> check_sigs meth_name funcs acc in
+
     let check_class_meths aklass parent_methods =
         let methods = StringMap.find aklass data.methods in
-        StringMap.fold check_sigs methods (methods, []) in
+        StringMap.fold skip_init methods (parent_methods, []) in
 
     let dfs_explorer aklass methods collisions =
        match check_class_meths aklass methods with
            | (methods, []) -> (methods, collisions)
-           | (methods, cols) -> (methods, (aklass, cols)::collisions) in
+           | (methods, cols) -> (methods, (build_collisions aklass cols false)::collisions) in
 
     match dfs_errors data dfs_explorer StringMap.empty [] with
         | [] -> Left(data)
@@ -739,7 +752,14 @@ let best_method data klass_name method_name actuals sections =
     match best_matching_signature data actuals methods with
         | [] -> None
         | [func] -> Some(func)
-        | _ -> raise(Invalid_argument("Multiple methods of the same signature in " ^ klass_name ^ "; Compiler error."))
+        | _ -> raise(Invalid_argument("Multiple methods named " ^ method_name ^ " of the same signature in " ^ klass_name ^ "; Compiler error."))
+
+let best_inherited_method data klass_name method_name actuals this =
+    let methods = class_ancestor_method_lookup data klass_name method_name this in
+    match best_matching_signature data actuals methods with
+        | [] -> None
+        | [func] -> Some(func)
+        | _ -> raise(Invalid_argument("Multiple methods named " ^ method_name ^ " of the same signature inherited in " ^ klass_name ^ "; Compiler error."))
 
 (**
     All the different types of non-compiler errors that can occur (programmer errors)
@@ -750,6 +770,7 @@ type class_data_error
     | DuplicateVariables of (string * string list) list
     | DuplicateFields of (string * (string * string) list) list
     | ConflictingMethods of (string * (string * string list) list) list
+    | ConflictingInherited of (string * (string * string list) list) list
     | Uninstantiable of string list
     | ConflictingRefinements of (string * (string * string list) list) list
     | MultipleMains of string list
@@ -776,6 +797,9 @@ let append_methods data = match build_class_method_map data with
 let test_init data = match verify_instantiable data with
     | Left(data) -> Left(data)
     | Right(bad) -> Right(Uninstantiable(bad))
+let test_inherited_methods data = match check_ancestor_signatures data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(ConflictingInherited(collisions))
 let append_refines data = match build_class_refinement_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingRefinements(collisions))
@@ -785,13 +809,13 @@ let append_mains data = match build_main_map data with
 
 let build_class_data klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
-      append_distance ; append_variables ; append_methods ; append_refines ;
-      append_mains ]
+      append_distance ; append_variables ; test_fields ; append_methods ;
+      test_init ; append_refines ; append_mains ]
 
 let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; append_methods ;
-      test_init ; append_refines ; append_mains ]
+      test_init ; test_inherited_methods ; append_refines ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -834,7 +858,17 @@ let append_leaf_methods aklass data = match build_method_map aklass with
     | Left(meths) ->
         let updated = StringMap.add aklass.klass meths data.methods in
         Left({ data with methods = updated })
-    | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass collisions false]))
+    | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass.klass collisions false]))
+let append_leaf_test_inherited aklass data =
+    let folder collisions meth = match class_ancestor_method_lookup data aklass.klass meth.name true with
+        | [] -> collisions
+        | funcs -> match List.filter (conflicting_signatures meth) funcs with
+            | [] -> collisions
+            | cols -> cols in
+    let functions = List.flatten (List.map snd (klass_to_methods aklass)) in
+    match List.fold_left folder [] functions with
+        | [] -> Left(data)
+        | collisions -> Right(ConflictingInherited([build_collisions aklass.klass collisions false]))
 let append_leaf_instantiable aklass data =
     let is_init mem = match mem with
         | InitMem(_) -> true
@@ -846,7 +880,7 @@ let append_leaf_refines aklass data = match build_refinement_map aklass with
     | Left(refs) ->
         let updated = StringMap.add aklass.klass refs data.refines in
         Left({ data with refines = updated })
-    | Right(collisions) -> Right(ConflictingRefinements([build_collisions aklass collisions true]))
+    | Right(collisions) -> Right(ConflictingRefinements([build_collisions aklass.klass collisions true]))
 let append_leaf_mains aklass data = match aklass.sections.mains with
     | [] -> Left(data)
     | [main] ->
@@ -868,16 +902,17 @@ let append_leaf data aklass =
     let with_klass f = f aklass in
     let actions =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
-          append_leaf_variables ; append_leaf_methods ; append_leaf_refines ; append_leaf_mains ;
-          append_leaf_ancestor ; append_leaf_distance ] in
+          append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
+          append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 let append_leaf_test data aklass =
     let with_klass f = f aklass in
     let actions =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
-          append_leaf_variables ; append_leaf_test_fields ; append_leaf_methods ; append_leaf_instantiable ;
-          append_leaf_refines ; append_leaf_mains ; append_leaf_ancestor ; append_leaf_distance ] in
+          append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
+          append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ; append_leaf_refines ;
+          append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 (**

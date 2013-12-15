@@ -18,6 +18,11 @@ let dupmeth (klass, meths) =
         | [(name, formals)] -> Format.sprintf "Class %s's method %s has multiple implementations taking %s" klass name (args formals)
         | _ -> Format.sprintf "Class %s has multiple methods with conflicting signatures:\n\t%s" klass (String.concat "\n\t" (List.map asig meths))
 
+let dupinherit (klass, meths) =
+    match meths with
+        | [(name, formals)] -> Format.sprintf "Class %s's method %s has conflicts with an inherited method taking %s" klass name (args formals)
+        | _ -> Format.sprintf "Class %s has multiple methods with conflicting with inherited methods:\n\t%s" klass (String.concat "\n\t" (List.map asig meths))
+
 let dupref (klass, refines) =
     match refines with
         | [refine] -> Format.sprintf "Class %s refinment %s is multiply defined." klass (aref refine)
@@ -31,6 +36,7 @@ let errstr = function
     | DuplicateVariables(list) -> String.concat "\n" (List.map dupvar list)
     | DuplicateFields(list) -> String.concat "\n" (List.map dupfield list)
     | ConflictingMethods(list) -> String.concat "\n" (List.map dupmeth list)
+    | ConflictingInherited(list) -> String.concat "\n" (List.map dupinherit list)
     | Uninstantiable(klasses) -> (match klasses with
         | [klass] -> "Class " ^ klass ^ " does not have a usable init."
         | _ -> "Multiple classes are not instantiable: [" ^ String.concat ", " klasses ^ "]")

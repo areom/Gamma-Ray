@@ -21,16 +21,6 @@ let lookup_type klass_data kname vname env = match map_lookup vname env with
         | Some((_, vtyp, _)) -> vtyp
         | None -> raise(Failure("ID " ^ vname ^ " not found in the ancestery of " ^ kname ^ " or in the environment."))
 
-(* Do a lookup on the instance variable for the current classdef and return
-   its type else then recurse its ancestor *)
-let get_field_type klass_data receiver field context =
-    let this = (receiver = current_class) in
-    let receiver = if this then context else receiver in
-    match Klass.class_field_far_lookup klass_data receiver field this with
-        | Left((_, vtyp, _)) -> vtyp
-        | Right(true) -> raise(Failure("Field " ^ field ^ " is not accessible in " ^ receiver ^ " from " ^ context ^ "."))
-        | Right(false) -> raise(Failure("Unknown field " ^ field ^ " in the ancestry of " ^ receiver ^ "."))
-
 let getLiteralType litparam = match litparam with
     | Ast.Int(i) -> "Integer"
     | Ast.Float(f) -> "Float"
@@ -41,46 +31,31 @@ let getRetType (fdef : Ast.func_def) = match fdef.returns with
     | Some(retval) -> retval
     | None -> "Void"
 
-let rec getAncestor klass_data recvr methd argtypelist section =
-    let parent = StringMap.find recvr klass_data.parents in
-    match best_method klass_data parent methd argtypelist section, parent with
-        | None, "Object" -> raise(Failure "Method not found")
-        | None, _ -> getAncestor klass_data parent methd argtypelist section
-        | Some(fdef), _ -> (*getRetType*) fdef
-
-let getPubMethod(*Type*) klass_data recvr methd arglist =
-    let argtypes = List.map fst arglist in
-    let section = [Ast.Publics] in
-    match best_method klass_data recvr methd argtypes section, recvr with
-        | None, "Object" -> raise(Failure "Method not found")
-        | None, _ -> getAncestor klass_data recvr methd argtypes section
-        | Some(fdef), _ -> (*getRetType*) fdef
-
-let getInstanceMethod(*Type*) klass_data recvr methd arglist =
-    let argtypes = List.map fst arglist in
-    let section = [Ast.Privates; Ast.Protects; Ast.Publics] in
-    match best_method klass_data recvr methd argtypes section, recvr with
-        | None, "Object" -> raise(Failure "Method not found")
-        | None, _ -> getAncestor klass_data recvr methd argtypes (List.tl section)
-        | Some(fdef), _ -> (*getRetType*) fdef
-
-
 let rec eval klass_data kname env exp =
     let eval' expr = eval klass_data kname env expr in
     let eval_exprlist elist = List.map eval' elist in
 
     let get_field expr mbr =
         let (recvr_type, _) as recvr = eval' expr in
-        let field_type = get_field_type klass_data recvr_type mbr kname in
+        let this = (recvr_type = current_class) in
+        let recvr_type = if this then kname else recvr_type in
+        let field_type = match Klass.class_field_far_lookup klass_data recvr_type mbr this with
+            | Left((_, vtyp, _)) -> vtyp
+            | Right(true) -> raise(Failure("Field " ^ mbr ^ " is not accessible in " ^ recvr_type ^ " from " ^ kname ^ "."))
+            | Right(false) -> raise(Failure("Unknown field " ^ mbr ^ " in the ancestry of " ^ recvr_type ^ ".")) in
         (field_type, Sast.Field(recvr, mbr)) in
 
     let get_invoc expr methd elist =
         let (recvr_type, _) as recvr = eval' expr in
         let arglist = eval_exprlist elist in
-        let mfdef(*mtype*) = if recvr_type = current_class
-            then getInstanceMethod(*Type*) klass_data recvr_type methd arglist
-            else getPubMethod(*Type*) klass_data recvr_type methd arglist in
-            (getRetType mfdef (*mtype*), Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
+        let this = (recvr_type = current_class) in
+        let recvr_type = if this then kname else recvr_type in
+        let argtypes = List.map fst arglist in
+        let mfdef = match Klass.best_inherited_method klass_data recvr_type methd argtypes this with
+            | None when this -> raise(Failure("Method " ^ methd ^ " not found ancestrally in " ^ recvr_type ^ "."))
+            | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
+            | Some(fdef) -> fdef in
+        (getRetType mfdef, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
     
     let get_init kname exprlist =
         let arglist = eval_exprlist exprlist in
