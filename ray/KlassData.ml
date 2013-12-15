@@ -19,6 +19,7 @@ let empty_data : class_data = {
     ancestors = StringMap.empty;
     distance = StringMap.empty;
     dispatcher = StringMap.empty;
+    refinable = StringMap.empty;
 }
 
 (**
@@ -414,6 +415,35 @@ let build_dispatch_map data =
     let dispatcher = StringMap.fold updater data.classes StringMap.empty in
     { data with dispatcher = dispatcher }
 
+(**
+    Update the refinement dispatch uid table with a given set of refinements.
+    @param parent The class the refinements will come from
+    @param refines A list of refinements
+    @param table The refinement dispatch table
+    @return The updated table
+  *)
+let update_refinable parent refines table =
+    let toname f = match f.host with
+        | Some(host) -> host ^ "." ^ f.name
+        | _ -> raise(Invalid_argument("Compiler error; we have refinement without host for " ^ f.name ^ " in " ^ f.inklass ^ ".")) in
+    let folder amap f = add_map_list (toname f) f amap in
+    let map = if StringMap.mem parent table then StringMap.find parent table else StringMap.empty in
+    let map = List.fold_left folder map refines in
+    StringMap.add parent map table
+
+(**
+    Add the refinable (class name -> host.name -> refinables list) table to the
+    given class_data record, returning the updated record.
+    @param data A class_data record info
+    @return A class_data object with the refinable updated
+  *)
+let build_refinable_map data =
+    let updater klass_name aklass table = match klass_name with
+        | "Object" -> table
+        | _ -> let parent = klass_to_parent aklass in update_refinable parent aklass.sections.refines table in
+    let refinable = StringMap.fold updater data.classes StringMap.empty in
+    { data with refinable = refinable}
+
 (** These are just things to pipe together building a class_data record pipeline *)
 let initial_data klasses = match initialize_class_data klasses with
     | Left(data) -> Left(data)
@@ -444,6 +474,7 @@ let append_refines data = match build_class_refinement_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingRefinements(collisions))
 let append_dispatcher data = Left(build_dispatch_map data)
+let append_refinable data = Left(build_refinable_map data)
 let append_mains data = match build_main_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(MultipleMains(collisions))
@@ -457,7 +488,7 @@ let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; append_methods ;
       test_init ; test_inherited_methods ; append_refines ; append_dispatcher ;
-      append_mains ]
+      append_refinable ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -543,6 +574,10 @@ let append_leaf_dispatch aklass data =
     let parent = klass_to_parent aklass in
     let updated = update_dispatch parent aklass.sections.refines data.dispatcher in
     Left({ data with dispatcher = updated })
+let append_leaf_refinable aklass data =
+    let parent = klass_to_parent aklass in
+    let updated = update_refinable parent aklass.sections.refines data.refinable in
+    Left({ data with refinable = updated })
 
 let append_leaf data aklass =
     let with_klass f = f aklass in
@@ -558,7 +593,7 @@ let append_leaf_test data aklass =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
           append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
           append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ; append_leaf_refines ;
-          append_leaf_dispatch ; append_leaf_mains ] in
+          append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 (**
@@ -578,6 +613,10 @@ let print_class_data data =
 
     let func_list funcs =
         let sigs = List.map (fun f -> "\n\t\t" ^ (full_signature_string f)) funcs in
+        String.concat "" sigs in
+
+    let func_of_list funcs =
+        let sigs = List.map (fun f -> "\n\t\t" ^ f.inklass ^ "->" ^ (full_signature_string f)) funcs in
         String.concat "" sigs in
 
     let class_printer cdef =
@@ -632,4 +671,5 @@ let print_class_data data =
     map_printer data.mains "Mains" full_signature_string;
     print_newline ();
     table_printer data.dispatcher "Dispatch" id;
-
+    print_newline ();
+    table_printer data.refinable "Refinable" func_of_list;
