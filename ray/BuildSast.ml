@@ -233,7 +233,8 @@ let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
             body = attach_bindings klass_data kname func.body with_params;
             section = func.section;
             inklass = func.inklass;
-            uid = func.uid; } in
+            uid = func.uid;
+            builtin = func.builtin } in
     sast_func
 
 let ast_mem_to_sast_mem klass_data kname (mem : Ast.member_def) initial_env =

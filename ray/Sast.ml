@@ -59,6 +59,7 @@ and func_def = {
     section : Ast.class_section;  (* Makes things easier later *)
     inklass : string;
     uid     : string;
+    builtin : bool;
 }
 
 (* A member is either a variable or some sort of function *)
