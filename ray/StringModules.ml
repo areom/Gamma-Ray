@@ -65,9 +65,13 @@ let map_lookup_list key map = if StringMap.mem key map
 
 (** Updating a string map that has list of possible values *)
 let add_map_list key value map =
-    if StringMap.mem key map
-        then StringMap.add key (value::(StringMap.find key map)) map
-        else StringMap.add key [value] map
+    let old = map_lookup_list key map in
+    StringMap.add key (value::old) map
+
+(** Updating a string map that has a list of possible values with a bunch of new values *)
+let concat_map_list key values map =
+    let old = map_lookup_list key map in
+    StringMap.add key (values@old) map
 
 (** Update a map but keep track of collisions *)
 let add_map_unique key value (map, collisions) =
