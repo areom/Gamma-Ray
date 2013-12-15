@@ -752,6 +752,7 @@ type class_data_error
     | DuplicateVariables of (string * string list) list
     | DuplicateFields of (string * (string * string) list) list
     | ConflictingMethods of (string * (string * string list) list) list
+    | ConflictingInherited of (string * (string * string list) list) list
     | Uninstantiable of string list
     | ConflictingRefinements of (string * (string * string list) list) list
     | MultipleMains of string list
@@ -778,6 +779,9 @@ let append_methods data = match build_class_method_map data with
 let test_init data = match verify_instantiable data with
     | Left(data) -> Left(data)
     | Right(bad) -> Right(Uninstantiable(bad))
+let test_inherited_methods data = match check_ancestor_signatures data with
+    | Left(data) -> Left(data)
+    | Right(collisions) -> Right(ConflictingInherited(collisions))
 let append_refines data = match build_class_refinement_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingRefinements(collisions))
@@ -793,7 +797,7 @@ let build_class_data klasses = seq (initial_data klasses)
 let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; append_methods ;
-      test_init ; append_refines ; append_mains ]
+      test_init ; test_inherited_methods ; append_refines ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
