@@ -565,7 +565,7 @@ let check_ancestor_signatures data =
     let dfs_explorer aklass methods collisions =
        match check_class_meths aklass methods with
            | (methods, []) -> (methods, collisions)
-           | (methods, cols) -> (methods, (aklass, cols)::collisions) in
+           | (methods, cols) -> (methods, (build_collisions aklass cols false)::collisions) in
 
     match dfs_errors data dfs_explorer StringMap.empty [] with
         | [] -> Left(data)
