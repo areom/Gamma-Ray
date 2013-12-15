@@ -459,7 +459,7 @@ let class_var_lookup data klass_name var_name =
     public / protected in an ancestor).
     @param data A class_data record.
     @param klass_name The name of a class (string)
-    @param var_name The name of a variable variable (string).
+    @param var_name The name of a variable (string).
     @return (class (string), type (string), class_section) option (None if not found).
   *)
 let class_field_lookup data klass_name var_name =
@@ -469,6 +469,22 @@ let class_field_lookup data klass_name var_name =
         | _, "Object" -> None
         | _, _ -> lookup (StringMap.find klass data.parents) [Publics; Protects] in
     lookup klass_name [Publics; Protects; Privates]
+
+(**
+    Given a class_data record, a class name, a var_name, and whether the receiver of the field lookup
+    is this, return the lookup of the field in the ancestry of the object. Note that this restricts
+    things that should be kept protected (thus this thusly passed)
+    @param data A class_data record
+    @param klass_name The name of a class (string)
+    @param var_name The name of a variable (string)
+    @return Either the left of a triple (class found, type, section) or a Right of a boolean, which
+    is true if the item was found but inaccessible and false otherwise.
+  *)
+let class_field_far_lookup data klass_name var_name this =
+    match class_field_lookup data klass_name var_name with
+        | Some((klass, vtyp, section)) when this || section = Publics -> Left((klass, vtyp, section))
+        | Some(_) -> Right(true)
+        | None -> Right(false)
 
 (**
     Given a class_data record, verify that there are no double declarations of instance
