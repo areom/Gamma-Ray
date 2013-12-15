@@ -1,6 +1,8 @@
 
 type varkind = Instance | Local
 
+(** Types for the semantic abstract syntax tree *)
+
 
 type environment = (string * varkind) Map.Make(String).t
 
