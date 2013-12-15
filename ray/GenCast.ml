@@ -1,5 +1,8 @@
+open Ast
 open Sast
 open Cast
+open Klass
+open StringModules
 
 (*Convert the sast expr to cast expr*)
 let rec sast_to_castexpr sast_expr =
@@ -73,25 +76,24 @@ let sast_to_cast_func (func : Sast.func_def) =
         } in
     cast_func
 
-(**
-    Pull apart a Sast.class_def
-    @param cdef A sast class_def
-    @return An ordered pair of the cast class_def and its functions serialized
+(** Flatten the class
+    @param cdef An ast cdef to flatten
+    @return A c_struct of a name, a refine set and a variable set
 *)
-let sast_to_cast_cdef (cdef : Sast.class_def) =
+let flatten_cdef (cdef : Ast.class_def) = 
     (** Flatten out our refine list into uids *)
     let flatten_refines refines =
-        List.map (fun (x : Sast.func_def) -> x.uid) refines 
+        List.map (fun (x : Ast.func_def) -> x.uid) refines 
     in
 
     (** Pick out variable members *)
     let rec flatten_section_variables section =
         match section with
-        | Sast.VarMem(v)::rest -> v::(flatten_section_variables rest)
+        | Ast.VarMem(v)::rest -> v::(flatten_section_variables rest)
         | [] -> []
         | _::rest -> (flatten_section_variables rest) 
     in
-    let flatten_variables sections =
+    let flatten_variables (sections : Ast.class_sections_def) =
         (flatten_section_variables sections.privates)
         @ (flatten_section_variables sections.protects)
         @ (flatten_section_variables sections.publics)
@@ -99,8 +101,68 @@ let sast_to_cast_cdef (cdef : Sast.class_def) =
 
     let cast_cdef : Cast.class_struct =
         {
-            klass     = cdef.klass::[];
+            klass     = [cdef.klass];
             refines   = flatten_refines cdef.sections.refines;
             variables = flatten_variables cdef.sections;
         } in
     cast_cdef
+
+(**
+    Build a list of the parent chain for a class
+    @param klass_data The class data for this program
+    @param cdef An ast class_def
+    @return A list of the cdefs that comprise the full scope of the original cdef
+*)
+let rec build_parents klass_data (cdef : Ast.class_def) =
+    let parent_cdef =
+        StringMap.find ( klass_to_parent cdef ) klass_data.classes
+    in
+    match cdef with
+    | { parent = None } -> [cdef]
+    | _ -> cdef :: (build_parents klass_data parent_cdef)
+
+(**
+    Pull apart a Ast.class_def
+    @param klass_data The class data for this program
+    @param sast_cdef A sast class_def
+    @return A c_struct and its functions put into a list
+*)
+let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
+    (** Drop the Sast to an Ast. We don't need environment stuff here *)
+    let cdef = StringMap.find sast_cdef.klass klass_data.classes in
+    let cdefs = build_parents klass_data cdef in
+    (** Function to fold our data again -- I'm making the assumption there are no duplicates *)
+    let merge_cdefs (klass_data,merged_cast_cdef) cdef =
+        let new_cast_cdef = flatten_cdef cdef in
+        let new_merged_cast_cdef = {
+            klass = merged_cast_cdef.klass @ new_cast_cdef.klass;
+            variables = merged_cast_cdef.variables @ new_cast_cdef.variables;
+            refines = merged_cast_cdef.refines @ new_cast_cdef.refines;
+        } in
+        (klass_data, new_merged_cast_cdef)
+    in
+    (** Since we're folding, it's easiest to start with an "empty" *)
+    let start_cdef = {
+        klass = [];
+        variables = [];
+        refines = [];
+    } in
+    let cast_cdef = List.fold_left merge_cdefs (klass_data, start_cdef) cdefs in
+    (** Pick out variable members *)
+    let rec flatten_section_methods section =
+        match section with
+        | Sast.MethodMem(v)::rest -> (sast_to_cast_func v)::(flatten_section_methods rest)
+        | Sast.InitMem(v)::rest -> (sast_to_cast_func v)::(flatten_section_methods rest)
+        | [] -> []
+        | _::rest -> (flatten_section_methods rest) 
+    in
+    let flatten_methods (sections : Sast.class_sections_def) =
+        (flatten_section_methods sections.privates)
+        @ (flatten_section_methods sections.protects)
+        @ (flatten_section_methods sections.publics)
+    in
+    (** It's important to note we really only care about methods of the
+    immediate sast. The parent methods will come out of the parent processing
+    and the refinements are attached in the struct generation. *)
+    let cast_cfunc = flatten_methods sast_cdef.sections in
+    (cast_cdef, cast_cfunc)
