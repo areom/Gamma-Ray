@@ -3,6 +3,7 @@ open Sast
 open Klass
 open Str
 open StringModules
+open Util
 
 let env = StringMap.empty
 
@@ -13,51 +14,23 @@ let env_update mode (vtype, vname) = StringMap.add vname (vtype, mode)
 let current_class = "_CurrentClassMarker_"
 let null_class = "_Null_"
 
-(**
-    Get the type of an instance variable data for a given variable name
-    and class name given a class_data record.
-    @param vname The variable being sought
-    @param klass_data The class_data record
-    @param kname The class we are looking in
-    @return Either Some(section, klass) where vname is an instance variable
-    in the variable table (map) for the class (klass), or None if there is no
-    variable to be found.
-  *)
-let rec getInstanceType vname klass_data kname =
-    match class_var_lookup klass_data kname vname, kname with
-        | Some(varinfo), _ -> Some(varinfo, kname)
-        | None, "Object" -> None
-        | _, _ -> getInstanceType vname klass_data (StringMap.find kname klass_data.parents)
 
-(**
-    Get an Id's type - Not accessed through objects
-    Therefore, it can be a local variable visible in the current scope i.e., present inside env
-    It can be an instance variable in the current class of any access scope
-    Or it can be an instance variable which is either protected or public in any of its ancestor
-    We just get to the closest ancestor
-  *)
-let getIDType vname env klass_data kname =
-    match map_lookup vname env with
-        | Some((vtyp, _)) -> vtyp
-        | _ -> match getInstanceType vname klass_data kname with
-            | Some((section, vtyp), cname) ->
-                if (kname = cname || section <> Ast.Privates) then vtyp
-                else raise (Failure("ID " ^ vname ^ " not in accessible scope"))
-            | None -> raise (Failure("ID " ^ vname ^ " not found"))
+let lookup_type klass_data kname vname env = match map_lookup vname env with
+    | Some((vtyp, _)) -> vtyp
+    | _ -> match Klass.class_field_lookup klass_data kname vname with
+        | Some((_, vtyp, _)) -> vtyp
+        | None -> raise(Failure("ID " ^ vname ^ " not found in the ancestery of " ^ kname ^ " or in the environment."))
+
 
 (* Do a lookup on the instance variable for the current classdef and return
    its type else then recurse its ancestor *)
 let getFieldType recvr member klass_data cur_kname =
-    let lookupclass = if recvr = current_class then cur_kname else recvr in
-    match getInstanceType member klass_data lookupclass with
-        | Some((section, vtyp), cname) ->
-            if section = Ast.Publics then vtyp
-            else if recvr = current_class then
-                if section = Ast.Protects then vtyp
-                else if section = Ast.Privates && cname = cur_kname then vtyp
-                else raise (Failure "Non-public members can only this as receiver")
-          else raise (Failure "Access only public through instance")
-        | None -> raise (Failure "Field unknown")
+    let this = (recvr = current_class) in
+    let recvr = if this then cur_kname else recvr in
+    match Klass.class_field_far_lookup klass_data recvr member this with
+        | Left((_, vtyp, _)) -> vtyp
+        | Right(true) -> raise(Failure("Field " ^ member ^ " is not accessible in " ^ recvr ^ " from " ^ cur_kname ^ "."))
+        | Right(false) -> raise(Failure("Unknown field " ^ member ^ " in the ancestry of " ^ recvr ^ "."))
 
 let getLiteralType litparam = match litparam with
     | Ast.Int(i) -> "Integer"
@@ -99,7 +72,8 @@ let rec eval klass_data kname env exp =
 
     let get_field expr mbr =
         let (recvr_type, _) as recvr = eval' expr in
-        (getFieldType recvr_type mbr klass_data kname, Sast.Field(recvr, mbr)) in
+        let field_type = getFieldType recvr_type mbr klass_data kname in
+        (field_type, Sast.Field(recvr, mbr)) in
 
     let get_invoc expr methd elist =
         let (recvr_type, _) as recvr = eval' expr in
@@ -164,7 +138,7 @@ let rec eval klass_data kname env exp =
     match exp with
         | Ast.This -> (current_class, Sast.This)
         | Ast.Null -> (null_class, Sast.Null)
-        | Ast.Id(vname) -> (getIDType vname env klass_data kname, Sast.Id(vname))
+        | Ast.Id(vname) -> (lookup_type klass_data kname vname env, Sast.Id(vname))
         | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
         | Ast.NewObj(s1, elist) -> get_init s1 elist
         | Ast.Field(expr, mbr) -> get_field expr mbr
