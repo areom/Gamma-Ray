@@ -532,6 +532,12 @@ let class_method_lookup data klass_name func_name =
     Given a class_data record, a class name, a method name, and whether the current context is
     `this' (i.e. if we want private / protected / etc), then return all methods in the ancestry
     of that class with that name (in the appropriate sections).
+    @param data A class_data record value
+    @param klass_name The name of a class.
+    @param method_name The name of a method to look up
+    @param this search mode -- true means public/protected/private and then public/protected,
+    false is always public
+    @return A list of methods with the given name.
   *)
 let class_ancestor_method_lookup data klass_name method_name this =
     let (startsects, recsects) = if this then ([Publics; Protects; Publics], [Publics; Protects]) else ([Publics], [Publics]) in
