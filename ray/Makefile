@@ -6,22 +6,7 @@ compile:
 	ocamlyacc parser.mly
 
 	ocamlc -c -g Ast.mli
-	ocamlc -c -g Util.ml
-	ocamlc -c -g StringModules.ml
-	ocamlc -c -g GlobalData.mli
-	ocamlc -c -g Klass.mli
-	ocamlc -c -g KlassData.mli
 	ocamlc -c -g UID.ml
-	ocamlc -c -g BuiltIns.ml
-	ocamlc -c -g Klass.ml
-	ocamlc -c -g KlassData.ml
-	ocamlc -c -g Debug.ml
-	ocamlc -c -g Variables.ml
-	ocamlc -c -g Sast.ml
-	ocamlc -c -g BuildSast.ml
-	ocamlc -c -g Unanonymous.ml
-	ocamlc -c -g Cast.ml
-	ocamlc -c -g GenCast.ml
 
 	ocamlc -c -g parser.mli
 	ocamlc -c -g scanner.ml
@@ -30,6 +15,23 @@ compile:
 	ocamlc -c -g WhiteSpace.ml
 	ocamlc -c -g Inspector.ml
 	ocamlc -c -g Pretty.ml
+
+	ocamlc -c -g Util.ml
+	ocamlc -c -g StringModules.ml
+	ocamlc -c -g GlobalData.mli
+	ocamlc -c -g Klass.mli
+	ocamlc -c -g KlassData.mli
+	ocamlc -c -g BuiltIns.ml
+	ocamlc -c -g Klass.ml
+	ocamlc -c -g KlassData.ml
+	ocamlc -c -g Variables.ml
+	ocamlc -c -g Sast.ml
+	ocamlc -c -g BuildSast.ml
+	ocamlc -c -g Unanonymous.ml
+	ocamlc -c -g Cast.ml
+	ocamlc -c -g GenCast.ml
+
+	ocamlc -c -g Debug.ml
 
 	ocamlc -c -g classinfo.ml
 	ocamlc -c -g inspect.ml
