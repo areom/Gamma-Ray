@@ -846,6 +846,16 @@ let append_leaf_methods aklass data = match build_method_map aklass with
         let updated = StringMap.add aklass.klass meths data.methods in
         Left({ data with methods = updated })
     | Right(collisions) -> Right(ConflictingMethods([build_collisions aklass.klass collisions false]))
+let append_leaf_test_inherited aklass data =
+    let folder collisions meth = match class_ancestor_method_lookup data aklass.klass meth.name true with
+        | [] -> collisions
+        | funcs -> match List.filter (conflicting_signatures meth) funcs with
+            | [] -> collisions
+            | cols -> cols in
+    let functions = List.flatten (List.map snd (klass_to_methods aklass)) in
+    match List.fold_left folder [] functions with
+        | [] -> Left(data)
+        | collisions -> Right(ConflictingInherited([build_collisions aklass.klass collisions false]))
 let append_leaf_instantiable aklass data =
     let is_init mem = match mem with
         | InitMem(_) -> true
