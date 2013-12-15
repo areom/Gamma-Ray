@@ -41,28 +41,17 @@ let getRetType (fdef : Ast.func_def) = match fdef.returns with
     | Some(retval) -> retval
     | None -> "Void"
 
-let rec getAncestor klass_data recvr methd argtypelist section =
-    let parent = StringMap.find recvr klass_data.parents in
-    match best_method klass_data parent methd argtypelist section, parent with
-        | None, "Object" -> raise(Failure "Method not found")
-        | None, _ -> getAncestor klass_data parent methd argtypelist section
-        | Some(fdef), _ -> (*getRetType*) fdef
-
 let getPubMethod(*Type*) klass_data recvr methd arglist =
     let argtypes = List.map fst arglist in
-    let section = [Ast.Publics] in
-    match best_method klass_data recvr methd argtypes section, recvr with
-        | None, "Object" -> raise(Failure "Method not found")
-        | None, _ -> getAncestor klass_data recvr methd argtypes section
-        | Some(fdef), _ -> (*getRetType*) fdef
+    match Klass.best_inherited_method klass_data recvr methd argtypes false with
+        | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr ^ "."))
+        | Some(fdef) -> fdef
 
 let getInstanceMethod(*Type*) klass_data recvr methd arglist =
     let argtypes = List.map fst arglist in
-    let section = [Ast.Privates; Ast.Protects; Ast.Publics] in
-    match best_method klass_data recvr methd argtypes section, recvr with
-        | None, "Object" -> raise(Failure "Method not found")
-        | None, _ -> getAncestor klass_data recvr methd argtypes (List.tl section)
-        | Some(fdef), _ -> (*getRetType*) fdef
+    match Klass.best_inherited_method klass_data recvr methd argtypes true with
+        | None -> raise(Failure("Method " ^ methd ^ " not found ancestrally in " ^ recvr ^ "."))
+        | Some(fdef) -> fdef
 
 
 let rec eval klass_data kname env exp =
