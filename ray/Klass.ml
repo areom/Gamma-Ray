@@ -58,6 +58,13 @@ type class_data = {
         classes. Distance from a type to itself is 0.
       *)
     distance : int lookup_table;
+
+    (**
+        A table [map -> map -> value]; primary key is a class name; the
+        secondary key is the refinement's full name (host.name); the value
+        is the uid of the dispatcher for this refinement.
+      *)
+    dispatcher : string lookup_table;
 }
 
 (** Construct an empty class_data object *)
@@ -72,6 +79,7 @@ let empty_data : class_data = {
     mains = StringMap.empty;
     ancestors = StringMap.empty;
     distance = StringMap.empty;
+    dispatcher = StringMap.empty;
 }
 
 (**
@@ -620,6 +628,32 @@ let build_distance klass ancestors =
 let build_distance_map data =
     let distance_map = StringMap.mapi build_distance data.ancestors in
     { data with distance = distance_map }
+
+(**
+    Add a class (class name - string) -> full method name (host.name - string) -> uid (string)
+    table so that dispatching can be done later on.
+    @param data A class_data record.
+    @return The class_data record with the dispatching identifier added.
+  *)
+let build_dispatch_map data =
+    let map_folder amap f = StringMap.add f (UID.uid_counter ()) amap in
+    let toname f = match f.host with
+        | Some(host) -> host ^ "." ^ f.name
+        | _ -> raise(Invalid_argument("Compiler error; we have refinement without host for " ^ f.name ^ " in " ^ f.inklass ^ ".")) in
+
+    let add_refines parent refines table =
+        let map = if StringMap.mem parent table then StringMap.find parent table else StringMap.empty in
+        let unknown f = not (StringMap.mem f map) in
+        let names = List.filter unknown (List.map toname refines) in
+        let map = List.fold_left map_folder map names in
+        StringMap.add parent map table in
+
+    let updater klass_name aklass table = match klass_name with
+        | "Object" -> table (* Object has no refinements *)
+        | _ -> let parent = klass_to_parent aklass in add_refines parent aklass.sections.refines table in
+
+    let dispatcher = StringMap.fold updater data.classes StringMap.empty in
+    { data with dispatcher = dispatcher }
 
 (**
     Given a class_data record and two classes, returns the distance between them. If one is a proper
