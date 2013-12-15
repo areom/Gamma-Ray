@@ -879,16 +879,16 @@ let append_leaf data aklass =
     let with_klass f = f aklass in
     let actions =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
-          append_leaf_variables ; append_leaf_methods ; append_leaf_refines ; append_leaf_mains ;
-          append_leaf_ancestor ; append_leaf_distance ] in
+          append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
+          append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 let append_leaf_test data aklass =
     let with_klass f = f aklass in
     let actions =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
-          append_leaf_variables ; append_leaf_test_fields ; append_leaf_methods ; append_leaf_instantiable ;
-          append_leaf_refines ; append_leaf_mains ; append_leaf_ancestor ; append_leaf_distance ] in
+          append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
+          append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 (**
