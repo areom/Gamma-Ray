@@ -45,6 +45,7 @@ and cfunc = {
     static  : bool;
     formals : cvar_def list;
     body    : cstmt list;
+    builtin : bool;
 }
 	
 (* The bare minimum for a struct represention *)

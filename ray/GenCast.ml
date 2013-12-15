@@ -69,6 +69,7 @@ let sast_to_cast_func (func : Sast.func_def) =
             formals = func.formals;
             static = func.static;
             body = cstmtlist func.body;
+            builtin = func.builtin;
         } in
     cast_func
 
