@@ -544,6 +544,32 @@ let class_ancestor_method_lookup data klass_name method_name this =
     find_methods [] klass_name startsects
 
 (**
+    Check to make sure that we don't have conflicting signatures as we go down the class tree.
+  *)
+let check_ancestor_signatures data =
+    let check_sigs meth_name funcs (methods, collisions) =
+        let updater (known, collisions) func =
+            if List.exists (conflicting_signatures func) known
+                then (known, func::collisions)
+                else (func::known, collisions) in
+        let apriori = map_lookup_list meth_name methods in
+        let (known, collisions) = List.fold_left updater (apriori, collisions) funcs in
+        (StringMap.add meth_name known methods, collisions) in
+
+    let check_class_meths aklass parent_methods =
+        let methods = StringMap.find aklass data.methods in
+        StringMap.fold check_sigs methods (methods, []) in
+
+    let dfs_explorer aklass methods collisions =
+       match check_class_meths aklass methods with
+           | (methods, []) -> (methods, collisions)
+           | (methods, cols) -> (methods, (aklass, cols)::collisions) in
+
+    match dfs_errors data dfs_explorer StringMap.empty [] with
+        | [] -> Left(data)
+        | collisions -> Right(collisions)
+
+(**
     Verifies that each class is able to be instantiated.
     @param data A class_data record
     @return Either the data is returned in Left or a list of uninstantiable classes in Right
