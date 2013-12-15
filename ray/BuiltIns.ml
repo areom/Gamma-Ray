@@ -49,7 +49,7 @@ let class_object : Ast.class_def =
 let class_printer : Ast.class_def =
     let name = "Printer" in
     let built_in = { built_in with inklass = name } in
-      
+
     let print_string : Ast.func_def =
         { built_in with
           name = "printString";

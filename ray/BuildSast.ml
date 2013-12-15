@@ -92,12 +92,12 @@ let rec eval klass_data kname env exp =
             | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
             | Some(fdef) -> fdef in
         (getRetType mfdef, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
-    
+
     let get_init kname exprlist =
         let arglist = eval_exprlist exprlist in
         let argtypes = List.map fst arglist in
         let mfdef =
-        match best_method klass_data kname "init" argtypes [Ast.Publics] with 
+        match best_method klass_data kname "init" argtypes [Ast.Publics] with
             | None       -> raise(Failure "Constructor not found")
             | Some(fdef) -> fdef in
         (kname, Sast.NewObj(kname, arglist, mfdef.uid)) in
