@@ -26,6 +26,7 @@ compile:
 	ocamlc -c -g KlassData.ml
 	ocamlc -c -g Variables.ml
 	ocamlc -c -g Sast.ml
+	ocamlc -c -g BuildSast.mli
 	ocamlc -c -g BuildSast.ml
 	ocamlc -c -g Unanonymous.ml
 	ocamlc -c -g Cast.ml
@@ -49,7 +50,7 @@ _tools:
 	ocamlc -g -o tools/freevars UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo freevars.cmo
 	ocamlc -g -o tools/classinfo UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo classinfo.cmo
 
-docsources = ast.mli scanner.ml parser.mli parser.ml WhiteSpace.ml Inspector.ml Pretty.ml Util.ml StringModules.ml BuiltIns.ml Klass.ml Debug.ml Variables.ml Unanonymous.ml UID.ml
+docsources = Ast.mli BuildSast.ml BuildSast.mli BuiltIns.ml Cast.ml Debug.ml GenCast.ml GlobalData.mli Inspector.ml Klass.ml Klass.mli KlassData.ml KlassData.mli Pretty.ml Sast.ml StringModules.ml UID.ml Unanonymous.ml Util.ml Variables.ml WhiteSpace.ml parser.ml parser.mli scanner.ml
 docgen = ./doc/.docgen
 
 _doc:
@@ -66,3 +67,4 @@ clean:
 
 cleantools:
 	rm tools/{prettify,inspect,streams,canonical,freevars,classinfo}
+

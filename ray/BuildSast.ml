@@ -6,32 +6,67 @@ open StringModules
 open Util
 open GlobalData
 
-let env = StringMap.empty
+(** Module to take an AST and build the sAST out of it. *)
 
-(*ADD MORE CHECKS*)
-
+(**
+    Update an environment to have a variable
+    @param mode The mode the variable is in (instance, local)
+    @param vtype The type of the variable
+    @param vname The name of the variable
+    @return A function that will update an environment passed to it.
+  *)
 let env_update mode (vtype, vname) = StringMap.add vname (vtype, mode)
 
+(** Marker for being in the current class -- ADT next time *)
 let current_class = "_CurrentClassMarker_"
+
+(** Marker for the null type -- ADT next time *)
 let null_class = "_Null_"
 
-
+(**
+    Given a class_data record, the name of a class, the name of a variable, and
+    and environment, return the type of the variable.
+    @param klass_data A class_data record value
+    @param kname The name of a class
+    @param vname The name of a variable
+    @param env The type of the variable
+    @return The variable's type or a Failure is raised if not found.
+  *)
 let lookup_type klass_data kname vname env = match map_lookup vname env with
     | Some((vtyp, _)) -> vtyp
     | _ -> match Klass.class_field_lookup klass_data kname vname with
         | Some((_, vtyp, _)) -> vtyp
         | None -> raise(Failure("ID " ^ vname ^ " not found in the ancestery of " ^ kname ^ " or in the environment."))
 
+(**
+    Map a literal value to its type
+    @param litparam a literal
+    @return A string representing the type.
+  *)
 let getLiteralType litparam = match litparam with
     | Ast.Int(i) -> "Integer"
     | Ast.Float(f) -> "Float"
     | Ast.String(s) -> "String"
     | Ast.Bool(b) -> "Boolean"
 
+(**
+    Map a function to its return type
+    @param fdef An Ast.func_def
+    @return The return type -- Void or its listed type.
+  *)
 let getRetType (fdef : Ast.func_def) = match fdef.returns with
     | Some(retval) -> retval
     | None -> "Void"
 
+(**
+    Given a class_data record, a class name, an environment, and an Ast.expr expression,
+    return a Sast.expr expression.
+    @param klass_data A class_data record
+    @param kname The name of of the current class
+    @param env The local environment (instance and local variables so far declared)
+    @param exp An expression to eval to a Sast.expr value
+    @return A Sast.expr expression, failing when there are issues.
+  *)
 let rec eval klass_data kname env exp =
     let eval' expr = eval klass_data kname env expr in
     let eval_exprlist elist = List.map eval' elist in
@@ -126,14 +161,17 @@ let rec eval klass_data kname env exp =
         | Ast.Unop(op, expr) -> get_unop op expr
         | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
 
-
-(*
- * attach_bindings : Build the Sast, by annotating the expressions with type and statements with env
- * klass_data : global class data record -> type: class_data
- * kname : class name -> type: string
- * stmts : list of Ast statements inside a member function of kname -> type: Ast.stmt list
- * env : map of var declarations visible in the current scope   - > type: environment
- *)
+(**
+    Given a class_data record, the name of the current class, a list of AST statements,
+    and an initial environment, enumerate the statements and attach the environment at
+    each step to that statement, yielding Sast statements. Note that when there is an
+    issue the function will raise Failure.
+    @param klass_data A class_data record
+    @param kname The name of the class that is the current context.
+    @param stmts A list of Ast statements
+    @param initial_env An initial environment
+    @return A list of Sast statements
+  *)
 let rec attach_bindings klass_data kname stmts initial_env =
     (* Calls that go easy on the eyes *)
     let eval' = eval klass_data kname in
@@ -197,7 +235,16 @@ let rec attach_bindings klass_data kname stmts initial_env =
 
     List.rev (fst(List.fold_left build_env ([], initial_env) stmts))
 
-let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
+(**
+    Given a class_data record, an Ast.func_def, an an initial environment,
+    convert the func_def to a Sast.func_def. Can raise failure when there
+    are issues with the statements / expressions in the function.
+    @param klass_data A class_data record
+    @param func An Ast.func_def to transform
+    @param initial_env The initial environment
+    @return A Sast.func_def value
+  *)
+let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
     let sast_func : Sast.func_def =
         {   returns = func.returns;
@@ -205,27 +252,43 @@ let ast_func_to_sast_func klass_data kname (func : Ast.func_def) initial_env =
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data kname func.body with_params;
+            body = attach_bindings klass_data func.inklass func.body with_params;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;
             builtin = func.builtin } in
     sast_func
 
-let ast_mem_to_sast_mem klass_data kname (mem : Ast.member_def) initial_env =
-    let change func = ast_func_to_sast_func klass_data kname func initial_env in
+(**
+    Given a class_data record, an Ast.member_def, and an initial environment,
+    convert the member into an Sast.member_def. May raise failure when there
+    are issues in the statements / expressions in the member.
+    @param klass_data A class_data record.
+    @param mem An Ast.member_def value
+    @param initial_env An environment of variables
+    @return A Sast.member_def
+  *)
+let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
+    let change func = ast_func_to_sast_func klass_data func initial_env in
     let transformed : Sast.member_def = match mem with
         | Ast.VarMem(v) -> Sast.VarMem(v)
         | Ast.MethodMem(m) -> Sast.MethodMem(change m)
         | Ast.InitMem(m) -> Sast.InitMem(change m) in
     transformed
 
+(**
+    Given a class_data object and an Ast.class_def, return a Sast.class_def
+    object. May fail when there are issues in the statements / expressions.
+    @param klass_data A class_data record value
+    @param ast_klass A class to transform
+    @return The transformed class.
+  *)
 let ast_to_sast klass_data (ast_klass : Ast.class_def) =
     let s : Ast.class_sections_def = ast_klass.sections in
     let env = StringMap.empty in
 
-    let mems = List.map (fun m -> ast_mem_to_sast_mem klass_data ast_klass.klass m env) in
-    let funs = List.map (fun f -> ast_func_to_sast_func klass_data ast_klass.klass f env) in
+    let mems = List.map (fun m -> ast_mem_to_sast_mem klass_data m env) in
+    let funs = List.map (fun f -> ast_func_to_sast_func klass_data f env) in
 
     let sections : Sast.class_sections_def =
         {   publics = mems s.publics;
