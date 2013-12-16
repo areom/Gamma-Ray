@@ -191,6 +191,20 @@ let class_ancestor_method_lookup data klass_name method_name this =
     find_methods [] klass_name startsects
 
 (**
+    Given a class_data record, class name, method name, and refinement name, return the list of
+    refinements in that class for that method with that name.
+    @param data A class_data record value
+    @param klass_name A class name
+    @param method_name A method name
+    @param refinement_name A refinement name
+    @return A list of func_def values that match the given requirements
+  *)
+let refine_lookup data klass_name method_name refinement_name =
+    match map_lookup klass_name data.refines with
+        | Some(map) -> map_lookup_list (method_name ^ "." ^ refinement_name) map
+        | _ -> []
+
+(**
     Given a class_data record and two classes, returns the distance between them. If one is a proper
     subtype of the other then Some(n) is returned where n is non-zero when the two classes are different
     and comparable (one is a subtype of the other), zero when they are the same, and None when they are
@@ -329,3 +343,27 @@ let best_inherited_method data klass_name method_name actuals this =
         | [] -> None
         | [func] -> Some(func)
         | _ -> raise(Invalid_argument("Multiple methods named " ^ method_name ^ " of the same signature inherited in " ^ klass_name ^ "; Compiler error."))
+
+(**
+    Given a list of refinements to apply and the types of actuals,
+    find the refinements that are compatible, partition them based
+    on their inklass, and give the best one for each class.
+    Returns a list of refines to use.
+    @param data A class_data record value
+    @param klass_name A class name
+    @param method_name A method name
+    @param refine_name A refinement name
+    @param actuals The types of the actual arguments
+    @return A list of functions to switch on based on the actuals.
+  *)
+let refine_on data klass_name method_name refine_name actuals =
+    let folder map f = add_map_list f.inklass f map in
+    let best funcs = match best_matching_signature data actuals funcs with
+        | [func] -> func
+        | _ -> raise(Failure("Compiler error finding a unique best refinement.")) in
+    let to_best klass funcs map = StringMap.add klass (best funcs) map in
+    let refines = refine_lookup data klass_name method_name refine_name in
+    let refines = List.filter (compatible_function data actuals) refines in
+    let by_class = List.fold_left folder StringMap.empty refines in
+    let best_map = StringMap.fold to_best by_class StringMap.empty in
+    List.map snd (StringMap.bindings best_map)
