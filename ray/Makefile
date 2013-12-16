@@ -32,7 +32,7 @@ compile:
 	ocamlc -c -g BuildSast.ml
 	ocamlc -c -g Unanonymous.mli
 	ocamlc -c -g Unanonymous.ml
-	ocamlc -c -g Cast.ml
+	ocamlc -c -g Cast.mli
 	ocamlc -c -g GenCast.ml
 	ocamlc -c -g GenC.ml
 	ocamlc -c -g Debug.ml
@@ -53,7 +53,7 @@ _tools:
 	ocamlc -g -o tools/freevars UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo freevars.cmo
 	ocamlc -g -o tools/classinfo UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo classinfo.cmo
 
-docsources = Ast.mli BuildSast.ml BuildSast.mli BuiltIns.ml BuiltIns.mli Cast.ml Debug.ml GenCast.ml GlobalData.mli Inspector.ml Inspector.mli Klass.ml Klass.mli KlassData.ml KlassData.mli Pretty.ml Sast.mli StringModules.ml UID.ml Unanonymous.ml Unanonymous.mli Util.ml Variables.ml WhiteSpace.ml parser.ml parser.mli scanner.ml
+docsources = Ast.mli BuildSast.ml BuildSast.mli BuiltIns.ml BuiltIns.mli Cast.mli Debug.ml GenCast.ml GenC.ml GlobalData.mli Inspector.ml Inspector.mli Klass.ml Klass.mli KlassData.ml KlassData.mli Pretty.ml Sast.mli StringModules.ml UID.ml Unanonymous.ml Unanonymous.mli Util.ml Variables.ml WhiteSpace.ml parser.ml parser.mli scanner.ml
 docgen = ./doc/.docgen
 
 _doc:
