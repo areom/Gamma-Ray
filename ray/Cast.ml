@@ -7,13 +7,11 @@ type cexpr_detail =
     | Null
     | Id of string
     | NewObj of string * string * cexpr list (* ctype * fname * args *)
-(*    | NewObj of string * expr list
-    | Anonymous of string * Ast.expr list * Ast.func_def list (* Evaluation is delayed *)
+(*  | Anonymous of string * Ast.expr list * Ast.func_def list (* Evaluation is delayed *)
 *)
     | Literal of Ast.lit
     | Assign of cexpr * cexpr  (* memory := data -- whether memory is good is a semantic issue *)
     | Deref of cexpr * cexpr (* road[pavement] *)
-
     | Field of cexpr * string (* road.pavement *)
     | Invoc of cexpr * string * cexpr list (*Invoc(receiver, functionname, args) *)
     | Unop of Ast.op * cexpr (* !x *)
