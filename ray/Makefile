@@ -34,7 +34,7 @@ compile:
 	ocamlc -c -g Unanonymous.ml
 	ocamlc -c -g Cast.ml
 	ocamlc -c -g GenCast.ml
-
+	ocamlc -c -g GenC.ml
 	ocamlc -c -g Debug.ml
 
 	ocamlc -c -g classinfo.ml
