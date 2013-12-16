@@ -54,6 +54,6 @@ type class_struct = {
 }
 
 (** Unnecessary semantic typing, woo! *)
-type main_uids = string list;
+type main_uids = string list
 
 type program = class_struct list * cfunc list * main_uids

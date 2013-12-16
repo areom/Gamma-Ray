@@ -148,7 +148,9 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
         variables = [];
         refines = [];
     } in
-    let cast_cdef = List.fold_left merge_cdefs (klass_data, start_cdef) cdefs in
+    let cast_cdef =
+        List.fold_left merge_cdefs (klass_data, start_cdef) cdefs
+    in
     (** Pick out variable members *)
     let rec flatten_section_methods section =
         match section with
@@ -157,8 +159,9 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
         | [] -> []
         | _::rest -> (flatten_section_methods rest) 
     in
+    (** Flatten a section of func_def. Not especially well written. *)
     let flatten_func_section section =
-        List.map sast_to_cast_func section
+        List.map (fun x -> sast_to_cast_func x) section
     in
     let flatten_methods (sections : Sast.class_sections_def) =
         (flatten_section_methods sections.privates)
@@ -176,3 +179,16 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
         List.map (fun (x : Sast.func_def) -> x.uid) sast_cdef.sections.mains
     in
     (cast_cdef, cast_cfunc, cast_mains)
+
+(** Silly function to attach all the individual "programs" of the program together *)
+let sast_to_cast klass_data sast =
+    let merge_sast (ccast_cdef, ccast_cfunc, ccast_mains) sast_cdef =
+        let (cast_cdef, cast_cfunc, cast_mains) =
+            sast_to_cast_cdef klass_data sast_cdef
+        in
+        (ccast_cdef @ cast_cdef, ccast_cfunc @ cast_cfunc, ccast_mains @ cast_mains)
+    in
+    let cast = 
+        List.map merge_sast ([],[],[]) sast
+    in
+    cast
