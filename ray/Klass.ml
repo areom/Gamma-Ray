@@ -290,6 +290,23 @@ let compatible_function data actuals func =
     compatible_formals data actuals (List.map fst func.formals)
 
 (**
+    Return whether a function's return type is compatible with a desired return type.
+    Note that if the desired return type is None then the function is compatible.
+    Otherwise if it is not None and the function's is, then it is not compatible.
+    Lastly, if the desired type is a supertype of the function's return type then the
+    function is compatible.
+    @param data A class_data record value
+    @param ret_type The desired return type
+    @param func A func_def to test.
+    @return True if compatible, false if not.
+  *)
+let compatible_return data ret_type func =
+    match ret_type, func.returns with
+        | None, _ -> true
+        | _, None -> false
+        | Some(desired), Some(given) -> is_subtype data given desired
+
+(**
     Filter a list of functions based on their section.
     @param funcs a list of functions
     @param sects a list of class_section values
@@ -356,13 +373,14 @@ let best_inherited_method data klass_name method_name actuals this =
     @param actuals The types of the actual arguments
     @return A list of functions to switch on based on the actuals.
   *)
-let refine_on data klass_name method_name refine_name actuals =
+let refine_on data klass_name method_name refine_name actuals ret_type =
     let folder map f = add_map_list f.inklass f map in
     let best funcs = match best_matching_signature data actuals funcs with
         | [func] -> func
         | _ -> raise(Failure("Compiler error finding a unique best refinement.")) in
     let to_best klass funcs map = StringMap.add klass (best funcs) map in
     let refines = refine_lookup data klass_name method_name refine_name in
+    let refines = List.filter (compatible_return data ret_type) refines in
     let refines = List.filter (compatible_function data actuals) refines in
     let by_class = List.fold_left folder StringMap.empty refines in
     let best_map = StringMap.fold to_best by_class StringMap.empty in
