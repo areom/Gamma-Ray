@@ -68,7 +68,7 @@ let class_printer : Ast.class_def =
     let print_init : Ast.func_def =
         { built_in with
           name = "init";
-          formals = [("Bool", "stdout")];
+          formals = [("Boolean", "stdout")];
           uid = "printer_init" } in
 
     let sections : Ast.class_sections_def =
@@ -93,18 +93,18 @@ let class_string : Ast.class_def =
     { klass = name; parent = Some("Object"); sections = sections }
 
 
-let class_bool : Ast.class_def =
-    let name = "Bool" in
+let class_boolean : Ast.class_def =
+    let name = "Boolean" in
     let built_in = { built_in with inklass = name } in
 
-    let bool_init : Ast.func_def =
+    let boolean_init : Ast.func_def =
         { built_in with
           name = "init";
-          uid = "bool_init" } in
+          uid = "boolean_init" } in
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [mem bool_init] } in
+          protects = [mem boolean_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
@@ -140,5 +140,5 @@ let class_float : Ast.class_def =
 
 (** The list of built in classes and their methods *)
 let built_in_classes =
-  [ class_object; class_string; class_bool; class_int; class_float ]
+  [ class_object; class_string; class_boolean; class_int; class_float ]
 
