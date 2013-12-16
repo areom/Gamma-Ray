@@ -53,6 +53,7 @@ type class_struct = {
     variables : cvar_def list;
 }
 
-type program_entry = CFunction of class_struct | ClassStruct of cfunc | MainInvoke of string
+(** Unnecessary semantic typing, woo! *)
+type main_uids = string list;
 
-type program = program_entry list
+type program = class_struct list * cfunc list * main_uids
