@@ -1,7 +1,7 @@
 open Cast
  
-let stringify_arith arith =
-    match arith with
+let stringify_arith op lop rop =
+    match op with
       Add  -> " + "
     | Sub  -> " - "
     | Prod -> " * "
@@ -10,8 +10,8 @@ let stringify_arith arith =
     | Neg  -> " may be wrong - ? it's an unop"
     | Pow  -> " ^ "
 
-let stringify_numtest numtest =
-    match numtest with
+let stringify_numtest op lop rop =
+    match op with
       Eq   -> " == "
     | Neq  -> " != "
     | Less -> " < "
@@ -19,17 +19,17 @@ let stringify_numtest numtest =
     | Leq  -> " <= "
     | Geq  -> " >= "
 
-let stringify_combtest combtest =
+let stringify_combtest op lop rop =
     match combtest with
       And  -> " && "
     | Or   -> " || "
     | Nand -> ""
 
-let stringify_binop op =
+let stringify_binop op  lop rop=
     match op with
-      Arithmetic(arith)  -> stringify_arith arith
-    | NumTest(numtest)   -> stringify_numtest numtest
-    | CombTest(combtest) -> stringify_combtest combtest
+      Arithmetic(arith)  -> stringify_arith arith lop rop
+    | NumTest(numtest)   -> stringify_numtest numtest lop rop
+    | CombTest(combtest) -> stringify_combtest combtest lop rop
 
 let stringify_list stmtlist =
    String.concat "\n" stmtlist
@@ -49,7 +49,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Field(obj, fieldname) -> (expr_to_cstr obj)^"."^(fieldname) 
     | Invoc(recvr, fname, args) ->  " Invoc"
     | Unop(op, expr) -> "Unop" 
-    | Binop(lop, op, rop) -> "( "^(expr_to_cstr lop)^" "^(stringify_binop op)^" "^(expr_to_cstr rop)^" )"
+    | Binop(lop, op, rop) -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop)
 
 let rec cast_to_cstmtlist stmtlist = stringify_list  (List.map cast_to_c_stmt stmtlist)
 
