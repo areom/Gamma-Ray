@@ -23,6 +23,13 @@ let current_class = "_CurrentClassMarker_"
 (** Marker for the null type -- ADT next time *)
 let null_class = "_Null_"
 
+(** Return whether an expression is a valid lvalue or not *)
+let is_lvalue (expr : Ast.expr) = match expr with
+    | Ast.Id(_) -> true
+    | Ast.Field(_, _) -> true
+    | Ast.Deref(_, _) -> true
+    | _ -> false
+
 (**
     Given a class_data record, the name of a class, the name of a variable, and
     and environment, return the type of the variable.
@@ -105,9 +112,10 @@ let rec eval klass_data kname mname env exp =
     let get_assign e1 e2 =
         let (t1, t2) = (eval' e1, eval' e2) in
         let (type1, type2) = (fst t1, fst t2) in
-        if is_subtype klass_data type2 type1
-            then (type1, Sast.Assign(t1, t2))
-            else raise (Failure "Assigning to incompatible type") in
+        match is_subtype klass_data type2 type1, is_lvalue e1 with
+            | _, false -> raise(Failure "Assigning to non-lvalue")
+            | false, _ -> raise(Failure "Assigning to incompatible types")
+            | _ -> (type1, Sast.Assign(t1, t2)) in
 
     let get_binop e1 op e2 =
         let isCompatible typ1 typ2 =
@@ -129,6 +137,11 @@ let rec eval klass_data kname mname env exp =
         let refines = Klass.refine_on klass_data kname mname rname argtypes desired in
         let switch = List.map (fun (f : Ast.func_def) -> (f.inklass, f.uid)) refines in
         (getRetType desired, Sast.Refine(rname, arglist, desired, switch)) in
+
+    let get_refinable rname =
+        let refines = refine_lookup klass_data kname mname rname in
+        let klasses = List.map (fun (f : Ast.func_def) -> f.inklass) refines in
+        ("Boolean", Sast.Refinable(rname, klasses)) in
 
     let get_deref e1 e2 =
         let expectArray typename = match last_chars typename 2 with
@@ -157,7 +170,7 @@ let rec eval klass_data kname mname env exp =
         | Ast.Binop(e1,op,e2) -> get_binop e1 op e2
         | Ast.Refine(s1, elist, soption) -> get_refine s1 elist soption
         | Ast.Deref(e1, e2) -> get_deref e1 e2
-        | Ast.Refinable(s1) -> ("Boolean", Sast.Refinable(s1)) (*Check if the method is refinable ?*)
+        | Ast.Refinable(s1) -> get_refinable s1
         | Ast.Unop(op, expr) -> get_unop op expr
         | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
 

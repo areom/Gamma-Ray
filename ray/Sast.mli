@@ -32,7 +32,7 @@ type expr_detail =
     | Unop of Ast.op * expr (* !x *)
     | Binop of expr * Ast.op * expr (* x + y *)
     | Refine of string * expr list * string option * (string * string) list (* refinement, arg list, opt ret type, switch list (class, uids) *)
-    | Refinable of string (* refinable *)
+    | Refinable of string * string list (* desired refinement, list of classes supporting refinement *)
 
 and
 
