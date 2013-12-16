@@ -31,7 +31,7 @@ type expr_detail =
     | Invoc of expr * string * expr list * string (* receiver.method(args) * bestmethod_uid  *)
     | Unop of Ast.op * expr (* !x *)
     | Binop of expr * Ast.op * expr (* x + y *)
-    | Refine of string * expr list * string option
+    | Refine of string * expr list * string option * (string * string) list (* refinement, arg list, opt ret type, switch list (class, uids) *)
     | Refinable of string (* refinable *)
 
 and

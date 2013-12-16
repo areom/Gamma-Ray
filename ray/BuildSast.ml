@@ -50,11 +50,11 @@ let getLiteralType litparam = match litparam with
     | Ast.Bool(b) -> "Boolean"
 
 (**
-    Map a function to its return type
-    @param fdef An Ast.func_def
+    Map a return type string option to a return type string
+    @param ret_type The return type.
     @return The return type -- Void or its listed type.
   *)
-let getRetType (fdef : Ast.func_def) = match fdef.returns with
+let getRetType ret_type = match ret_type with
     | Some(retval) -> retval
     | None -> "Void"
 
@@ -67,8 +67,8 @@ let getRetType (fdef : Ast.func_def) = match fdef.returns with
     @param exp An expression to eval to a Sast.expr value
     @return A Sast.expr expression, failing when there are issues.
   *)
-let rec eval klass_data kname env exp =
-    let eval' expr = eval klass_data kname env expr in
+let rec eval klass_data kname mname env exp =
+    let eval' expr = eval klass_data kname mname env expr in
     let eval_exprlist elist = List.map eval' elist in
 
     let get_field expr mbr =
@@ -91,7 +91,7 @@ let rec eval klass_data kname env exp =
             | None when this -> raise(Failure("Method " ^ methd ^ " not found ancestrally in " ^ recvr_type ^ "."))
             | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
             | Some(fdef) -> fdef in
-        (getRetType mfdef, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
+        (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
 
     let get_init kname exprlist =
         let arglist = eval_exprlist exprlist in
@@ -123,12 +123,12 @@ let rec eval klass_data kname env exp =
             | Ast.CombTest(_) -> ignore(isCompatible typ1 typ2); "Boolean" in
         (gettype op t1 t2, Sast.Binop(t1,op,t2)) in
 
-    let get_refine s1 elist soption =
+    let get_refine rname elist desired =
         let arglist = eval_exprlist elist in
-        let refinedtype = match soption with
-            | Some (typ) -> typ
-            | None -> "Void" in (*getMethodType env klass_data kname s1 arglist*)
-        (refinedtype, Sast.Refine(s1, arglist, soption)) in
+        let argtypes = List.map fst arglist in
+        let refines = Klass.refine_on klass_data kname mname rname argtypes desired in
+        let switch = List.map (fun (f : Ast.func_def) -> (f.inklass, f.uid)) refines in
+        (getRetType desired, Sast.Refine(rname, arglist, desired, switch)) in
 
     let get_deref e1 e2 =
         let expectArray typename = match last_chars typename 2 with
@@ -172,10 +172,10 @@ let rec eval klass_data kname env exp =
     @param initial_env An initial environment
     @return A list of Sast statements
   *)
-let rec attach_bindings klass_data kname stmts initial_env =
+let rec attach_bindings klass_data kname mname stmts initial_env =
     (* Calls that go easy on the eyes *)
-    let eval' = eval klass_data kname in
-    let attach' = attach_bindings klass_data kname in
+    let eval' = eval klass_data kname mname in
+    let attach' = attach_bindings klass_data kname mname in
     let eval_exprlist env elist = List.map (eval' env) elist in
 
     let rec get_superinit kname arglist =
@@ -252,7 +252,7 @@ let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data func.inklass func.body with_params;
+            body = attach_bindings klass_data func.name func.inklass func.body with_params;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;
