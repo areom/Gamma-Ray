@@ -21,8 +21,8 @@ let sections : Ast.class_sections_def =
       refines = [];
       mains = [] }
 
-let meth_of f = MethodMem(f)
-let init_of i = InitMem(i)
+let mem f = if f.name = "init" then InitMem(f) else MethodMem(f)
+let members = List.map mem
 
 let class_object : Ast.class_def =
     let name = "Object" in
@@ -41,8 +41,8 @@ let class_object : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          publics = [meth_of get_id];
-          protects = [init_of init_obj] } in
+          publics = [mem get_id];
+          protects = [mem init_obj] } in
 
     { klass = name; parent = None; sections = sections }
 
@@ -73,7 +73,7 @@ let class_printer : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          publics = List.map meth_of [print_string; print_int; print_float; print_init] } in
+          publics = members [print_string; print_int; print_float; print_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
@@ -88,7 +88,7 @@ let class_string : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [init_of string_init] } in
+          protects = [mem string_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
@@ -104,7 +104,7 @@ let class_bool : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [init_of bool_init] } in
+          protects = [mem bool_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
@@ -119,7 +119,7 @@ let class_int : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [init_of int_init] } in
+          protects = [mem int_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
@@ -134,7 +134,7 @@ let class_float : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [init_of float_init] } in
+          protects = [mem float_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
