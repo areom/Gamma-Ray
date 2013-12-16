@@ -148,7 +148,7 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
         variables = [];
         refines = [];
     } in
-    let cast_cdef =
+    let (_, cast_cdef) =
         List.fold_left merge_cdefs (klass_data, start_cdef) cdefs
     in
     (** Pick out variable members *)
@@ -178,7 +178,7 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
     let cast_mains =
         List.map (fun (x : Sast.func_def) -> x.uid) sast_cdef.sections.mains
     in
-    (cast_cdef, cast_cfunc, cast_mains)
+    ([cast_cdef], cast_cfunc, cast_mains)
 
 (** Silly function to attach all the individual "programs" of the program together *)
 let sast_to_cast klass_data sast =
@@ -189,6 +189,6 @@ let sast_to_cast klass_data sast =
         (ccast_cdef @ cast_cdef, ccast_cfunc @ cast_cfunc, ccast_mains @ cast_mains)
     in
     let cast = 
-        List.map merge_sast ([],[],[]) sast
+        List.fold_left merge_sast ([],[],[]) sast
     in
     cast
