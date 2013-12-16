@@ -197,6 +197,34 @@ let build_class_var_map data =
         | Right(collisions) -> Right(collisions) (* Same value different types parametrically *)
 
 (**
+    Given a class_data record and a class_def value, return the instance variables (just the
+    var_def) that have an unknown type.
+    @param data A class_data record value
+    @param aklass A class_def value
+    @return A list of unknown-typed instance variables in the class
+  *)
+let type_check_variables data aklass =
+    let unknown_type (var_type, _) = not (is_type data var_type) in
+    let vars = List.flatten (List.map snd (klass_to_variables aklass)) in
+    List.filter unknown_type vars
+
+(**
+    Given a class_data record, verify that all instance variables of all classes are of known
+    types. Returns the Left of the data if everything is okay, or the Right of a list of pairs,
+    first item being a class, second being variables of unknown types (type, name pairs).
+    @param data A class_data record value.
+    @return Left(data) if everything is okay, otherwise Right(unknown types) where unknown types
+    is a list of (class, var_def) pairs.
+  *)
+let verify_typed data =
+    let verify_klass klass_name aklass unknowns = match type_check_variables data aklass with
+        | [] -> unknowns
+        | bad -> (klass_name, bad)::unknowns in
+    match StringMap.fold verify_klass data.classes [] with
+        | [] -> Left(data)
+        | bad -> Right(bad)
+
+(**
     Build a map of all the methods within a class, returing either a list of collisions
     (in Right) when there are conflicting signatures or the map (in Left) when there
     are not. Keys to the map are function names and the values are lists of func_def's.
