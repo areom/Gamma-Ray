@@ -157,13 +157,22 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
         | [] -> []
         | _::rest -> (flatten_section_methods rest) 
     in
+    let flatten_func_section section =
+        List.map sast_to_cast_func section
+    in
     let flatten_methods (sections : Sast.class_sections_def) =
         (flatten_section_methods sections.privates)
         @ (flatten_section_methods sections.protects)
         @ (flatten_section_methods sections.publics)
+        @ (flatten_func_section sections.refines)
+        @ (flatten_func_section sections.mains)
     in
     (** It's important to note we really only care about methods of the
     immediate sast. The parent methods will come out of the parent processing
     and the refinements are attached in the struct generation. *)
     let cast_cfunc = flatten_methods sast_cdef.sections in
-    (cast_cdef, cast_cfunc)
+    (** Simply pop out the uids. *)
+    let cast_mains =
+        List.map (fun (x : Sast.func_def) -> x.uid) sast_cdef.sections.mains
+    in
+    (cast_cdef, cast_cfunc, cast_mains)
