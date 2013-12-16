@@ -57,7 +57,7 @@ let rec expr_to_cstr (exptype, expr_detail) = exprdetail_to_cstr expr_detail
 and exprdetail_to_cstr castexpr_detail =
 
     match castexpr_detail with
-    | This          -> "We wont have a this right?"
+    | This          -> "this"
     | Null          -> "NULL"
     | Id(vname)     -> vname
     | NewObj(classname, fname, args) -> "NEWOBJ TBD"
