@@ -38,3 +38,4 @@ expect-*
 *.cmi
 *.cmo
 ray/doc/*
+ray/bin/*
