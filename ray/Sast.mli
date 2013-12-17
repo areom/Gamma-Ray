@@ -1,23 +1,14 @@
 
-type varkind = Instance | Local
-
 (** Types for the semantic abstract syntax tree *)
 
 
+(** The type of a variable in the environment *)
+type varkind = Instance of string | Local
+
+(** The environment at any given statement. *)
 type environment = (string * varkind) Map.Make(String).t
 
-(*
-type lit =
-        Int of int
-    | Float of float
-    | String of string
-    | Bool of bool
-
-type arith = Add | Sub | Prod | Quot | Div | Mod | Neg | Pow
-type numtest = Eq | Neq | Less | Grtr | Leq | Geq
-type combtest = And | Or | Nand | Nor | Xor | Not
-type op = Arithmetic of arith | NumTest of numtest | CombTest of combtest
-*)
+(** An expression value -- like in AST *)
 type expr_detail =
     | This
     | Null
@@ -34,29 +25,25 @@ type expr_detail =
     | Refine of string * expr list * string option * (string * string) list (* refinement, arg list, opt ret type, switch list (class, uids) *)
     | Refinable of string * string list (* desired refinement, list of classes supporting refinement *)
 
-and
+(** An expression with a type tag *)
+and expr = string * expr_detail
 
-expr = string * expr_detail
-
-and
-
-var_def = (string * string)
-
+(** A statement tagged with an environment *)
 and sstmt =
-    | Decl of var_def * expr option * environment
+    | Decl of Ast.var_def * expr option * environment
     | If of (expr option * sstmt list) list * environment
     | While of expr * sstmt list * environment
     | Expr of expr * environment
     | Return of expr option * environment
     | Super of expr list *string * environment (**arglist, uidof super init, env**)
 
-
+(** A function definition *)
 and func_def = {
     returns : string option;
     host    : string option;
     name    : string;
     static  : bool;
-    formals : var_def list;
+    formals : Ast.var_def list;
     body    : sstmt list;
     section : Ast.class_section;  (* Makes things easier later *)
     inklass : string;
@@ -65,7 +52,7 @@ and func_def = {
 }
 
 (* A member is either a variable or some sort of function *)
-type member_def = VarMem of var_def | MethodMem of func_def | InitMem of func_def
+type member_def = VarMem of Ast.var_def | MethodMem of func_def | InitMem of func_def
 
 (* Things that can go in a class *)
 type class_sections_def = {
