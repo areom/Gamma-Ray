@@ -25,7 +25,7 @@ and c_expr_detail sastexp =
     | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr e1, e2)
     | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr expr)
     | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr e1, op, sast_to_castexpr e2)
-    | Sast.Invoc(recv, fname, args, fuid) -> Cast.Invoc(sast_to_castexpr recv, "f_"^fuid^fname, sast_to_castexprlist args) 
+    | Sast.Invoc(recv, fname, args, fuid) -> Cast.Invoc(sast_to_castexpr recv, "f_"^fuid^fname, sast_to_castexprlist args)
     | _                      -> Cast.Null (* To avoid warning*)
 
 
@@ -33,31 +33,31 @@ and c_expr_detail sastexp =
 let rec cstmtlist slist =  List.map cstmt slist
 
 (*convert sast statement to c statements*)
-and cstmt sstmt = 
+and cstmt sstmt =
 
-    let getoptexpr optexpr = 
+    let getoptexpr optexpr =
         match optexpr with
           Some exp -> Some(sast_to_castexpr exp)
         | None     -> None
     in
-					
+
     let rec getiflist iflist =
         match iflist with
-	      []                   -> []
-		| [(optexpr, slist)]   -> [(getoptexpr optexpr, cstmtlist slist)]
-		| (optexpr, slist)::tl -> (getoptexpr optexpr, cstmtlist slist):: getiflist tl    
-	in
+              []                   -> []
+            | [(optexpr, slist)]   -> [(getoptexpr optexpr, cstmtlist slist)]
+            | (optexpr, slist)::tl -> (getoptexpr optexpr, cstmtlist slist):: getiflist tl
+    in
 
     match sstmt with
       Sast.Decl(var_def, optexpr, env) -> Cast.Decl(var_def, getoptexpr optexpr, env)
     | Sast.If(iflist, env)             -> Cast.If(getiflist iflist, env)
     | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr expr, cstmtlist sstmtlist, env)
     | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr exp, env)
-    | Sast.Return(optexpr, env)         -> Cast.Return(getoptexpr optexpr, env)
-    | Sast.Super(args, fuid, env)       -> (*Cast.Super(sast_to_castexprlist args, env)*)
- 					 Cast.Expr(("Void",Cast.Invoc(("This",Cast.This), "f_"^fuid^"_init" ,sast_to_castexprlist args)), env)
-  (*  
-    | _                                -> raise (Failure "Yet to implement all statement") 
+    | Sast.Return(optexpr, env)        -> Cast.Return(getoptexpr optexpr, env)
+    | Sast.Super(args, fuid, env)      -> (*Cast.Super(sast_to_castexprlist args, env)*)
+                                          Cast.Expr(("Void",Cast.Invoc(("This",Cast.This), "f_"^fuid^"_init" ,sast_to_castexprlist args)), env)
+  (*
+    | _                                -> raise (Failure "Yet to implement all statement")
   *)
 
 (**
@@ -81,10 +81,10 @@ let sast_to_cast_func (func : Sast.func_def) =
     @param cdef An ast cdef to flatten
     @return A c_struct of a name, a refine set and a variable set
 *)
-let flatten_cdef (cdef : Ast.class_def) = 
+let flatten_cdef (cdef : Ast.class_def) =
     (** Flatten out our refine list into uids *)
     let flatten_refines refines =
-        List.map (fun (x : Ast.func_def) -> x.uid) refines 
+        List.map (fun (x : Ast.func_def) -> x.uid) refines
     in
 
     (** Pick out variable members *)
@@ -92,7 +92,7 @@ let flatten_cdef (cdef : Ast.class_def) =
         match section with
         | Ast.VarMem(v)::rest -> v::(flatten_section_variables rest)
         | [] -> []
-        | _::rest -> (flatten_section_variables rest) 
+        | _::rest -> (flatten_section_variables rest)
     in
     let flatten_variables (sections : Ast.class_sections_def) =
         (flatten_section_variables sections.privates)
@@ -157,7 +157,7 @@ let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
         | Sast.MethodMem(v)::rest -> (sast_to_cast_func v)::(flatten_section_methods rest)
         | Sast.InitMem(v)::rest -> (sast_to_cast_func v)::(flatten_section_methods rest)
         | [] -> []
-        | _::rest -> (flatten_section_methods rest) 
+        | _::rest -> (flatten_section_methods rest)
     in
     (** Flatten a section of func_def. Not especially well written. *)
     let flatten_func_section section =
@@ -188,7 +188,7 @@ let sast_to_cast klass_data sast =
         in
         (ccast_cdef @ cast_cdef, ccast_cfunc @ cast_cfunc, ccast_mains @ cast_mains)
     in
-    let cast = 
+    let cast =
         List.fold_left merge_sast ([],[],[]) sast
     in
     cast

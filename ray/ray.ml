@@ -42,4 +42,4 @@ let print_header =
 let print_source =
     let gen_source = GenC.cast_to_c source_cast in
     fprintf output_c "%s" gen_source;
-    close_out output_c 
+    close_out output_c

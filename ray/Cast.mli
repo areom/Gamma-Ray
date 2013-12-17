@@ -16,16 +16,16 @@ type cexpr_detail =
     | Invoc of cexpr * string * cexpr list (*Invoc(receiver, functionname, args) *)
     | Unop of Ast.op * cexpr (* !x *)
     | Binop of cexpr * Ast.op * cexpr (* x + y *)
-(* 
+(*
    | Refine of string * expr list * string option
     | Refinable of string (* refinable *)
 *)
-and  
+and
 
 cexpr = string * cexpr_detail
 
-and 
-  
+and
+
 cvar_def = (string * string)
 
 and cstmt =
@@ -45,7 +45,7 @@ and cfunc = {
     body    : cstmt list;
     builtin : bool;
 }
-	
+
 (* The bare minimum for a struct represention *)
 type class_struct = {
     klass     : string list; (* It's important to know all the possible classes, in ascending order up to Object. The first one becomes the name. *)

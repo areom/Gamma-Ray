@@ -2,7 +2,7 @@ open Cast
 
 let c_indent = "  "
 
-let lit_to_str lit = 
+let lit_to_str lit =
     match lit with
       Ast.Int(i) -> string_of_int i
     | Ast.Float(f) -> string_of_float f
@@ -10,7 +10,7 @@ let lit_to_str lit =
     | Ast.Bool(b) ->if b = true then "1" else "0"
 
 
-let stringify_unop op lop = 
+let stringify_unop op lop =
     match op with
       Ast.Arithmetic(Ast.Neg) -> "-"^lop
     | Ast.CombTest(Ast.Not)   -> "!"^lop
@@ -42,7 +42,7 @@ let stringify_combtest op lop rop =
     | Ast.Or   -> lop^" || "^rop
     | Ast.Nand -> "!( "^lop^" && "^rop^" )"
     | Ast.Nor  -> "!( "^lop^" || "^rop^" )"
-    | Ast.Xor  -> "!( "^lop^" == "^rop^" )" 
+    | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
     | Ast.Not  -> raise(Failure "Unary operator")
 
 let stringify_binop op  lop rop=
@@ -69,9 +69,9 @@ and exprdetail_to_cstr castexpr_detail =
     | Deref(carray, index)           ->
         (expr_to_cstr carray)^"["^(expr_to_cstr index)^"]"
     | Field(obj, fieldname)          ->
-        (expr_to_cstr obj)^".v_"^(fieldname) 
+        (expr_to_cstr obj)^".v_"^(fieldname)
     | Invoc(recvr, fname, args)      -> "IMPLEMENT INVOC - TBD"
-    | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr) 
+    | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr)
     | Binop(lop, op, rop)            ->
         "( "^(stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop))^" )"
 
@@ -85,9 +85,9 @@ and vdecl_to_cstr (vtype, vname) = vtype^" "^vname^";\n"
 *)
 let rec cast_to_cstmtlist stmtlist = stringify_list  (List.map cast_to_c_stmt stmtlist)
 
-and ifstmt_to_str level (ifexpr, body) = 
+and ifstmt_to_str level (ifexpr, body) =
     match ifexpr with
-    | Some(ifpred)   ->  if level <> 0 then 
+    | Some(ifpred)   ->  if level <> 0 then
        "elseif( " ^ (expr_to_cstr ifpred) ^" ) {\n"
         ^(cast_to_cstmtlist body)^"\n}\n"
         else
@@ -100,8 +100,8 @@ and ifstmt_to_str level (ifexpr, body) =
     @param caststmt A statement in C-Ast form
     @returm A c statement
 *)
-and cast_to_c_stmt caststmt = 
-    let c_stmt = 
+and cast_to_c_stmt caststmt =
+    let c_stmt =
         match caststmt with
         | Decl(vdecl, Some(expr), env) ->
             (vdecl_to_cstr vdecl)^" = "^(expr_to_cstr expr)^";\n"
@@ -116,7 +116,7 @@ and cast_to_c_stmt caststmt =
         | Return(Some(expr), env) ->
             "return ("^(expr_to_cstr expr)^");\n"
         | _ ->
-            "Yet to implement this statement" 
+            "Yet to implement this statement"
     in
     c_indent ^ c_stmt
 
@@ -185,8 +185,8 @@ let cast_to_c (cast_cdefs,cast_cfuncs,cast_mains) =
     (cast_to_c_funcs cast_cfuncs) ^
     (cast_to_c_mains cast_mains)
 
-(** 
-   Take a class definition and return code consisting of struct types 
+(**
+   Take a class definition and return code consisting of struct types
    @param cast_cdefs A list of class definitions
    @return A set of type definitions
 *)
