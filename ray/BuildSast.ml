@@ -139,7 +139,7 @@ let rec eval klass_data kname mname env exp =
         (getRetType desired, Sast.Refine(rname, arglist, desired, switch)) in
 
     let get_refinable rname =
-        let refines = refine_lookup klass_data kname mname rname in
+        let refines = Klass.refinable_lookup klass_data kname mname rname in
         let klasses = List.map (fun (f : Ast.func_def) -> f.inklass) refines in
         ("Boolean", Sast.Refinable(rname, klasses)) in
 
