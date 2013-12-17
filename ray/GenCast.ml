@@ -5,190 +5,132 @@ open Klass
 open StringModules
 open GlobalData
 
-(*Convert the sast expr to cast expr*)
-let rec sast_to_castexpr sast_expr =
-    (fst sast_expr, c_expr_detail (snd sast_expr) )
+let to_fname fuid fname = Format.sprintf "f_%s_%s" fuid fname
+let to_rname fuid fhost fname = Format.sprintf "f_%s_%s_%s" fuid fhost fname
 
-and sast_to_castexprlist explist  = List.map sast_to_castexpr explist
+let get_fname (f : Sast.func_def) = to_fname f.uid f.name
+let get_rname (f : Sast.func_def) = match f.host with
+    | None -> raise(Failure("Generating refine name for non-refinement " ^ f.name ^ " in class " ^ f.inklass ^ "."))
+    | Some(host) -> to_rname f.uid host f.name
+let get_vname vname = "v_" ^ vname
+let get_tname tname = "t_" ^ tname
+
+(*Convert the sast expr to cast expr*)
+let rec sast_to_castexpr env sast_expr = (fst sast_expr, c_expr_detail (snd sast_expr) env)
+and sast_to_castexprlist env explist = List.map (sast_to_castexpr env) explist
 
 (*Conver the sast expr_detail to cast_expr detail*)
-and c_expr_detail sastexp =
-
+and c_expr_detail sastexp env =
     match sastexp with
       Sast.This              -> Cast.This
     | Sast.Null              -> Cast.Null
-    | Sast.Id(vname)         -> Cast.Id(vname)
-    | Sast.NewObj(classname, args, fuid) -> Cast.NewObj(classname, "f_"^fuid^"_init"^classname ,sast_to_castexprlist args)
+    | Sast.Id(vname)         -> Cast.Id(get_vname vname, snd (StringMap.find vname env))
+    | Sast.NewObj(classname, args, fuid) -> Cast.NewObj(classname, to_fname fuid "init", sast_to_castexprlist env args)
     | Sast.Literal(lit)      -> Cast.Literal(lit)
-    | Sast.Assign(e1, e2)    -> Cast.Assign(sast_to_castexpr e1, sast_to_castexpr e2)
-    | Sast.Deref(e1, e2)     -> Cast.Deref(sast_to_castexpr e1, sast_to_castexpr e2)
-    | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr e1, e2)
-    | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr expr)
-    | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr e1, op, sast_to_castexpr e2)
-    | Sast.Invoc(recv, fname, args, fuid) -> Cast.Invoc(sast_to_castexpr recv, "f_"^fuid^fname, sast_to_castexprlist args)
-    | _                      -> Cast.Null (* To avoid warning*)
-
+    | Sast.Assign(e1, e2)    -> Cast.Assign(sast_to_castexpr env e1, sast_to_castexpr env e2)
+    | Sast.Deref(e1, e2)     -> Cast.Deref(sast_to_castexpr env e1, sast_to_castexpr env e2)
+    | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr env e1, e2)
+    | Sast.Invoc(recv, fname, args, fuid) -> Cast.Invoc(sast_to_castexpr env recv, to_fname fuid fname, sast_to_castexprlist env args)
+    | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr env expr)
+    | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr env e1, op, sast_to_castexpr env e2)
+    | Sast.Refine(name, args, rtype, switch) -> Cast.Refine(name, sast_to_castexprlist env args, rtype, switch)
+    | Sast.Refinable(name, switch) -> Cast.Refinable(name, switch)
+    | Anonymous(_, _, _)     -> raise(Failure("Anonymous objects should have been deanonymized."))
 
 (*Convert the statement list by invoking cstmt on each of the sast stmt*)
 let rec cstmtlist slist =  List.map cstmt slist
 
+(* Prepend suffixes *)
+and cdef (vtype, vname) = (get_tname vtype, get_vname vname)
+
 (*convert sast statement to c statements*)
 and cstmt sstmt =
-
-    let getoptexpr optexpr =
+    let getoptexpr env optexpr =
         match optexpr with
-          Some exp -> Some(sast_to_castexpr exp)
-        | None     -> None
-    in
+          Some exp -> Some(sast_to_castexpr env exp)
+        | None     -> None in
 
-    let rec getiflist iflist =
+    let rec getiflist env iflist =
         match iflist with
               []                   -> []
-            | [(optexpr, slist)]   -> [(getoptexpr optexpr, cstmtlist slist)]
-            | (optexpr, slist)::tl -> (getoptexpr optexpr, cstmtlist slist):: getiflist tl
-    in
+            | [(optexpr, slist)]   -> [(getoptexpr env optexpr, cstmtlist slist)]
+            | (optexpr, slist)::tl -> (getoptexpr env optexpr, cstmtlist slist):: getiflist env tl in
+
+    let getsuper args fuid env =
+        let recvr = ("This", Cast.This) in
+        let init = to_fname fuid "init" in
+        let cargs = sast_to_castexprlist env args in
+        Cast.Invoc((recvr, init, cargs)) in
 
     match sstmt with
-      Sast.Decl(var_def, optexpr, env) -> Cast.Decl(var_def, getoptexpr optexpr, env)
-    | Sast.If(iflist, env)             -> Cast.If(getiflist iflist, env)
-    | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr expr, cstmtlist sstmtlist, env)
-    | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr exp, env)
-    | Sast.Return(optexpr, env)        -> Cast.Return(getoptexpr optexpr, env)
-    | Sast.Super(args, fuid, env)      -> (*Cast.Super(sast_to_castexprlist args, env)*)
-                                          Cast.Expr(("Void",Cast.Invoc(("This",Cast.This), "f_"^fuid^"_init" ,sast_to_castexprlist args)), env)
-  (*
-    | _                                -> raise (Failure "Yet to implement all statement")
-  *)
+      Sast.Decl(var_def, optexpr, env) -> Cast.Decl(cdef var_def, getoptexpr env optexpr, env)
+    | Sast.If(iflist, env)             -> Cast.If(getiflist env iflist, env)
+    | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr env expr, cstmtlist sstmtlist, env)
+    | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr env exp, env)
+    | Sast.Return(optexpr, env)        -> Cast.Return(getoptexpr env optexpr, env)
+    | Sast.Super(args, fuid, env)      -> Cast.Expr(("Void", getsuper args fuid env), env)
 
 (**
     Trim up the sast func_def to the cast cfunc_def
     @param func It's a sast func_def. Woo.
     @return It's a cast cfunc_def. Woo.
 *)
-let sast_to_cast_func (func : Sast.func_def) =
-    let (cast_func : Cast.cfunc) =
-        {
-            returns = func.returns;
-            uid = func.uid;
-            formals = func.formals;
-            static = func.static;
-            body = cstmtlist func.body;
-            builtin = func.builtin;
-        } in
-    cast_func
+let sast_to_cast_func (func : Sast.func_def) : cfunc =
+    let name = match func.host with
+        | None -> get_fname func
+        | Some(host) -> get_rname func in
+    {   returns = func.returns;
+        name = name;
+        formals = func.formals;
+        static = func.static;
+        body = cstmtlist func.body;
+        builtin = func.builtin; }
 
-(** Flatten the class
-    @param cdef An ast cdef to flatten
-    @return A c_struct of a name, a refine set and a variable set
-*)
-let flatten_cdef (cdef : Ast.class_def) =
-    (** Flatten out our refine list into uids *)
-    let flatten_refines refines =
-        List.map (fun (x : Ast.func_def) -> x.uid) refines
-    in
+let build_class_struct_map klass_data (sast_classes : Sast.class_def list) =
+    (* Extract the ancestry and variables from a class into a cdef *)
+    let klass_to_struct klass_name (aklass : Ast.class_def) =
+        let compare (_, n1) (_, n2) = Pervasives.compare n1 n2 in
+        let ivars = List.flatten (List.map snd (Klass.klass_to_variables aklass)) in
+        [(klass_name, List.sort compare ivars)] in
 
-    (** Pick out variable members *)
-    let rec flatten_section_variables section =
-        match section with
-        | Ast.VarMem(v)::rest -> v::(flatten_section_variables rest)
-        | [] -> []
-        | _::rest -> (flatten_section_variables rest)
-    in
-    let flatten_variables (sections : Ast.class_sections_def) =
-        (flatten_section_variables sections.privates)
-        @ (flatten_section_variables sections.protects)
-        @ (flatten_section_variables sections.publics)
-    in
+    (* Map each individial class to a basic class_struct *)
+    let struct_map = StringMap.mapi klass_to_struct klass_data.classes in
 
-    let cast_cdef : Cast.class_struct =
-        {
-            klass     = [cdef.klass];
-            refines   = flatten_refines cdef.sections.refines;
-            variables = flatten_variables cdef.sections;
-        } in
-    cast_cdef
+    (* Now, assuming we get parents before children, update the maps appropriately *)
+    let folder map = function
+        | "Object" -> StringMap.add "Object" (StringMap.find "Object" struct_map) map
+        | aklass ->
+            let parent = StringMap.find (StringMap.find aklass klass_data.parents) map in
+            let this = StringMap.find aklass struct_map in
+            StringMap.add aklass (this @ parent) map in
 
-(**
-    Build a list of the parent chain for a class
-    @param klass_data The class data for this program
-    @param cdef An ast class_def
-    @return A list of the cdefs that comprise the full scope of the original cdef
-*)
-let rec build_parents klass_data (cdef : Ast.class_def) =
-    let parent_cdef =
-        StringMap.find ( klass_to_parent cdef ) klass_data.classes
-    in
-    match cdef with
-    | { parent = None } -> [cdef]
-    | _ -> cdef :: (build_parents klass_data parent_cdef)
+    (* Update the map so that each child has information from parents *)
+    let struct_map = List.fold_left folder StringMap.empty (Klass.get_class_names klass_data) in
 
-(**
-    Pull apart a Ast.class_def
-    @param klass_data The class data for this program
-    @param sast_cdef A sast class_def
-    @return A c_struct and its functions put into a list
-*)
-let sast_to_cast_cdef klass_data (sast_cdef : Sast.class_def) =
-    (** Drop the Sast to an Ast. We don't need environment stuff here *)
-    let cdef = StringMap.find sast_cdef.klass klass_data.classes in
-    let cdefs = build_parents klass_data cdef in
-    (** Function to fold our data again -- I'm making the assumption there are no duplicates *)
-    let merge_cdefs (klass_data,merged_cast_cdef) cdef =
-        let new_cast_cdef = flatten_cdef cdef in
-        let new_merged_cast_cdef = {
-            klass = merged_cast_cdef.klass @ new_cast_cdef.klass;
-            variables = merged_cast_cdef.variables @ new_cast_cdef.variables;
-            refines = merged_cast_cdef.refines @ new_cast_cdef.refines;
-        } in
-        (klass_data, new_merged_cast_cdef)
-    in
-    (** Since we're folding, it's easiest to start with an "empty" *)
-    let start_cdef = {
-        klass = [];
-        variables = [];
-        refines = [];
-    } in
-    let (_, cast_cdef) =
-        List.fold_left merge_cdefs (klass_data, start_cdef) cdefs
-    in
-    (** Pick out variable members *)
-    let rec flatten_section_methods section =
-        match section with
-        | Sast.MethodMem(v)::rest -> (sast_to_cast_func v)::(flatten_section_methods rest)
-        | Sast.InitMem(v)::rest -> (sast_to_cast_func v)::(flatten_section_methods rest)
-        | [] -> []
-        | _::rest -> (flatten_section_methods rest)
-    in
-    (** Flatten a section of func_def. Not especially well written. *)
-    let flatten_func_section section =
-        List.map (fun x -> sast_to_cast_func x) section
-    in
-    let flatten_methods (sections : Sast.class_sections_def) =
-        (flatten_section_methods sections.privates)
-        @ (flatten_section_methods sections.protects)
-        @ (flatten_section_methods sections.publics)
-        @ (flatten_func_section sections.refines)
-        @ (flatten_func_section sections.mains)
-    in
-    (** It's important to note we really only care about methods of the
-    immediate sast. The parent methods will come out of the parent processing
-    and the refinements are attached in the struct generation. *)
-    let cast_cfunc = flatten_methods sast_cdef.sections in
-    (** Simply pop out the uids. *)
-    let cast_mains =
-        List.map (fun (x : Sast.func_def) -> x.uid) sast_cdef.sections.mains
-    in
-    ([cast_cdef], cast_cfunc, cast_mains)
+    (* Reverse the values so that they start from the root *)
+    StringMap.map List.rev struct_map
 
-(** Silly function to attach all the individual "programs" of the program together *)
-let sast_to_cast klass_data sast =
-    let merge_sast (ccast_cdef, ccast_cfunc, ccast_mains) sast_cdef =
-        let (cast_cdef, cast_cfunc, cast_mains) =
-            sast_to_cast_cdef klass_data sast_cdef
-        in
-        (ccast_cdef @ cast_cdef, ccast_cfunc @ cast_cfunc, ccast_mains @ cast_mains)
-    in
-    let cast =
-        List.fold_left merge_sast ([],[],[]) sast
-    in
-    cast
+let sast_functions (klasses : Sast.class_def list) =
+    (* Map a Sast class to its functions *)
+    let get_functions (klass : Sast.class_def) =
+        let s = klass.sections in
+        let funcs = function
+            | Sast.MethodMem(m) -> Some(m)
+            | Sast.InitMem(i) -> Some(i)
+            | _ -> None in
+        let get_funcs mems = Util.filter_option (List.map funcs mems) in
+        List.flatten [ get_funcs s.publics ; get_funcs s.protects ; get_funcs s.privates ; s.refines ; s.mains ] in
+
+    let all_functions = List.flatten (List.map get_functions klasses) in
+    let all_mains = List.flatten (List.map (fun k -> k.sections.mains) klasses) in
+
+    (all_functions, all_mains)
+
+let sast_to_cast klass_data (klasses : Sast.class_def list) : Cast.program =
+    let (funcs, mains) = sast_functions klasses in
+    let main_case f = (f.inklass, get_fname f) in
+    let cfuncs = List.map sast_to_cast_func funcs in
+    let main_switch = List.map main_case mains in
+    let struct_map = build_class_struct_map klass_data klasses in
+
+    (struct_map, cfuncs, main_switch)

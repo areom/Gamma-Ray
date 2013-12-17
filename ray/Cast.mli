@@ -41,7 +41,7 @@ and cfunc = {
 (* The bare minimum for a struct represention *)
 type class_struct = (string * Ast.var_def list) list (* All the data for this object from the root (first item) down, paired with class name *)
 
-(* A main is a class name and a UID *)
+(* A main is a class name and a function name for that main *)
 type main_func = (string * string)
 
 (* A program is a map from all classes to their struct's, a list of all functions, and a list of mainfuncs *)
