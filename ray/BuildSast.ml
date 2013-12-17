@@ -135,12 +135,12 @@ let rec eval klass_data kname mname env exp =
         let argtypes = List.map fst arglist in
         let refines = Klass.refine_on klass_data kname mname rname argtypes desired in
         let switch = List.map (fun (f : Ast.func_def) -> (f.inklass, f.uid)) refines in
-        (getRetType desired, Sast.Refine(rname, arglist, desired, switch)) in
+        (getRetType desired, Sast.Refine(rname, arglist, desired, Switch(switch, UID.uid_counter ()))) in
 
     let get_refinable rname =
         let refines = Klass.refinable_lookup klass_data kname mname rname in
         let klasses = List.map (fun (f : Ast.func_def) -> f.inklass) refines in
-        ("Boolean", Sast.Refinable(rname, klasses)) in
+        ("Boolean", Sast.Refinable(rname, Test(klasses, UID.uid_counter ()))) in
 
     let get_deref e1 e2 =
         let expectArray typename = match Str.last_chars typename 2 with

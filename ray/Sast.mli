@@ -1,6 +1,10 @@
 
 (** Types for the semantic abstract syntax tree *)
 
+(** A switch for refinment or refinable checks *)
+type refine_switch =
+    | Switch of (string * string) list * string (* class/best-uid list, switch uid *)
+    | Test of string list * string  (* class list, uid of switch *)
 
 (** The type of a variable in the environment *)
 type varkind = Instance of string | Local
@@ -22,8 +26,8 @@ type expr_detail =
     | Invoc of expr * string * expr list * string (* receiver.method(args) * bestmethod_uid  *)
     | Unop of Ast.op * expr (* !x *)
     | Binop of expr * Ast.op * expr (* x + y *)
-    | Refine of string * expr list * string option * (string * string) list (* refinement, arg list, opt ret type, switch list (class, uids) *)
-    | Refinable of string * string list (* desired refinement, list of classes supporting refinement *)
+    | Refine of string * expr list * string option * refine_switch (* refinement, arg list, opt ret type, switch id *)
+    | Refinable of string * refine_switch (* desired refinement, list of classes supporting refinement *)
 
 (** An expression with a type tag *)
 and expr = string * expr_detail
