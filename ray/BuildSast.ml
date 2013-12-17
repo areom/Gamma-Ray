@@ -16,6 +16,17 @@ open GlobalData
     @return A function that will update an environment passed to it.
   *)
 let env_update mode (vtype, vname) = StringMap.add vname (vtype, mode)
+let env_updates mode = List.fold_left (fun env vdef -> env_update mode vdef env)
+let add_ivars klass env level =
+    let sects = match level with
+        | Publics -> [Publics]
+        | Protects -> [Publics; Protects]
+        | Privates -> [Publics; Protects; Privates]
+        | _ -> raise(Failure("Inappropriate class section - access level."))  in
+    let filter (s, _) = List.mem s sects in
+    let vars = Klass.klass_to_variables klass in
+    let eligible = List.flatten (List.map snd (List.filter filter vars)) in
+    env_updates (Instance(klass.klass)) env eligible
 
 (** Marker for being in the current class -- ADT next time *)
 let current_class = "_CurrentClassMarker_"
@@ -300,7 +311,14 @@ let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
   *)
 let ast_to_sast klass_data (ast_klass : Ast.class_def) =
     let s : Ast.class_sections_def = ast_klass.sections in
-    let env = StringMap.empty in
+    let rec update_env env sect (klass : Ast.class_def) =
+        let env = add_ivars klass env sect in
+        match klass.klass with
+            | "Object" -> env
+            | _ -> let parent = Klass.klass_to_parent klass in
+                   let pclass = StringMap.find parent klass_data.classes in
+                   update_env env Protects pclass in
+    let env = update_env StringMap.empty Privates ast_klass in
 
     let mems = List.map (fun m -> ast_mem_to_sast_mem klass_data m env) in
     let funs = List.map (fun f -> ast_func_to_sast_func klass_data f env) in
