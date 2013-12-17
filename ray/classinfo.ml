@@ -14,6 +14,10 @@ let dupfield (klass, fields) = match fields with
     | [(ancestor, var)] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " was declared in ancestor " ^ ancestor ^ "."
     | _ -> "Class " ^ klass ^ " has instance variables declared in ancestors: [" ^ String.concat ", " (List.map (fun (a, v) -> v ^ " in " ^ a) fields) ^ "]"
 
+let unknowntypes (klass, types) = match types with
+    | [(vtype, vname)] -> "Class " ^ klass ^ "'s instancevariable " ^ vname ^ " has unknown type " ^ vtype ^ "."
+    | _ -> "Class " ^ klass ^ " has instance variables with unknown types: [" ^ String.concat ", " (List.map (fun (t,v) -> t ^ ":" ^ v) types) ^ "]"
+
 let dupmeth (klass, meths) =
     match meths with
         | [(name, formals)] -> Format.sprintf "Class %s's method %s has multiple implementations taking %s" klass name (args formals)
@@ -36,6 +40,7 @@ let errstr = function
         | _ -> "Multiple classes share the names [" ^ (String.concat ", " klasses) ^ "]")
     | DuplicateVariables(list) -> String.concat "\n" (List.map dupvar list)
     | DuplicateFields(list) -> String.concat "\n" (List.map dupfield list)
+    | UnknownTypes(types) -> String.concat "\n" (List.map unknowntypes types)
     | ConflictingMethods(list) -> String.concat "\n" (List.map dupmeth list)
     | ConflictingInherited(list) -> String.concat "\n" (List.map dupinherit list)
     | Uninstantiable(klasses) -> (match klasses with

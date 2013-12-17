@@ -486,6 +486,9 @@ let append_distance data = Left(build_distance_map data)
 let append_variables data = match build_class_var_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(DuplicateVariables(collisions))
+let test_types data = match verify_typed data with
+    | Left(data) -> Left(data)
+    | Right(bad) -> Right(UnknownTypes(bad))
 let test_fields data = match check_field_collisions data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(DuplicateFields(collisions))
@@ -514,9 +517,9 @@ let build_class_data klasses = seq (initial_data klasses)
 
 let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
-      append_distance ; append_variables ; test_fields ; append_methods ;
-      test_init ; test_inherited_methods ; append_refines ; append_dispatcher ;
-      append_refinable ; append_mains ]
+      append_distance ; append_variables ; test_fields ; test_types ;
+      append_methods ; test_init ; test_inherited_methods ; append_refines ;
+      append_dispatcher ; append_refinable ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -555,6 +558,10 @@ let append_leaf_test_fields aklass data =
     match List.fold_left folder [] varnames with
         | [] -> Left(data)
         | collisions -> Right(DuplicateFields([(aklass.klass, collisions)]))
+let append_leaf_type_vars aklass data =
+    match type_check_variables data aklass with
+        | [] -> Left(data)
+        | bad -> Right(UnknownTypes([(aklass.klass, bad)]))
 let append_leaf_methods aklass data = match build_method_map aklass with
     | Left(meths) ->
         let updated = StringMap.add aklass.klass meths data.methods in
@@ -620,8 +627,8 @@ let append_leaf_test data aklass =
     let actions =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
           append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
-          append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ; append_leaf_refines ;
-          append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ] in
+          append_leaf_type_vars ; append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ;
+          append_leaf_refines ; append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 (**

@@ -27,6 +27,7 @@ type class_data_error
     | DuplicateClasses of string list
     | DuplicateVariables of (string * string list) list
     | DuplicateFields of (string * (string * string) list) list
+    | UnknownTypes of (string * (string * string) list) list
     | ConflictingMethods of (string * (string * string list) list) list
     | ConflictingInherited of (string * (string * string list) list) list
     | Uninstantiable of string list
