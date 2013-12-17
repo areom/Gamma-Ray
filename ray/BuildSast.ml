@@ -158,14 +158,14 @@ let rec eval klass_data kname mname env exp =
         | Ast.CombTest(Not) -> ("Boolean", Sast.Unop(op, eval' expr))
         | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_ast_op op ^ " given.")) in
 
-    let lookup_type id env = match map_lookup id env with
+    let lookup_type id = match map_lookup id env with
         | None -> "Unknown id " ^ id ^ " in environment built around " ^ kname ^ ", " ^ mname ^ "."
         | Some((vtype, _)) -> vtype in
 
     match exp with
         | Ast.This -> (current_class, Sast.This)
         | Ast.Null -> (null_class, Sast.Null)
-        | Ast.Id(vname) -> (lookup_type vname env, Sast.Id(vname))
+        | Ast.Id(vname) -> (lookup_type vname, Sast.Id(vname))
         | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
         | Ast.NewObj(s1, elist) -> get_init s1 elist
         | Ast.Field(expr, mbr) -> get_field expr mbr
