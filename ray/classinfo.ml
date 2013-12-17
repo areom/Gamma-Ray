@@ -14,9 +14,17 @@ let dupfield (klass, fields) = match fields with
     | [(ancestor, var)] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " was declared in ancestor " ^ ancestor ^ "."
     | _ -> "Class " ^ klass ^ " has instance variables declared in ancestors: [" ^ String.concat ", " (List.map (fun (a, v) -> v ^ " in " ^ a) fields) ^ "]"
 
+let show_vdecls vs = "[" ^ String.concat ", " (List.map (fun (t,v) -> t ^ ":" ^ v) vs) ^ "]"
+
 let unknowntypes (klass, types) = match types with
     | [(vtype, vname)] -> "Class " ^ klass ^ "'s instancevariable " ^ vname ^ " has unknown type " ^ vtype ^ "."
-    | _ -> "Class " ^ klass ^ " has instance variables with unknown types: [" ^ String.concat ", " (List.map (fun (t,v) -> t ^ ":" ^ v) types) ^ "]"
+    | _ -> "Class " ^ klass ^ " has instance variables with unknown types: " ^ show_vdecls types
+
+let badsig1 klass (func, ret, params) = match ret, params with
+    | None, params -> "Class " ^ klass ^ "'s " ^ func ^ " has poorly typed parameters: " ^ show_vdecls params
+    | Some(rval), [] -> "Class " ^ klass ^ "'s " ^ func ^ " has an invalid return type: " ^ rval ^ "."
+    | Some(rval), p -> "Class " ^ klass ^ "'s " ^ func ^ " has invalid return type " ^ rval ^ " and poorly typed parameters: " ^ show_vdecls p
+let badsig (klass, badfuncs) = String.concat "\n" (List.map (badsig1 klass) badfuncs)
 
 let dupmeth (klass, meths) =
     match meths with
@@ -43,6 +51,7 @@ let errstr = function
     | UnknownTypes(types) -> String.concat "\n" (List.map unknowntypes types)
     | ConflictingMethods(list) -> String.concat "\n" (List.map dupmeth list)
     | ConflictingInherited(list) -> String.concat "\n" (List.map dupinherit list)
+    | PoorlyTypedSigs(list) -> String.concat "\n" (List.map badsig list)
     | Uninstantiable(klasses) -> (match klasses with
         | [klass] -> "Class " ^ klass ^ " does not have a usable init."
         | _ -> "Multiple classes are not instantiable: [" ^ String.concat ", " klasses ^ "]")

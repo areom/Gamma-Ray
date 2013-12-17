@@ -234,7 +234,7 @@ let verify_typed data =
 let type_check_func data func =
     let atype = is_type data in
     let check_ret = match func.returns with
-        | Some(vtype) -> if atype vtype then None else Some(atype)
+        | Some(vtype) -> if atype vtype then None else Some(vtype)
         | _ -> None in
     let check_param (vtype, vname) = if atype vtype then Some((vtype, vname)) else None in
     let bad_params = filter_option (List.map check_param func.formals) in
@@ -265,8 +265,8 @@ let type_check_class data aklass =
     (Return and parameters)
     @param data A class_data record object
     @param aklass A class_def object
-    @return Left(data) if everything went okay; Right((klass name, func_name, option string,
-    (type, name) list) list) list)
+    @return Left(data) if everything went okay; Right((klass name, bad_sig list) list)
+    where bad_sig is (func_name, string option, (type, var) list))
   *)
 let type_check_signatures data =
     let folder klass_name aklass bad = match type_check_class data aklass with
@@ -556,6 +556,9 @@ let test_inherited_methods data = match check_ancestor_signatures data with
 let append_refines data = match build_class_refinement_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(ConflictingRefinements(collisions))
+let test_signatures data = match type_check_signatures data with
+    | Left(data) -> Left(data)
+    | Right(bad) -> Right(PoorlyTypedSigs(bad))
 let append_dispatcher data = Left(build_dispatch_map data)
 let append_refinable data = Left(build_refinable_map data)
 let append_mains data = match build_main_map data with
@@ -571,7 +574,7 @@ let build_class_data_test klasses = seq (initial_data klasses)
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; test_types ;
       append_methods ; test_init ; test_inherited_methods ; append_refines ;
-      append_dispatcher ; append_refinable ; append_mains ]
+      test_signatures ; append_dispatcher ; append_refinable ; append_mains ]
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -647,6 +650,9 @@ let append_leaf_mains aklass data = match aklass.sections.mains with
         let updated = StringMap.add aklass.klass main data.mains in
         Left({ data with mains = updated })
     | _ -> Right(MultipleMains([aklass.klass]))
+let append_leaf_signatures aklass data = match type_check_class data aklass with
+    | Left(data) -> Left(data)
+    | Right(bad) -> Right(PoorlyTypedSigs([bad]))
 let append_leaf_ancestor aklass data =
     let parent = klass_to_parent aklass in
     let ancestors = aklass.klass::(StringMap.find parent data.ancestors) in
@@ -671,7 +677,8 @@ let append_leaf data aklass =
     let actions =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
           append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
-          append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_mains ] in
+          append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_signatures ;
+          append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 let append_leaf_test data aklass =

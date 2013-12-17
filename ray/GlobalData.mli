@@ -30,6 +30,7 @@ type class_data_error
     | UnknownTypes of (string * (string * string) list) list
     | ConflictingMethods of (string * (string * string list) list) list
     | ConflictingInherited of (string * (string * string list) list) list
+    | PoorlyTypedSigs of (string * (string * string option * (string * string) list) list) list
     | Uninstantiable of string list
     | ConflictingRefinements of (string * (string * string list) list) list
     | MultipleMains of string list
