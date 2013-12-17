@@ -1,7 +1,6 @@
 open Ast
 open Sast
 open Klass
-open Str
 open StringModules
 open Util
 open GlobalData
@@ -144,8 +143,8 @@ let rec eval klass_data kname mname env exp =
         ("Boolean", Sast.Refinable(rname, klasses)) in
 
     let get_deref e1 e2 =
-        let expectArray typename = match last_chars typename 2 with
-            | "[]" -> first_chars typename (String.length typename - 2)
+        let expectArray typename = match Str.last_chars typename 2 with
+            | "[]" -> Str.first_chars typename (String.length typename - 2)
             | _  -> raise (Failure "Not an array type") in
         let (t1, t2) = (eval' e1, eval' e2) in
         let getArrayType (typ1, _) (typ2, _) = match typ2 with
