@@ -236,7 +236,7 @@ let type_check_func data func =
     let check_ret = match func.returns with
         | Some(vtype) -> if atype vtype then None else Some(vtype)
         | _ -> None in
-    let check_param (vtype, vname) = if atype vtype then Some((vtype, vname)) else None in
+    let check_param (vtype, vname) = if not (atype vtype) then Some((vtype, vname)) else None in
     let bad_params = filter_option (List.map check_param func.formals) in
     match check_ret, bad_params, func.host with
         | None, [], _ -> Left(data)
