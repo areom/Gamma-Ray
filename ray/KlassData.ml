@@ -236,7 +236,7 @@ let type_check_func data func =
     let check_ret = match func.returns with
         | Some(vtype) -> if atype vtype then None else Some(vtype)
         | _ -> None in
-    let check_param (vtype, vname) = if atype vtype then Some((vtype, vname)) else None in
+    let check_param (vtype, vname) = if not (atype vtype) then Some((vtype, vname)) else None in
     let bad_params = filter_option (List.map check_param func.formals) in
     match check_ret, bad_params, func.host with
         | None, [], _ -> Left(data)
@@ -504,7 +504,7 @@ let build_dispatch_map data =
   *)
 let update_refinable parent refines table =
     let toname f = match f.host with
-        | Some(host) -> host ^ "." ^ f.name
+        | Some(host) -> host
         | _ -> raise(Invalid_argument("Compiler error; we have refinement without host for " ^ f.name ^ " in " ^ f.inklass ^ ".")) in
     let folder amap f = add_map_list (toname f) f amap in
     let map = if StringMap.mem parent table then StringMap.find parent table else StringMap.empty in

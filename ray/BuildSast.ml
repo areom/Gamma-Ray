@@ -15,7 +15,22 @@ open GlobalData
     @param vname The name of the variable
     @return A function that will update an environment passed to it.
   *)
-let env_update mode (vtype, vname) = StringMap.add vname (vtype, mode)
+let env_update mode (vtype, vname) env = match map_lookup vname env, mode with
+    | None, _ -> StringMap.add vname (vtype, mode) env
+    | Some((otype, Local)), Local -> raise(Failure("Local variable " ^ vname ^ " loaded twice, once with type " ^ otype ^ " and then with type " ^ vtype ^ "."))
+    | _, Local -> StringMap.add vname (vtype, mode) env
+    | _, _ -> raise(Failure("Instance variable declared twice in ancestry chain -- this should have been detected earlier; compiler error."))
+let env_updates mode = List.fold_left (fun env vdef -> env_update mode vdef env)
+let add_ivars klass env level =
+    let sects = match level with
+        | Publics -> [Publics]
+        | Protects -> [Publics; Protects]
+        | Privates -> [Publics; Protects; Privates]
+        | _ -> raise(Failure("Inappropriate class section - access level."))  in
+    let filter (s, _) = List.mem s sects in
+    let vars = Klass.klass_to_variables klass in
+    let eligible = List.flatten (List.map snd (List.filter filter vars)) in
+    env_updates (Instance(klass.klass)) env eligible
 
 (** Marker for being in the current class -- ADT next time *)
 let current_class = "_CurrentClassMarker_"
@@ -29,21 +44,6 @@ let is_lvalue (expr : Ast.expr) = match expr with
     | Ast.Field(_, _) -> true
     | Ast.Deref(_, _) -> true
     | _ -> false
-
-(**
-    Given a class_data record, the name of a class, the name of a variable, and
-    and environment, return the type of the variable.
-    @param klass_data A class_data record value
-    @param kname The name of a class
-    @param vname The name of a variable
-    @param env The type of the variable
-    @return The variable's type or a Failure is raised if not found.
-  *)
-let lookup_type klass_data kname vname env = match map_lookup vname env with
-    | Some((vtyp, _)) -> vtyp
-    | _ -> match Klass.class_field_lookup klass_data kname vname with
-        | Some((_, vtyp, _)) -> vtyp
-        | None -> raise(Failure("ID " ^ vname ^ " not found in the ancestery of " ^ kname ^ " or in the environment."))
 
 (**
     Map a literal value to its type
@@ -139,7 +139,7 @@ let rec eval klass_data kname mname env exp =
         (getRetType desired, Sast.Refine(rname, arglist, desired, switch)) in
 
     let get_refinable rname =
-        let refines = refine_lookup klass_data kname mname rname in
+        let refines = Klass.refinable_lookup klass_data kname mname rname in
         let klasses = List.map (fun (f : Ast.func_def) -> f.inklass) refines in
         ("Boolean", Sast.Refinable(rname, klasses)) in
 
@@ -158,10 +158,14 @@ let rec eval klass_data kname mname env exp =
         | Ast.CombTest(Not) -> ("Boolean", Sast.Unop(op, eval' expr))
         | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_ast_op op ^ " given.")) in
 
+    let lookup_type id = match map_lookup id env with
+        | None -> "Unknown id " ^ id ^ " in environment built around " ^ kname ^ ", " ^ mname ^ "."
+        | Some((vtype, _)) -> vtype in
+
     match exp with
         | Ast.This -> (current_class, Sast.This)
         | Ast.Null -> (null_class, Sast.Null)
-        | Ast.Id(vname) -> (lookup_type klass_data kname vname env, Sast.Id(vname))
+        | Ast.Id(vname) -> (lookup_type vname, Sast.Id(vname))
         | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
         | Ast.NewObj(s1, elist) -> get_init s1 elist
         | Ast.Field(expr, mbr) -> get_field expr mbr
@@ -300,7 +304,14 @@ let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
   *)
 let ast_to_sast klass_data (ast_klass : Ast.class_def) =
     let s : Ast.class_sections_def = ast_klass.sections in
-    let env = StringMap.empty in
+    let rec update_env env sect (klass : Ast.class_def) =
+        let env = add_ivars klass env sect in
+        match klass.klass with
+            | "Object" -> env
+            | _ -> let parent = Klass.klass_to_parent klass in
+                   let pclass = StringMap.find parent klass_data.classes in
+                   update_env env Protects pclass in
+    let env = update_env StringMap.empty Privates ast_klass in
 
     let mems = List.map (fun m -> ast_mem_to_sast_mem klass_data m env) in
     let funs = List.map (fun f -> ast_func_to_sast_func klass_data f env) in
