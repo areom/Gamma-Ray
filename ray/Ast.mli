@@ -16,7 +16,7 @@ type lit =
   | Bool of bool
 
 (** The binary arithmatic operators *)
-type arith = Add | Sub | Prod | Quot | Div | Mod | Neg | Pow
+type arith = Add | Sub | Prod | Div | Mod | Neg | Pow
 
 (** The binary comparison operators *)
 type numtest = Eq | Neq | Less | Grtr | Leq | Geq

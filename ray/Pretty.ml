@@ -20,7 +20,6 @@ let pp_arith = function
     | Add  -> "Add"
     | Sub  -> "Sub"
     | Prod -> "Prod"
-    | Quot -> "Quot"
     | Div  -> "Div"
     | Mod  -> "Mod"
     | Neg  -> "Neg"

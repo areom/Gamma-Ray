@@ -225,7 +225,6 @@ let inspect_ast_arith (op : Ast.arith) = match op with
     | Add  -> "Add"
     | Sub  -> "Sub"
     | Prod -> "Prod"
-    | Quot -> "Quot"
     | Div  -> "Div"
     | Mod  -> "Mod"
     | Neg  -> "Neg"
