@@ -302,7 +302,7 @@ let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
     @param ast_klass A class to transform
     @return The transformed class.
   *)
-let ast_to_sast klass_data (ast_klass : Ast.class_def) =
+let ast_to_sast_klass klass_data (ast_klass : Ast.class_def) =
     let s : Ast.class_sections_def = ast_klass.sections in
     let rec update_env env sect (klass : Ast.class_def) =
         let env = add_ivars klass env sect in
@@ -329,3 +329,11 @@ let ast_to_sast klass_data (ast_klass : Ast.class_def) =
             sections = sections } in
 
     sast_klass
+
+
+(**
+    @param ast An ast program
+    @return A sast program
+*)
+let ast_to_sast klass_data (ast : Ast.class_def list) =
+    List.map (fun klass -> ast_to_sast_klass klass_data klass) ast
