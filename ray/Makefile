@@ -1,4 +1,4 @@
-all: compile _tools _doc _ray
+all: compile _tools _ray _doc
 
 compile:
 	#Generate the lexer and parser
@@ -43,7 +43,7 @@ compile:
 	ocamlc -c -g streams.ml
 	ocamlc -c -g canonical.ml
 	ocamlc -c -g freevars.ml
-	ocamlc -c -g build.ml
+	ocamlc -c -g ray.ml
 
 _tools:
 	#Make the tools
@@ -57,7 +57,9 @@ _tools:
 _ray:
 	#Make ray
 	mkdir -p bin
-	ocamlc -g -o bin/ray UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo freevars.cmo str.cma BuildSast.cmo classinfo.cmo GenCast.cmo GenC.cmo build.cmo
+	ocamlc -g -o bin/ray UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo str.cma BuildSast.cmo GenCast.cmo GenC.cmo ray.cmo
+
+nodoc: compile _tools _ray
 
 docsources = Ast.mli BuildSast.ml BuildSast.mli BuiltIns.ml BuiltIns.mli Cast.mli Debug.ml GenCast.ml GenC.ml GlobalData.mli Inspector.ml Inspector.mli Klass.ml Klass.mli KlassData.ml KlassData.mli Pretty.ml Sast.mli StringModules.ml UID.ml Unanonymous.ml Unanonymous.mli Util.ml Variables.ml WhiteSpace.ml parser.ml parser.mli scanner.ml
 docgen = ./doc/.docgen
