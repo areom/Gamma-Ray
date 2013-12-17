@@ -504,7 +504,7 @@ let build_dispatch_map data =
   *)
 let update_refinable parent refines table =
     let toname f = match f.host with
-        | Some(host) -> host ^ "." ^ f.name
+        | Some(host) -> host
         | _ -> raise(Invalid_argument("Compiler error; we have refinement without host for " ^ f.name ^ " in " ^ f.inklass ^ ".")) in
     let folder amap f = add_map_list (toname f) f amap in
     let map = if StringMap.mem parent table then StringMap.find parent table else StringMap.empty in
