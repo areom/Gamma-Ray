@@ -1,11 +1,10 @@
-(*type varkind = Instance | Local
+open StringModules
 
-type environment = (string * varkind) Map.Make(String).t
-*)
+(* The detail of an expression *)
 type cexpr_detail =
     | This
     | Null
-    | Id of string
+    | Id of string * Sast.varkind (* name, local/instance *)
     | NewObj of string * string * cexpr list (* ctype * fname * args *)
     | Literal of Ast.lit
     | Assign of cexpr * cexpr  (* memory := data -- whether memory is good is a semantic issue *)
@@ -14,42 +13,36 @@ type cexpr_detail =
     | Invoc of cexpr * string * cexpr list (*Invoc(receiver, functionname, args) *)
     | Unop of Ast.op * cexpr (* !x *)
     | Binop of cexpr * Ast.op * cexpr (* x + y *)
-    | Refine of string * cexpr list * string option * (string * string) list (* refinement, arg list, opt ret type, switch list (class, uids) *)
-    | Refinable of string * string list (* desired refinement, list of classes supporting refinement *)
-and
+    | Refine of string * cexpr list * string option * Sast.refine_switch (* refinement, arg list, opt ret type, switch list (class, uids) *)
+    | Refinable of string * Sast.refine_switch (* desired refinement, list of classes supporting refinement *)
 
-cexpr = string * cexpr_detail
+(* The expression and its type *)
+and cexpr = string * cexpr_detail
 
-and
-
-cvar_def = (string * string)
-
+(* A statement which has cexpr detail *)
 and cstmt =
-    | Decl of cvar_def * cexpr option * Sast.environment
+    | Decl of Ast.var_def * cexpr option * Sast.environment
     | If of (cexpr option * cstmt list) list * Sast.environment
     | While of cexpr * cstmt list * Sast.environment
     | Expr of cexpr * Sast.environment
     | Return of cexpr option * Sast.environment
     | Super of cexpr list * Sast.environment
 
-
+(* A c func is a simplified function (no host, etc) *)
 and cfunc = {
     returns : string option;
-    uid     : string;
+    name    : string;  (* Combine uid and name into this *)
     static  : bool;
-    formals : cvar_def list;
+    formals : Ast.var_def list;
     body    : cstmt list;
     builtin : bool;
 }
 
 (* The bare minimum for a struct represention *)
-type class_struct = {
-    klass     : string list; (* It's important to know all the possible classes, in ascending order up to Object. The first one becomes the name. *)
-    refines   : string list; (* The uids of all the refinements *)
-    variables : cvar_def list;
-}
+type class_struct = (string * Ast.var_def list) list (* All the data for this object from the root (first item) down, paired with class name *)
 
-(** Unnecessary semantic typing, woo! *)
-type main_uids = string list
+(* A main is a class name and a UID *)
+type main_func = (string * string)
 
-type program = class_struct list * cfunc list * main_uids
+(* A program is a map from all classes to their struct's, a list of all functions, and a list of mainfuncs *)
+type program = class_struct lookup_map * cfunc list * main_func list
