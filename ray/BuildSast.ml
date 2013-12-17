@@ -46,21 +46,6 @@ let is_lvalue (expr : Ast.expr) = match expr with
     | _ -> false
 
 (**
-    Given a class_data record, the name of a class, the name of a variable, and
-    and environment, return the type of the variable.
-    @param klass_data A class_data record value
-    @param kname The name of a class
-    @param vname The name of a variable
-    @param env The type of the variable
-    @return The variable's type or a Failure is raised if not found.
-  *)
-let lookup_type klass_data kname vname env = match map_lookup vname env with
-    | Some((vtyp, _)) -> vtyp
-    | _ -> match Klass.class_field_lookup klass_data kname vname with
-        | Some((_, vtyp, _)) -> vtyp
-        | None -> raise(Failure("ID " ^ vname ^ " not found in the ancestery of " ^ kname ^ " or in the environment."))
-
-(**
     Map a literal value to its type
     @param litparam a literal
     @return A string representing the type.
@@ -173,10 +158,14 @@ let rec eval klass_data kname mname env exp =
         | Ast.CombTest(Not) -> ("Boolean", Sast.Unop(op, eval' expr))
         | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_ast_op op ^ " given.")) in
 
+    let lookup_type id env = match map_lookup id env with
+        | None -> "Unknown id " ^ id ^ " in environment built around " ^ kname ^ ", " ^ mname ^ "."
+        | Some((vtype, _)) -> vtype in
+
     match exp with
         | Ast.This -> (current_class, Sast.This)
         | Ast.Null -> (null_class, Sast.Null)
-        | Ast.Id(vname) -> (lookup_type klass_data kname vname env, Sast.Id(vname))
+        | Ast.Id(vname) -> (lookup_type vname env, Sast.Id(vname))
         | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
         | Ast.NewObj(s1, elist) -> get_init s1 elist
         | Ast.Field(expr, mbr) -> get_field expr mbr
