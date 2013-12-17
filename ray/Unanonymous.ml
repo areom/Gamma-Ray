@@ -321,7 +321,7 @@ let deanonymize klass_data sast_klasses =
 
         | klass::rest, _ -> match KlassData.append_leaf init_state.data klass with
             | Left(data) ->
-                let sast_klass = BuildSast.ast_to_sast data klass in
+                let sast_klass = BuildSast.ast_to_sast_klass data klass in
                 let state = { init_state with data = data } in
                 run_deanon state rest (sast_klass::sasts)
             | Right(issue) -> Right(issue) in

@@ -43,6 +43,7 @@ compile:
 	ocamlc -c -g streams.ml
 	ocamlc -c -g canonical.ml
 	ocamlc -c -g freevars.ml
+	ocamlc -c -g build.ml
 
 _tools:
 	#Make the tools
