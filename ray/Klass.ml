@@ -423,3 +423,16 @@ let refine_on data klass_name method_name refine_name actuals ret_type =
 
     (* Now just return the bindings from the best *)
     List.map snd (StringMap.bindings best_map)
+
+(**
+    Get the names of the classes in level order (i.e. from root down).
+    @param data A class_data record
+    @return The list of known classes, from the root down.
+  *)
+let get_class_names data =
+    let kids aklass = map_lookup_list aklass data.children in
+    let rec append found = function
+        | [] -> List.rev found
+        | items -> let next = List.flatten (List.map kids items) in
+            append (items@found) next in
+    append [] ["Object"]
