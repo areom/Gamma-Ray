@@ -15,7 +15,11 @@ open GlobalData
     @param vname The name of the variable
     @return A function that will update an environment passed to it.
   *)
-let env_update mode (vtype, vname) = StringMap.add vname (vtype, mode)
+let env_update mode (vtype, vname) env = match map_lookup vname env, mode with
+    | None, _ -> StringMap.add vname (vtype, mode) env
+    | Some((otype, Local)), Local -> raise(Failure("Local variable " ^ vname ^ " loaded twice, once with type " ^ otype ^ " and then with type " ^ vtype ^ "."))
+    | _, Local -> StringMap.add vname (vtype, mode) env
+    | _, _ -> raise(Failure("Instance variable declared twice in ancestry chain -- this should have been detected earlier; compiler error."))
 let env_updates mode = List.fold_left (fun env vdef -> env_update mode vdef env)
 let add_ivars klass env level =
     let sects = match level with
