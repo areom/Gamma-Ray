@@ -21,11 +21,11 @@ let output_h = open_out (Sys.argv.(2) ^ ".h")
 let output_c = open_out (Sys.argv.(2) ^ ".c")
 
 let print_header =
-    let gen_header = GenC.cast_to_h cast in
-    fprint output_h gen_header;
+    let gen_header = GenC.cast_to_h source_cast in
+    fprintf output_h "%s" gen_header;
     close_out output_h
 
 let print_source =
-    let gen_source = GenC.cast_to_c cast in
-    fprint output_c gen_source;
+    let gen_source = GenC.cast_to_c source_cast in
+    fprintf output_c "%s" gen_source;
     close_out output_c
