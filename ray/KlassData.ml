@@ -225,6 +225,58 @@ let verify_typed data =
         | bad -> Right(bad)
 
 (**
+    Given a function, type check the signature (Return, Params).
+    @param data A class_data record value.
+    @param func An Ast.func_def record
+    @return Left(data) if everything is alright; Right([host.]name, option string, (type, name)
+    list) if wrong.
+  *)
+let type_check_func data func =
+    let atype = is_type data in
+    let check_ret = match func.returns with
+        | Some(vtype) -> if atype vtype then None else Some(atype)
+        | _ -> None in
+    let check_param (vtype, vname) = if atype vtype then Some((vtype, vname)) else None in
+    let bad_params = filter_option (List.map check_param func.formals) in
+    match check_ret, bad_params, func.host with
+        | None, [], _ -> Left(data)
+        | _, _, None -> Right((func.name, check_ret, bad_params))
+        | _, _, Some(host) -> Right((host ^ "." ^ func.name, check_ret, bad_params))
+
+(**
+    Given a class_data object and a klass, verify that all of its methods have good types
+    (Return and parameters).
+    @param data A class_data record object
+    @param aklass A class_def object
+    @return Left(data) if everything went okay; Right((klass name, (func name, option string,
+    (type, name) list) list))
+  *)
+let type_check_class data aklass =
+    let folder bad func = match type_check_func data func with
+        | Left(data) -> bad
+        | Right(issue) -> issue::bad in
+    let funcs = List.flatten (List.map snd (klass_to_functions aklass)) in
+    match List.fold_left folder [] funcs with
+        | [] -> Left(data)
+        | bad -> Right((aklass.klass, bad))
+
+(**
+    Given a class_data object, verify that all classes have methods with good signatures
+    (Return and parameters)
+    @param data A class_data record object
+    @param aklass A class_def object
+    @return Left(data) if everything went okay; Right((klass name, func_name, option string,
+    (type, name) list) list) list)
+  *)
+let type_check_signatures data =
+    let folder klass_name aklass bad = match type_check_class data aklass with
+        | Left(data) -> bad
+        | Right(issue) -> issue::bad in
+    match StringMap.fold folder data.classes [] with
+        | [] -> Left(data)
+        | bad -> Right(bad)
+
+(**
     Build a map of all the methods within a class, returing either a list of collisions
     (in Right) when there are conflicting signatures or the map (in Left) when there
     are not. Keys to the map are function names and the values are lists of func_def's.
