@@ -222,7 +222,9 @@ let rec attach_bindings klass_data kname mname stmts initial_env =
         let stmts = attach' slist while_env in
         Sast.While(exprtyp, stmts, while_env) in
 
-    let build_declstmt vdef opt_expr decl_env = Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env) in
+    let build_declstmt ((vtype, vname) as vdef) opt_expr decl_env =
+        if Klass.is_type klass_data vtype then Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env)
+        else raise(Failure("Variable " ^ vname ^ " in the method " ^ mname ^ " in the class " ^ kname ^ " has unknown type " ^ vtype ^ ".")) in
     let build_returnstmt opt_expr ret_env = Sast.Return(opt_eval opt_expr ret_env, ret_env) in
     let build_exprstmt expr expr_env = Sast.Expr(eval' expr_env expr, expr_env) in
     let build_superstmt expr_list super_env =
