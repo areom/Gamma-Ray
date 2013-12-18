@@ -12,3 +12,4 @@ val append_leaf : GlobalData.class_data -> Ast.class_def -> (GlobalData.class_da
 val append_leaf_test : GlobalData.class_data -> Ast.class_def -> (GlobalData.class_data, GlobalData.class_data_error) either
 
 val print_class_data : GlobalData.class_data -> unit
+val errstr : GlobalData.class_data_error -> string

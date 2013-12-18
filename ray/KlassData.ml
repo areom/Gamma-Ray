@@ -766,4 +766,65 @@ let print_class_data data =
     print_newline ();
     table_printer data.dispatcher "Dispatch" id;
     print_newline ();
-    table_printer data.refinable "Refinable" func_of_list;
+    table_printer data.refinable "Refinable" func_of_list
+
+
+(* ERROR HANDLING *)
+
+let args lst = Format.sprintf "(%s)" (String.concat ", " lst)
+let asig (name, formals) = Format.sprintf "%s %s" name (args formals)
+let aref (name, formals) = asig (name, formals)
+
+let dupvar (klass, vars) = match vars with
+    | [var] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " is multiply declared"
+    | _ -> "Class " ^ klass ^ " has multiply declared variables: [" ^ (String.concat ", " vars) ^ "]"
+
+let dupfield (klass, fields) = match fields with
+    | [(ancestor, var)] -> "Class " ^ klass ^ "'s instance variable " ^ var ^ " was declared in ancestor " ^ ancestor ^ "."
+    | _ -> "Class " ^ klass ^ " has instance variables declared in ancestors: [" ^ String.concat ", " (List.map (fun (a, v) -> v ^ " in " ^ a) fields) ^ "]"
+
+let show_vdecls vs = "[" ^ String.concat ", " (List.map (fun (t,v) -> t ^ ":" ^ v) vs) ^ "]"
+
+let unknowntypes (klass, types) = match types with
+    | [(vtype, vname)] -> "Class " ^ klass ^ "'s instancevariable " ^ vname ^ " has unknown type " ^ vtype ^ "."
+    | _ -> "Class " ^ klass ^ " has instance variables with unknown types: " ^ show_vdecls types
+
+let badsig1 klass (func, ret, params) = match ret, params with
+    | None, params -> "Class " ^ klass ^ "'s " ^ func ^ " has poorly typed parameters: " ^ show_vdecls params
+    | Some(rval), [] -> "Class " ^ klass ^ "'s " ^ func ^ " has an invalid return type: " ^ rval ^ "."
+    | Some(rval), p -> "Class " ^ klass ^ "'s " ^ func ^ " has invalid return type " ^ rval ^ " and poorly typed parameters: " ^ show_vdecls p
+let badsig (klass, badfuncs) = String.concat "\n" (List.map (badsig1 klass) badfuncs)
+
+let dupmeth (klass, meths) =
+    match meths with
+        | [(name, formals)] -> Format.sprintf "Class %s's method %s has multiple implementations taking %s" klass name (args formals)
+        | _ -> Format.sprintf "Class %s has multiple methods with conflicting signatures:\n\t%s" klass (String.concat "\n\t" (List.map asig meths))
+
+let dupinherit (klass, meths) =
+    match meths with
+        | [(name, formals)] -> Format.sprintf "Class %s's method %s has conflicts with an inherited method taking %s" klass name (args formals)
+        | _ -> Format.sprintf "Class %s has multiple methods with conflicting with inherited methods:\n\t%s" klass (String.concat "\n\t" (List.map asig meths))
+
+let dupref (klass, refines) =
+    match refines with
+        | [refine] -> Format.sprintf "Class %s refinment %s is multiply defined." klass (aref refine)
+        | _ -> Format.sprintf "Class %s has multiple refinements multiply defined:\n\t%s" klass (String.concat "\n\t" (List.map aref refines))
+
+let errstr = function
+    | HierarchyIssue(s) -> s
+    | DuplicateClasses(klasses) -> (match klasses with
+        | [klass] -> "Multiple classes named " ^ klass
+        | _ -> "Multiple classes share the names [" ^ (String.concat ", " klasses) ^ "]")
+    | DuplicateVariables(list) -> String.concat "\n" (List.map dupvar list)
+    | DuplicateFields(list) -> String.concat "\n" (List.map dupfield list)
+    | UnknownTypes(types) -> String.concat "\n" (List.map unknowntypes types)
+    | ConflictingMethods(list) -> String.concat "\n" (List.map dupmeth list)
+    | ConflictingInherited(list) -> String.concat "\n" (List.map dupinherit list)
+    | PoorlyTypedSigs(list) -> String.concat "\n" (List.map badsig list)
+    | Uninstantiable(klasses) -> (match klasses with
+        | [klass] -> "Class " ^ klass ^ " does not have a usable init."
+        | _ -> "Multiple classes are not instantiable: [" ^ String.concat ", " klasses ^ "]")
+    | ConflictingRefinements(list) -> String.concat "\n" (List.map dupref list)
+    | MultipleMains(klasses) -> (match klasses with
+        | [klass] -> "Class " ^ klass ^ " has multiple mains defined."
+        | _ -> "Multiple classes have more than one main: [" ^ String.concat ", " klasses ^ "]")
