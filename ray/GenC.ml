@@ -176,7 +176,10 @@ let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
         out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
 
     comment "Structures for each of the objects.";
-    StringMap.iter (fun klass data -> out (cast_to_c_class_struct klass data)) cdefs;
+    let print_class klass data =
+        if StringSet.mem klass GenCast.built_in_names then ()
+        else out (cast_to_c_class_struct klass data) in
+    StringMap.iter print_class cdefs;
 
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
