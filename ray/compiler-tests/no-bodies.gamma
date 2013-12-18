@@ -1,0 +1,16 @@
+class Math:
+  private:
+    Float xyz
+  public:
+    init():
+    Int add(Int a, Int b):
+    Int sub(Int a, Int c):
+  main():
+
+class NonMath:
+  private:
+    String shakespeare
+  public:
+    init():
+    String recite():
+  main():
