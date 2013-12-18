@@ -45,10 +45,15 @@ let main _ =
         output_string " * Generating C...";
         output_string " */";
         GenC.cast_to_c source stdout;
-        print_newline ()
-    with _ ->
-        output_string "Got an exception!";
-        Printexc.print_backtrace stderr
+        print_newline ();
+        exit 0
+    with excn ->
+        let backtrace = Printexc.get_backtrace () in
+        let out = match excn with
+            | Failure(reason) -> Format.sprintf "Failed: %s\n" reason
+            | Invalid_argument(msg) -> Format.sprintf "Argument issue somewhere: %s\n" msg
+            | _ -> "Unknown exception" in
+        Printf.fprintf stderr "%s\n%s\n" out backtrace;
+        exit 1
 
 let _ = main ()
-
