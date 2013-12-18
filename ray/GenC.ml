@@ -146,7 +146,7 @@ let cast_to_c_class_struct klass_name ancestors =
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
     let metain = String.concat "\n\t\t" ["char **ancestor;"; "int generation;"; "char *class;"] in
     let meta = Format.sprintf "\tstruct {\n\t\t%s\n\t} meta;" metain in
-    Format.sprintf "\n\ntypedef struct {\n%s\n\n\t%s\n} %s;" meta internals klass_name
+    Format.sprintf "typedef struct {\n%s\n\n\t%s\n} %s;\n\n" meta internals klass_name
 
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
@@ -160,7 +160,7 @@ let cast_to_c_func cfunc =
         | Some(builtin), None -> Format.sprintf "%s(%s);" builtin (String.concat ", " args)
         | Some(builtin), _ -> Format.sprintf "return %s(%s);" builtin (String.concat ", " args) in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
-    Format.sprintf "%s%s(%s)\n{\n%s\n}\n" ret_type cfunc.name signature body
+    Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
     let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
@@ -170,7 +170,10 @@ let cast_to_c_main mains =
 
 let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
-    let comment string = out (Format.sprintf "\n\n/*\n%s\n*/" string) in
+    let comment string =
+        let comments = Str.split (Str.regexp "\n") string in
+        let commented = List.map (Format.sprintf " * %s") comments in
+        out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
 
     comment "Structures for each of the objects.";
     StringMap.iter (fun klass data -> out (cast_to_c_class_struct klass data)) cdefs;
