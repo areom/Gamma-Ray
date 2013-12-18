@@ -57,8 +57,8 @@ let class_printer : Ast.class_def =
           uid = "printer_print_string" } in
     let print_int : Ast.func_def =
         { built_in with
-          name = "printInt";
-          formals = [("Int", "arg")];
+          name = "printInteger";
+          formals = [("Integer", "arg")];
           uid = "printer_print_int" } in
     let print_float : Ast.func_def =
         { built_in with
@@ -108,18 +108,18 @@ let class_boolean : Ast.class_def =
 
     { klass = name; parent = Some("Object"); sections = sections }
 
-let class_int : Ast.class_def =
-    let name = "Int" in
+let class_integer : Ast.class_def =
+    let name = "Integer" in
     let built_in = { built_in with inklass = name } in
 
-    let int_init : Ast.func_def =
+    let integer_init : Ast.func_def =
         { built_in with
           name = "init";
-          uid = "int_init" } in
+          uid = "integer_init" } in
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [mem int_init] } in
+          protects = [mem integer_init] } in
 
     { klass = name; parent = Some("Object"); sections = sections }
 
@@ -140,5 +140,5 @@ let class_float : Ast.class_def =
 
 (** The list of built in classes and their methods *)
 let built_in_classes =
-  [ class_object; class_string; class_boolean; class_int; class_float ]
+  [ class_object; class_string; class_boolean; class_integer; class_float ]
 
