@@ -111,31 +111,34 @@ and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
     @param stmtlist A list of statements
     @return A body of c statements
 *)
-let rec cast_to_cstmtlist stmtlist = stringify_list  (List.map cast_to_c_stmt stmtlist)
+let rec cast_to_c_stmt indent cast =
+    let indents = String.make indent '\t' in
+    let stmts = cast_to_c_stmtlist (indent+1) in
 
-and ifstmt_to_str level (ifexpr, body) =
-    let cbody = Format.sprintf "{\n %s \n}" (cast_to_cstmtlist body) in
-    match ifexpr with
-    | Some(ifpred) ->
-        let thisif = Format.sprintf "if ( %s ) %s\n" (expr_to_cstr ifpred) cbody in
-        if level = 0 then thisif else "else " ^ thisif
-    | None -> Format.sprintf "else %s\n" cbody
+    let cstmt = match cast with
+        | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
+        | Decl(vdecl, None, env) -> Format.sprintf "%s;" (vdecl_to_cstr vdecl)
+        | If(iflist, env) -> cast_to_c_if_chain indent iflist
+        | While(pred, [], env) -> Format.sprintf "while ( %s ) { }" (expr_to_cstr pred)
+        | While(pred, body, env) -> Format.sprintf "while ( %s ) {\n%s\n%s}" (expr_to_cstr pred) (stmts body) indents
+        | Expr(expr, env) -> Format.sprintf "( %s );" (expr_to_cstr expr)
+        | Return(Some(expr), env) -> Format.sprintf "return ( %s );" (expr_to_cstr expr)
+        | Return(_, env) -> "return;" in
+    indents ^ cstmt
 
-(**
-    Output a statement in c
-    @param caststmt A statement in C-Ast form
-    @returm A c statement
-*)
-and cast_to_c_stmt caststmt =
-    let c_stmt = match caststmt with
-        | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);\n" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
-        | Decl(vdecl, None, env) -> Format.sprintf "%s;\n" (vdecl_to_cstr vdecl)
-        | If(iflist, env) -> stringify_list (List.mapi ifstmt_to_str iflist)
-        | While(pred, body, env) -> Format.sprintf "while ( %s ) {\n %s \n}\n" (expr_to_cstr pred) (cast_to_cstmtlist body)
-        | Expr(expr, env) -> Format.sprintf "( %s );\n" (expr_to_cstr expr)
-        | Return(Some(expr), env) -> Format.sprintf "return ( %s );\n" (expr_to_cstr expr)
-        | Return(_, env) -> "return;\n" in
-    c_indent ^ c_stmt
+and cast_to_c_stmtlist indent stmts =
+    String.concat "\n" (List.map (cast_to_c_stmt indent) stmts)
+
+and cast_to_c_if_pred = function
+    | None -> "else"
+    | Some(ifpred) -> Format.sprintf "if ( %s )" (expr_to_cstr ifpred)
+
+and cast_to_c_if_chain indent pieces =
+    let indents = String.make indent '\t' in
+    let stmts = cast_to_c_stmtlist (indent + 1) in
+    let combine (pred, body) = Format.sprintf "%s {\n%s%s}" (cast_to_c_if_pred pred) (stmts body) indents in
+    String.concat " else " (List.map combine pieces)
+
 
 let cast_to_c_class_struct klass_name ancestors =
     let ancestor_var (vtype, vname) = Format.sprintf "%s %s;" vtype vname in
@@ -152,7 +155,7 @@ let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void "
         | Some(atype) -> Format.sprintf "%s *" atype in
-    let stmts = cast_to_cstmtlist cfunc.body in
+    let stmts = cast_to_c_stmtlist 1 cfunc.body in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
     if cfunc.builtin
