@@ -26,7 +26,6 @@ and cstmt =
     | While of cexpr * cstmt list * Sast.environment
     | Expr of cexpr * Sast.environment
     | Return of cexpr option * Sast.environment
-    | Super of cexpr list * Sast.environment
 
 (* A c func is a simplified function (no host, etc) *)
 and cfunc = {
