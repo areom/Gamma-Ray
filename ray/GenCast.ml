@@ -111,9 +111,10 @@ let build_class_struct_map klass_data (sast_classes : Sast.class_def list) =
     let folder map = function
         | "Object" -> StringMap.add (get_tname "Object") (StringMap.find "Object" struct_map) map
         | aklass ->
-            let parent = StringMap.find (StringMap.find aklass klass_data.parents) map in
+            let parent = StringMap.find aklass klass_data.parents in
+            let ancestors = StringMap.find (get_tname parent) map in
             let this = StringMap.find aklass struct_map in
-            StringMap.add (get_tname aklass) (this @ parent) map in
+            StringMap.add (get_tname aklass) (this @ ancestors) map in
 
     (* Update the map so that each child has information from parents *)
     let struct_map = List.fold_left folder StringMap.empty (Klass.get_class_names klass_data) in
