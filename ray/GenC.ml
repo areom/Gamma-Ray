@@ -139,11 +139,13 @@ and cast_to_c_stmt caststmt =
 
 let cast_to_c_class_struct klass_name ancestors =
     let ancestor_var (vtype, vname) = Format.sprintf "%s %s;" vtype vname in
-    let ancestor_vars vars = String.concat "\n" (List.map ancestor_var vars) in
-    let internal_struct (ancestor, vars) = Format.sprintf "struct { %s } %s;" (ancestor_vars vars) ancestor in
-    let internals = String.concat "\n\n" (List.map internal_struct ancestors) in
-    let meta = Format.sprintf "struct { char **ancestors; } meta;" in
-    Format.sprintf "typedef struct {\n%s\n%s\n} %s" meta internals klass_name
+    let ancestor_vars vars = String.concat "\n\t\t" (List.map ancestor_var vars) in
+    let internal_struct (ancestor, vars) = match vars with
+        | [] -> Format.sprintf "struct { /* empty */ } %s;" ancestor
+        | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s\n" (ancestor_vars vars) ancestor in
+    let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
+    let meta = Format.sprintf "\tstruct { char **ancestors; } meta;" in
+    Format.sprintf "\n\ntypedef struct {\n%s\n\n\t%s\n} %s;" meta internals klass_name
 
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
@@ -160,14 +162,20 @@ let cast_to_c_func cfunc =
     Format.sprintf "%s %s(%s)\n{\n%s\n}" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
-    let main_fmt = ""^^"if (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
+    let main_fmt = ""^^"if (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
-    Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 0;}" switch
+    Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 0;\n}" switch
 
 let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
-    let out string = Printf.fprintf channel "%s" string in
-    (* Print each structure *)
+    let out string = Printf.fprintf channel "%s\n" string in
+    let comment string = out (Format.sprintf "\n\n/*\n%s\n*/" string) in
+
+    comment "Structures for each of the objects.";
     StringMap.iter (fun klass data -> out (cast_to_c_class_struct klass data)) cdefs;
+
+    comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
+
+    comment "The main.";
     out (cast_to_c_main mains);
