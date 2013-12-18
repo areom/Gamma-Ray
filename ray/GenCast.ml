@@ -85,9 +85,10 @@ and cstmt mname sstmt =
     @return It's a cast cfunc_def. Woo.
 *)
 let sast_to_cast_func (func : Sast.func_def) : cfunc =
-    let name = match func.host with
-        | None -> get_fname func
-        | Some(host) -> get_rname func in
+    let name = match func.host, func.builtin with
+        | _, true -> func.uid
+        | None, _ -> get_fname func
+        | Some(host), _ -> get_rname func in
     {   returns = opt_tname func.returns;
         name = name;
         formals = List.map get_vdef func.formals;
