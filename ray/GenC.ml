@@ -151,7 +151,7 @@ let cast_to_c_class_struct klass_name ancestors =
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void"
-        | _ -> GenCast.get_tname "Object" in
+        | Some(atype) -> Format.sprintf "%s *" atype in
     let stmts = cast_to_cstmtlist cfunc.body in
     let args = "this" :: (List.map snd cfunc.formals) in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
@@ -159,8 +159,8 @@ let cast_to_c_func cfunc =
         | None, _ -> stmts
         | Some(builtin), None -> Format.sprintf "%s(%s);" builtin (String.concat ", " args)
         | Some(builtin), _ -> Format.sprintf "return %s(%s);" builtin (String.concat ", " args) in
-    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " " ^ v) params) in
-    Format.sprintf "%s %s(%s)\n{\n%s\n}\n" ret_type cfunc.name signature body
+    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
+    Format.sprintf "%s%s(%s)\n{\n%s\n}\n" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
     let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
