@@ -576,7 +576,7 @@ let production_list =
       append_distance ; append_variables ; test_fields ; append_methods ;
       test_init ; append_refines ; append_mains ]
 
-let build_class_data klasses = seq (initial_data klasses) production_list
+let build_class_data klasses = seq (initial_data klasses) test_list (*production_list*)
 let build_class_data_test klasses = seq (initial_data klasses) test_list
 
 let append_leaf_known aklass data =
@@ -687,7 +687,7 @@ let test_leaf =
       append_leaf_refines ; append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ]
 
 let leaf_with_klass actions data klass = seq (Left(data)) (List.map (fun f -> f klass) actions)
-let append_leaf = leaf_with_klass production_leaf
+let append_leaf = leaf_with_klass test_leaf (* production_leaf *)
 let append_leaf_test = leaf_with_klass test_leaf
 
 let append_leaf_test data aklass =
