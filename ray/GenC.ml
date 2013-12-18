@@ -136,142 +136,37 @@ and cast_to_c_stmt caststmt =
         | Return(_, env) -> "return;\n" in
     c_indent ^ c_stmt
 
-(**
-    Define class objects for our classes. The heavy lifting is done in the header.
-    @param cast_cdefs A list of class definitions
-    @return Code for instantiating class stuff
-*)
-let cast_to_c_classes cast_cdefs =
-    let cast_to_c_class cast_cdef =
-        let class_name = (List.hd cast_cdef.klass) in
-        (** Initialize a struct object for this class *)
-        class_name ^ "_class_details = {" ^ class_name ^ "};"
-    in
-    (String.concat "\n" (List.map cast_to_c_class cast_cdefs))
+let cast_to_c_class_struct klass_name ancestors =
+    let ancestor_var (vtype, vname) = Format.sprintf "%s %s;" vtype vname in
+    let ancestor_vars vars = String.concat "\n" (List.map ancestor_var vars) in
+    let interanl_struct (ancestor, vars) = Format.sprintf "struct { %s } %s;" (ancestor_vars) ancestor in
+    let internals = String.concat "\n\n" (List.map internal_struct ancestors) in
+    let meta = Format.sprintf "struct { char **ancestors; } meta;"
+    Format.sprintf "typedef struct {\n%s\n%s\n} %s" meta internals klass_name
 
-(** Build a function signature *)
-let build_sig cfunc =
-    let build_formal (type_name,var_name) =
-        "gen_class * v_"^var_name
-    in
-    let possible_host = if cfunc.static then ""
-        else "gen_class * host,"
-    in
-    "gen_class * f_" ^ cfunc.uid ^ "(" ^ possible_host
-    ^(String.concat "," (List.map build_formal cfunc.formals))
-    ^")"
+let cast_to_c_func cfunc =
+    let ret_type = match cfunc.returns with
+        | None -> "void"
+        | _ -> GenCast.get_tname "Object" in
+    let stmts = cast_to_c_stmtlist cfunc.body in
+    let args = "this" :: (List.map snd cfunc.formals) in
+    let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
+    let body = match cfunc.builtin, cfunc.returns with
+        | None -> stmts
+        | Some(builtin), None -> Format.sprintf "%s(%s);" (String.concat ", " args)
+        | Some(builtin), _ -> Format.sprintf "return %s(%s);" (String.concat ", " args) in
+    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " " ^ v) params)
+    Format.sprintf "%s %s(%s)\n{\n%s\n}" ret_type cfunc.name signature body
 
-(** Remove builtins from a func list *)
-let strip_builtins cfuncs = List.filter (fun cfunc -> not cfunc.builtin) cfuncs
+let cast_to_c_main mains =
+    let main_fmt = "if (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
+    let for_main (klass, uid) = Format.sprintf main_fmt  klass (String.length klass + 1) uid in
+    let switch = String.concat "\n" (List.map for_main mains) in
+    Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 0;}" switch
 
-(**
-    Define our functions. The heavy lifting is done in the header.
-    @param cfuncs A list of function definitions
-    @return Code for instantiating class stuff
-*)
-let cast_to_c_funcs cfuncs =
-    let cast_to_c_func cfunc =
-        (build_sig cfunc) ^ "{\n" ^
-        (cast_to_cstmtlist cfunc.body)
-        ^ "\n}"
-    in
-    (String.concat "\n" (List.map cast_to_c_func (strip_builtins cfuncs)))
-
-(**
-    Build the choice of mains. (I'd rather spend time on
-    checking then implementing main selection. Sorry!)
-    @param cast_cdefs A list of class mains
-    @return A c main function calling our main function.
-*)
-let cast_to_c_mains cast_mains =
-    let first_main = List.hd cast_mains in
-    "int main(int argc, char **argv){\n" ^
-    c_indent ^ "f_" ^ first_main ^ "();\n" ^
-    "}"
-
-(**
-    Take a C-Ast and return a program in c
-    @param cast_cdefs A list of class definitions
-    @param cast_cfuncs A list of function defintions
-    @param cast_mains A list of main method uids
-    @return A program in c
-*)
-let cast_to_c (cast_cdefs,cast_cfuncs,cast_mains) =
-    (cast_to_c_classes cast_cdefs) ^
-    (cast_to_c_funcs cast_cfuncs) ^
-    (cast_to_c_mains cast_mains)
-
-(**
-   Take a class definition and return code consisting of struct types
-   @param cast_cdefs A list of class definitions
-   @return A set of type definitions
-*)
-let cast_to_h_classes cast_cdefs =
-    let generic_class_struct =
-        "typedef struct{\n"^
-        c_indent ^ "int class_data;\n"^
-        c_indent ^ "int var_data;\n"^
-        c_indent ^ "int refine_data;\n"^
-        "} gen_class;\n\n"
-    in
-    (* I'm a little unsure if there are more data points to add here.
-    Maybe this could be replaced with class_name alone? *)
-    let class_details_struct =
-        "typedef struct {\n" ^
-        c_indent ^ "char* class_name;\n" ^
-        "} class_details;"
-    in
-    (**
-        Classes have three important component structs: class data,
-        refinement data, and variables. They get tied together by a generic
-        class struct
-    *)
-    let cast_to_h_class cast_cdef =
-        let class_name = (List.hd cast_cdef.klass) in
-        (** Define a struct object for this class *)
-        let cast_to_h_class_detail =
-            "class_details " ^ class_name ^ "_class_details;"
-        in
-        (** Put out a pointer for each variable as part of a struct *)
-        let cast_to_h_var_set =
-            "typedef struct {\n" ^
-            (String.concat "\n" (List.map
-                (fun (type_name,var_name) -> c_indent ^ "gen_class* v_"^var_name^";")
-                cast_cdef.variables)) ^
-            "} cv_" ^ class_name ^ ";"
-        in
-        (** Put out a pointer for each refinement function as part of a struct *)
-        let cast_to_h_ref_set =
-            "typedef struct {\n"^
-            (String.concat "\b" (List.map
-                (fun ref_name -> c_indent ^ "int f_"^ref_name^";\n")
-                cast_cdef.refines)) ^
-            "} cr_" ^ class_name ^ ";" ^
-            (** Pre-define the refinement object. Name is sorta stupid *)
-            "cr_" ^ class_name ^ " " ^ class_name ^ "_refines;"
-        in
-        cast_to_h_class_detail ^ "\n\n"
-        ^ cast_to_h_var_set ^ "\n\n"
-        ^ cast_to_h_ref_set
-    in
-    generic_class_struct ^ class_details_struct
-    ^ (String.concat "\n\n" (List.map cast_to_h_class cast_cdefs))
-
-(**
-    Build code for function header definitions
-    @param cfuncs A list of function definintions
-    @return A string of code containing function header
-*)
-let cast_to_h_funcs cfuncs =
-    (String.concat "\n\n"
-        (List.map (fun cfunc -> (build_sig cfunc) ^ ";") (strip_builtins cfuncs)))
-
-(**
-    Take a C-Ast and return a header in c
-    @param cast_cdefs A list of class definitions
-    @param cast_cfuncs A list of function defintions
-    @return A header in c
-*)
-let cast_to_h (cast_cdefs,cast_cfuncs,cast_mains) =
-    (cast_to_h_classes cast_cdefs) ^
-    (cast_to_h_funcs cast_cfuncs)
+let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
+    let out string = Printf.printf out "%s" string in
+    (* Print each structure *)
+    StringMap.iter (fun klass data -> out (cast_to_c_class_struct klass data)) cdefs;
+    List.iter (fun func -> out (cast_to_c_func func)) funcs;
+    out (cast_to_c_main mains);
