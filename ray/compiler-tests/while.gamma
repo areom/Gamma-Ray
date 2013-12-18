@@ -1,0 +1,7 @@
+
+class WhileLoopTest:
+  public:
+    init():
+      Integer a
+      while(true):
+        a := 4
