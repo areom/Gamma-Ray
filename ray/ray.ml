@@ -27,4 +27,9 @@ let source_cast =
     let sast = BuildSast.ast_to_sast klass_data ast in
     GenCast.sast_to_cast klass_data sast
 
-let _ = GenC.cast_to_c source_cast stdout
+let _ =
+    try
+        Printexc.record_backtrace true;
+        GenC.cast_to_c source_cast stdout
+    with _ ->
+        Printexc.print_backtrace stderr
