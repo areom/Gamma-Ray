@@ -34,7 +34,7 @@ and cfunc = {
     static  : bool;
     formals : Ast.var_def list;
     body    : cstmt list;
-    builtin : string option;
+    builtin : bool;
     inklass : string; (* needed for THIS *)
 }
 

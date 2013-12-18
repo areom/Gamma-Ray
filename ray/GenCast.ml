@@ -93,7 +93,7 @@ let sast_to_cast_func (func : Sast.func_def) : cfunc =
         formals = List.map get_vdef func.formals;
         static = func.static;
         body = cstmtlist func.name func.body;
-        builtin = if func.builtin then Some(func.uid) else None;
+        builtin = func.builtin;
         inklass = func.inklass; }
 
 let build_class_struct_map klass_data (sast_classes : Sast.class_def list) =

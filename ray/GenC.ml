@@ -153,14 +153,11 @@ let cast_to_c_func cfunc =
         | None -> "void "
         | Some(atype) -> Format.sprintf "%s *" atype in
     let stmts = cast_to_cstmtlist cfunc.body in
-    let args = "this" :: (List.map snd cfunc.formals) in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
-    let body = match cfunc.builtin, cfunc.returns with
-        | None, _ -> stmts
-        | Some(builtin), None -> Format.sprintf "%s(%s);" builtin (String.concat ", " args)
-        | Some(builtin), _ -> Format.sprintf "return %s(%s);" builtin (String.concat ", " args) in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
-    Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" ret_type cfunc.name signature body
+    if cfunc.builtin
+        then Format.sprintf "/* Place-holder for %s%s(%s) */\n" ret_type cfunc.name signature
+        else Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" ret_type cfunc.name signature stmts
 
 let cast_to_c_main mains =
     let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
