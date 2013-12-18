@@ -23,7 +23,7 @@ let get_data ast =
     output_string (Format.sprintf " * Using %s KlassData Builder" which);
     match builder ast with
         | Left(data) -> data
-        | Right(issue) -> Printf.fprintf stderr "%s" (KlassData.errstr issue); exit(1)
+        | Right(issue) -> Printf.fprintf stderr "%s\n" (KlassData.errstr issue); exit 1
 
 let source_cast _ =
     output_string " * Reading Tokens...";
