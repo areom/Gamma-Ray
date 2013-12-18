@@ -142,7 +142,7 @@ let cast_to_c_class_struct klass_name ancestors =
     let ancestor_vars vars = String.concat "\n\t\t" (List.map ancestor_var vars) in
     let internal_struct (ancestor, vars) = match vars with
         | [] -> Format.sprintf "struct { /* empty */ } %s;" ancestor
-        | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s\n" (ancestor_vars vars) ancestor in
+        | _ -> Format.sprintf "struct {\n\t\t%s\n\t}; %s\n" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
     let meta = Format.sprintf "\tstruct { char **ancestors; } meta;" in
     Format.sprintf "\n\ntypedef struct {\n%s\n\n\t%s\n} %s;" meta internals klass_name
@@ -159,10 +159,10 @@ let cast_to_c_func cfunc =
         | Some(builtin), None -> Format.sprintf "%s(%s);" builtin (String.concat ", " args)
         | Some(builtin), _ -> Format.sprintf "return %s(%s);" builtin (String.concat ", " args) in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " " ^ v) params) in
-    Format.sprintf "%s %s(%s)\n{\n%s\n}" ret_type cfunc.name signature body
+    Format.sprintf "%s %s(%s)\n{\n%s\n}\n" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
-    let main_fmt = ""^^"if (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
+    let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 0;\n}" switch
