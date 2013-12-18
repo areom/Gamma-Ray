@@ -139,23 +139,23 @@ and cast_to_c_stmt caststmt =
 let cast_to_c_class_struct klass_name ancestors =
     let ancestor_var (vtype, vname) = Format.sprintf "%s %s;" vtype vname in
     let ancestor_vars vars = String.concat "\n" (List.map ancestor_var vars) in
-    let interanl_struct (ancestor, vars) = Format.sprintf "struct { %s } %s;" (ancestor_vars) ancestor in
+    let internal_struct (ancestor, vars) = Format.sprintf "struct { %s } %s;" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n" (List.map internal_struct ancestors) in
-    let meta = Format.sprintf "struct { char **ancestors; } meta;"
+    let meta = Format.sprintf "struct { char **ancestors; } meta;" in
     Format.sprintf "typedef struct {\n%s\n%s\n} %s" meta internals klass_name
 
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void"
         | _ -> GenCast.get_tname "Object" in
-    let stmts = cast_to_c_stmtlist cfunc.body in
+    let stmts = cast_to_cstmtlist cfunc.body in
     let args = "this" :: (List.map snd cfunc.formals) in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
     let body = match cfunc.builtin, cfunc.returns with
         | None -> stmts
         | Some(builtin), None -> Format.sprintf "%s(%s);" (String.concat ", " args)
         | Some(builtin), _ -> Format.sprintf "return %s(%s);" (String.concat ", " args) in
-    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " " ^ v) params)
+    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " " ^ v) params) in
     Format.sprintf "%s %s(%s)\n{\n%s\n}" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
