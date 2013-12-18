@@ -188,10 +188,10 @@ let rec eval klass_data kname mname env exp =
     @param initial_env An initial environment
     @return A list of Sast statements
   *)
-let rec attach_bindings klass_data kname mname stmts initial_env =
+let rec attach_bindings klass_data kname mname isvoid stmts initial_env =
     (* Calls that go easy on the eyes *)
     let eval' = eval klass_data kname mname in
-    let attach' = attach_bindings klass_data kname mname in
+    let attach' = attach_bindings klass_data kname mname isvoid in
     let eval_exprlist env elist = List.map (eval' env) elist in
 
     let rec get_superinit kname arglist =
@@ -228,7 +228,10 @@ let rec attach_bindings klass_data kname mname stmts initial_env =
     let build_declstmt ((vtype, vname) as vdef) opt_expr decl_env =
         if Klass.is_type klass_data vtype then Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env)
         else raise(Failure("Variable " ^ vname ^ " in the method " ^ mname ^ " in the class " ^ kname ^ " has unknown type " ^ vtype ^ ".")) in
-    let build_returnstmt opt_expr ret_env = Sast.Return(opt_eval opt_expr ret_env, ret_env) in
+    let build_returnstmt opt_expr ret_env = match opt_expr, isvoid with
+        | None, false -> raise(Failure("Void return from non-void function " ^ mname ^ " in klass " ^ kname ^ "."))
+        | Some(_), true -> raise(Failure("Non-void return from void function " ^ mname ^ " in klass " ^ kname ^ "."))
+        | _, _ -> Sast.Return(opt_eval opt_expr ret_env, ret_env) in
     let build_exprstmt expr expr_env = Sast.Expr(eval' expr_env expr, expr_env) in
     let build_superstmt expr_list super_env =
         let arglist = eval_exprlist super_env expr_list in
@@ -264,13 +267,14 @@ let rec attach_bindings klass_data kname mname stmts initial_env =
   *)
 let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
+    let isvoid = match func.returns with None -> true | _ -> false in
     let sast_func : Sast.func_def =
         {   returns = func.returns;
             host = func.host;
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data func.inklass func.name func.body with_params;
+            body = attach_bindings klass_data func.inklass func.name isvoid func.body with_params;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;
