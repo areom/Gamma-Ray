@@ -3,8 +3,8 @@ class Math:
     Float xyz
   public:
     init():
-    Int add(Int a, Int b):
-    Int sub(Int a, Int c):
+    Integer add(Integer a, Integer b):
+    Integer sub(Integer a, Integer c):
   main():
 
 class NonMath:
