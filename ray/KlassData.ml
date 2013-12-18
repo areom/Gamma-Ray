@@ -565,16 +565,19 @@ let append_mains data = match build_main_map data with
     | Left(data) -> Left(data)
     | Right(collisions) -> Right(MultipleMains(collisions))
 
-let build_class_data klasses = seq (initial_data klasses)
-    [ append_children ; append_parent ; test_tree ; append_ancestor ;
-      append_distance ; append_variables ; test_fields ; append_methods ;
-      test_init ; append_refines ; append_mains ]
-
-let build_class_data_test klasses = seq (initial_data klasses)
+let test_list =
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; test_types ;
       append_methods ; test_init ; test_inherited_methods ; append_refines ;
       test_signatures ; append_dispatcher ; append_refinable ; append_mains ]
+
+let production_list =
+    [ append_children ; append_parent ; test_tree ; append_ancestor ;
+      append_distance ; append_variables ; test_fields ; append_methods ;
+      test_init ; append_refines ; append_mains ]
+
+let build_class_data klasses = seq (initial_data klasses) production_list
+let build_class_data_test klasses = seq (initial_data klasses) test_list
 
 let append_leaf_known aklass data =
     let updated = StringSet.add aklass.klass data.known in
@@ -672,14 +675,20 @@ let append_leaf_refinable aklass data =
     let updated = update_refinable parent aklass.sections.refines data.refinable in
     Left({ data with refinable = updated })
 
-let append_leaf data aklass =
-    let with_klass f = f aklass in
-    let actions =
-        [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
-          append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
-          append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_signatures ;
-          append_leaf_mains ] in
-    seq (Left(data)) (List.map with_klass actions)
+let production_leaf =
+    [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
+      append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
+      append_leaf_methods ; append_leaf_instantiable ; append_leaf_refines ; append_leaf_signatures ;
+      append_leaf_mains ]
+let test_leaf =
+    [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
+      append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
+      append_leaf_type_vars ; append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ;
+      append_leaf_refines ; append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ]
+
+let leaf_with_klass actions data klass = seq (Left(data)) (List.map (fun f -> f klass) actions)
+let append_leaf = leaf_with_klass production_leaf
+let append_leaf_test = leaf_with_klass test_leaf
 
 let append_leaf_test data aklass =
     let with_klass f = f aklass in
