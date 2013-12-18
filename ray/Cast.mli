@@ -34,7 +34,8 @@ and cfunc = {
     static  : bool;
     formals : Ast.var_def list;
     body    : cstmt list;
-    builtin : bool;
+    builtin : string option;
+    inklass : string; (* needed for THIS *)
 }
 
 (* The bare minimum for a struct represention *)
