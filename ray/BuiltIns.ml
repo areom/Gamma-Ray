@@ -46,6 +46,36 @@ let class_object : Ast.class_def =
 
     { klass = name; parent = None; sections = sections }
 
+let class_scanner : Ast.class_def =
+    let name = "Scanner" in
+    let built_in = { built_in with inklass = name } in
+
+    let scan_line : Ast.func_def =
+        { built_in with
+          name = "scanString";
+          returns = Some("String");
+          uid = "scanner_scan_string" } in
+    let scan_int : Ast.func_def =
+        { built_in with
+          name = "scanInteger";
+          returns = Some("Integer");
+          uid = "scanner_scan_integer" } in
+    let scan_float : Ast.func_def =
+        { built_in with
+          name = "scanFloat";
+          returns = Some("Float");
+          uid = "scanner_scan_float" } in
+    let scan_init : Ast.func_def =
+        { built_in with
+          name = "init";
+          uid = "scanner_init" } in
+
+    let sections : Ast.class_sections_def =
+        { sections with
+          publics = members [scan_line; scan_int; scan_float; scan_init] } in
+
+    { klass = name; parent = None; sections = sections }
+
 let class_printer : Ast.class_def =
     let name = "Printer" in
     let built_in = { built_in with inklass = name } in
@@ -140,5 +170,5 @@ let class_float : Ast.class_def =
 
 (** The list of built in classes and their methods *)
 let built_in_classes =
-  [ class_object; class_string; class_boolean; class_integer; class_float ]
+  [ class_object; class_string; class_boolean; class_integer; class_float; class_printer; class_scanner ]
 
