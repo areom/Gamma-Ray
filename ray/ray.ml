@@ -20,28 +20,31 @@ let get_data ast =
     let (which, builder) = if (Array.length Sys.argv <= 2)
         then ("Normal", KlassData.build_class_data)
         else ("Experimental", KlassData.build_class_data_test) in
-    output_string (Format.sprintf "Using %s KlassData Builder" which);
+    output_string (Format.sprintf " * Using %s KlassData Builder" which);
     match builder ast with
         | Left(data) -> data
         | Right(issue) -> Printf.fprintf stderr "%s" (KlassData.errstr issue); exit(1)
 
-let source_cast =
-    output_string "Reading Tokens...";
+let source_cast _ =
+    output_string " * Reading Tokens...";
     let tokens = with_file Inspector.from_channel Sys.argv.(1) in
-    output_string "Parsing Tokens...";
+    output_string " * Parsing Tokens...";
     let ast = Parser.cdecls (WhiteSpace.lextoks tokens) (Lexing.from_string "") in
-    output_string "Generating Global Data...";
+    output_string " * Generating Global Data...";
     let klass_data = get_data ast in
-    output_string "Building Semantic AST...";
+    output_string " * Building Semantic AST...";
     let sast = BuildSast.ast_to_sast klass_data ast in
-    output_string "Generating C AST...";
+    output_string " * Generating C AST...";
     GenCast.sast_to_cast klass_data sast
 
 let main _ =
     Printexc.record_backtrace true;
-    output_string "Generating C...";
+    output_string "/* Starting Build Process...";
     try
-        GenC.cast_to_c source_cast stdout;
+        let source = source_cast () in
+        output_string " * Generating C...";
+        output_string " */";
+        GenC.cast_to_c source stdout;
         print_newline ()
     with _ ->
         output_string "Got an exception!";
