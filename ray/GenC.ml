@@ -5,22 +5,19 @@ let c_indent = "  "
 let dispatches = ref []
 let dispatchon = ref []
 
-let lit_to_str lit =
-    match lit with
-      Ast.Int(i) -> string_of_int i
+let lit_to_str lit = match lit with
+    | Ast.Int(i) -> string_of_int i
     | Ast.Float(f) -> string_of_float f
     | Ast.String(s) -> "\"" ^ s ^ "\""  (* escapes were escaped during lexing *)
     | Ast.Bool(b) ->if b then "1" else "0"
 
-let stringify_unop op rop =
-    match op with
-      Ast.Arithmetic(Ast.Neg) -> "-"^rop
+let stringify_unop op rop = match op with
+    | Ast.Arithmetic(Ast.Neg) -> "-"^rop
     | Ast.CombTest(Ast.Not)   -> "!"^rop
     | _   -> raise (Failure "Unknown operator")
 
-let stringify_arith op lop rop =
-    match op with
-      Ast.Add  -> lop^" + "^rop
+let stringify_arith op lop rop = match op with
+    | Ast.Add  -> lop^" + "^rop
     | Ast.Sub  -> lop^" - "^rop
     | Ast.Prod -> lop^" * "^rop
     | Ast.Div  -> lop^" / "^rop
@@ -28,32 +25,28 @@ let stringify_arith op lop rop =
     | Ast.Neg  ->  raise(Failure "Unary operator")
     | Ast.Pow  -> Format.sprintf "pow(%s,%s)" lop rop
 
-let stringify_numtest op lop rop =
-    match op with
-      Ast.Eq   -> lop^" == "^rop
+let stringify_numtest op lop rop = match op with
+    | Ast.Eq   -> lop^" == "^rop
     | Ast.Neq  -> lop^" != "^rop
     | Ast.Less -> lop^" < "^rop
     | Ast.Grtr -> lop^" > "^rop
     | Ast.Leq  -> lop^" <= "^rop
     | Ast.Geq  -> lop^" >= "^rop
 
-let stringify_combtest op lop rop =
-    match op with
-      Ast.And  -> lop^" && "^rop
+let stringify_combtest op lop rop = match op with
+    | Ast.And  -> lop^" && "^rop
     | Ast.Or   -> lop^" || "^rop
     | Ast.Nand -> "!( "^lop^" && "^rop^" )"
     | Ast.Nor  -> "!( "^lop^" || "^rop^" )"
     | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
     | Ast.Not  -> raise(Failure "Unary operator")
 
-let stringify_binop op lop rop=
-    match op with
-      Ast.Arithmetic(arith)  -> stringify_arith arith lop rop
+let stringify_binop op lop rop = match op with
+    | Ast.Arithmetic(arith)  -> stringify_arith arith lop rop
     | Ast.NumTest(numtest)   -> stringify_numtest numtest lop rop
     | Ast.CombTest(combtest) -> stringify_combtest combtest lop rop
 
-let stringify_list stmtlist =
-   String.concat "\n" stmtlist
+let stringify_list stmtlist = String.concat "\n" stmtlist
 
 let rec expr_to_cstr (exptype, expr_detail) = exprdetail_to_cstr expr_detail
 
