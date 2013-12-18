@@ -150,7 +150,7 @@ let cast_to_c_class_struct klass_name ancestors =
 
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
-        | None -> "void"
+        | None -> "void "
         | Some(atype) -> Format.sprintf "%s *" atype in
     let stmts = cast_to_cstmtlist cfunc.body in
     let args = "this" :: (List.map snd cfunc.formals) in
