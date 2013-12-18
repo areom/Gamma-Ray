@@ -141,7 +141,7 @@ let cast_to_c_class_struct klass_name ancestors =
     let ancestor_var (vtype, vname) = Format.sprintf "%s %s;" vtype vname in
     let ancestor_vars vars = String.concat "\n\t\t" (List.map ancestor_var vars) in
     let internal_struct (ancestor, vars) = match vars with
-        | [] -> Format.sprintf "struct { /* empty */ } %s;" ancestor
+        | [] -> Format.sprintf "struct { BYTE empty_vars; } %s;" ancestor
         | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s;\n" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
     let metain = String.concat "\n\t\t" ["char **ancestor;"; "int generation;"; "char *class;"] in
