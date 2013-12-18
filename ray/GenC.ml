@@ -144,7 +144,8 @@ let cast_to_c_class_struct klass_name ancestors =
         | [] -> Format.sprintf "struct { /* empty */ } %s;" ancestor
         | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s;\n" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
-    let meta = Format.sprintf "\tstruct { char **ancestors; } meta;" in
+    let metain = String.concat "\n\t\t" ["char **ancestor;"; "int generation;"; "char *class;"] in
+    let meta = Format.sprintf "\tstruct {\n\t\t%s\n\t} meta;" metain in
     Format.sprintf "\n\ntypedef struct {\n%s\n\n\t%s\n} %s;" meta internals klass_name
 
 let cast_to_c_func cfunc =
