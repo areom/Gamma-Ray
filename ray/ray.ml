@@ -33,7 +33,7 @@ let source_cast _ =
     output_string " * Generating Global Data...";
     let klass_data = get_data ast in
     output_string " * Building Semantic AST...";
-    let sast = BuildSast.ast_to_sast klass_data ast in
+    let sast = BuildSast.ast_to_sast klass_data in
     output_string " * Generating C AST...";
     GenCast.sast_to_cast klass_data sast
 
