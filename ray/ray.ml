@@ -16,9 +16,14 @@ let with_file f file =
     close_in input;
     result
 
-let get_data ast = match KlassData.build_class_data ast with
-    | Left(data) -> data
-    | Right(issue) -> Printf.fprintf stderr "%s" (KlassData.errstr issue); exit(1)
+let get_data ast =
+    let (which, builder) = if (Array.length Sys.argv <= 2)
+        then ("Normal", KlassData.build_class_data)
+        else ("Experimental", KlassData.build_class_data_test) in
+    output_string (Format.sprintf "Using %s KlassData Builder" which);
+    match builder ast with
+        | Left(data) -> data
+        | Right(issue) -> Printf.fprintf stderr "%s" (KlassData.errstr issue); exit(1)
 
 let source_cast =
     output_string "Reading Tokens...";
