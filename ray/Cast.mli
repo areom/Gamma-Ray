@@ -13,8 +13,8 @@ type cexpr_detail =
     | Invoc of cexpr * string * cexpr list (*Invoc(receiver, functionname, args) *)
     | Unop of Ast.op * cexpr (* !x *)
     | Binop of cexpr * Ast.op * cexpr (* x + y *)
-    | Refine of string * cexpr list * string option * Sast.refine_switch (* refinement, arg list, opt ret type, switch list (class, uids) *)
-    | Refinable of string * Sast.refine_switch (* desired refinement, list of classes supporting refinement *)
+    | Refine of cexpr list * string option * Sast.refine_switch (* arg list, opt ret type, switch list (class, uids) *)
+    | Refinable of Sast.refine_switch (* list of classes supporting refinement *)
 
 (* The expression and its type *)
 and cexpr = string * cexpr_detail
