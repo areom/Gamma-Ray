@@ -166,7 +166,7 @@ let cast_to_c_main mains =
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 0;}" switch
 
 let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
-    let out string = Printf.printf channel "%s" string in
+    let out string = Printf.fprintf channel "%s" string in
     (* Print each structure *)
     StringMap.iter (fun klass data -> out (cast_to_c_class_struct klass data)) cdefs;
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
