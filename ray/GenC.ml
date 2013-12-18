@@ -1,4 +1,5 @@
 open Cast
+open StringModules
 
 let c_indent = "  "
 
@@ -152,20 +153,20 @@ let cast_to_c_func cfunc =
     let args = "this" :: (List.map snd cfunc.formals) in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
     let body = match cfunc.builtin, cfunc.returns with
-        | None -> stmts
-        | Some(builtin), None -> Format.sprintf "%s(%s);" (String.concat ", " args)
-        | Some(builtin), _ -> Format.sprintf "return %s(%s);" (String.concat ", " args) in
+        | None, _ -> stmts
+        | Some(builtin), None -> Format.sprintf "%s(%s);" builtin (String.concat ", " args)
+        | Some(builtin), _ -> Format.sprintf "return %s(%s);" builtin (String.concat ", " args) in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " " ^ v) params) in
     Format.sprintf "%s %s(%s)\n{\n%s\n}" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
-    let main_fmt = "if (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
-    let for_main (klass, uid) = Format.sprintf main_fmt  klass (String.length klass + 1) uid in
+    let main_fmt = ""^^"if (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
+    let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 0;}" switch
 
 let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
-    let out string = Printf.printf out "%s" string in
+    let out string = Printf.printf channel "%s" string in
     (* Print each structure *)
     StringMap.iter (fun klass data -> out (cast_to_c_class_struct klass data)) cdefs;
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
