@@ -338,5 +338,7 @@ let ast_to_sast_klass klass_data (ast_klass : Ast.class_def) =
     @param ast An ast program
     @return A sast program
 *)
-let ast_to_sast klass_data (ast : Ast.class_def list) =
-    List.map (fun klass -> ast_to_sast_klass klass_data klass) ast
+let ast_to_sast klass_data =
+    let klasses = StringMap.bindings klass_data.classes in
+    let to_sast (_, klass) = ast_to_sast_klass klass_data klass in
+    List.map to_sast klasses
