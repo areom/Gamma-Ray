@@ -99,14 +99,14 @@ let rec eval klass_data kname mname env exp =
             | Some(fdef) -> fdef in
         (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
 
-    let get_init kname exprlist =
+    let get_init class_name exprlist =
         let arglist = eval_exprlist exprlist in
         let argtypes = List.map fst arglist in
         let mfdef =
-        match best_method klass_data kname "init" argtypes [Ast.Publics] with
+        match best_method klass_data class_name "init" argtypes [Ast.Publics] with
             | None       -> raise(Failure "Constructor not found")
             | Some(fdef) -> fdef in
-        (kname, Sast.NewObj(kname, arglist, mfdef.uid)) in
+        (class_name, Sast.NewObj(class_name, arglist, mfdef.uid)) in
 
     let get_assign e1 e2 =
         let (t1, t2) = (eval' e1, eval' e2) in
@@ -270,7 +270,7 @@ let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data func.name func.inklass func.body with_params;
+            body = attach_bindings klass_data func.inklass func.name func.body with_params;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;
