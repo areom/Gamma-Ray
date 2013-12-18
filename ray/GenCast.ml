@@ -18,7 +18,7 @@ let get_tname tname = "t_" ^ tname
 let opt_tname = function
     | None -> None
     | Some(atype) -> Some(get_tname atype)
-let get_vdef (vtype, vname) = (get_tname vtype, get_vname vtype)
+let get_vdef (vtype, vname) = (get_tname vtype, get_vname vname)
 
 let cast_switch meth refine =
     let update_dispatch (klass, uid) = (get_tname klass, to_rname uid meth refine) in
