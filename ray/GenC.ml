@@ -6,14 +6,14 @@ let lit_to_str lit =
     match lit with
       Ast.Int(i) -> string_of_int i
     | Ast.Float(f) -> string_of_float f
-    | Ast.String(s) -> s
-    | Ast.Bool(b) ->if b = true then "1" else "0"
+    | Ast.String(s) -> "\"" ^ s ^ "\""  (* escapes were escaped during lexing *)
+    | Ast.Bool(b) ->if b then "1" else "0"
 
 
-let stringify_unop op lop =
+let stringify_unop op rop =
     match op with
-      Ast.Arithmetic(Ast.Neg) -> "-"^lop
-    | Ast.CombTest(Ast.Not)   -> "!"^lop
+      Ast.Arithmetic(Ast.Neg) -> "-"^rop
+    | Ast.CombTest(Ast.Not)   -> "!"^rop
     | _   -> raise (Failure "Unknown operator")
 
 let stringify_arith op lop rop =
@@ -24,8 +24,7 @@ let stringify_arith op lop rop =
     | Ast.Div  -> lop^" / "^rop
     | Ast.Mod  -> lop^" % "^rop
     | Ast.Neg  ->  raise(Failure "Unary operator")
-    | Ast.Pow  -> lop^" ^ "^rop
-    | Ast.Quot ->  raise(Failure "Unused Quot remove it")
+    | Ast.Pow  -> Format.sprintf "pow(%s,%s)" lop rop
 
 let stringify_numtest op lop rop =
     match op with
@@ -45,7 +44,7 @@ let stringify_combtest op lop rop =
     | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
     | Ast.Not  -> raise(Failure "Unary operator")
 
-let stringify_binop op  lop rop=
+let stringify_binop op lop rop=
     match op with
       Ast.Arithmetic(arith)  -> stringify_arith arith lop rop
     | Ast.NumTest(numtest)   -> stringify_numtest numtest lop rop
@@ -54,29 +53,41 @@ let stringify_binop op  lop rop=
 let stringify_list stmtlist =
    String.concat "\n" stmtlist
 
-
 let rec expr_to_cstr (exptype, expr_detail) = exprdetail_to_cstr expr_detail
 
 and exprdetail_to_cstr castexpr_detail =
+    let generate_deref obj index =
+        Format.sprintf "((%s *)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
+
+    let generate_field obj field =
+        (* Put it off until later, via MACROS! *)
+        Format.sprintf "DEREF(%s, %s)" (expr_to_cstr obj) field in
+
+    let generate_invocation recvr fname args =
+        let this = expr_to_cstr recvr in
+        let vals = List.map expr_to_cstr args in
+        match args with
+            | [] -> Format.sprintf "%s(%s)" fname this
+            | args -> Format.sprintf "%s(%s, %s)" fname this (String.concat ", " vals) in
+
+    let get_vreference vname = function
+        | Sast.Local -> vname
+        | Sast.Instance(_) -> "this->" ^ vname in
+
     match castexpr_detail with
     | This                           -> "this" (* There is no way this is right with implicit object passing *)
     | Null                           -> "NULL"
-    | Id(vname)                      -> vname
-    | NewObj(classname, fname, args) -> "NEWOBJ TBD"
+    | Id(vname, varkind)             -> get_vreference(vname, varkind)
+    | NewObj(classname, fname, args) -> allocate_obj classname fname args
     | Literal(lit)                   -> lit_to_str lit
-    | Assign(memory, data)           ->
-        (expr_to_cstr memory)^" = "^(expr_to_cstr data)
-    | Deref(carray, index)           ->
-        (expr_to_cstr carray)^"["^(expr_to_cstr index)^"]"
-    | Field(obj, fieldname)          ->
-        (expr_to_cstr obj)^".v_"^(fieldname)
-    | Invoc(recvr, fname, args)      -> "IMPLEMENT INVOC - TBD"
+    | Assign(memory, data)           -> (expr_to_cstr memory)^" = "^(expr_to_cstr data)
+    | Deref(carray, index)           -> generate_deref carray index
+    | Field(obj, fieldname)          -> generate_field obj fieldname
+    | Invoc(recvr, fname, args)      -> generate_invocation rcvr fname args
     | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr)
-    | Binop(lop, op, rop)            ->
-        "( "^(stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop))^" )"
+    | Binop(lop, op, rop)            -> "( "^(stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop))^" )"
 
-
-and vdecl_to_cstr (vtype, vname) = vtype^" "^vname^";\n"
+and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
 (**
     Take a list of cast_stmts and return a body of c statements
@@ -86,14 +97,12 @@ and vdecl_to_cstr (vtype, vname) = vtype^" "^vname^";\n"
 let rec cast_to_cstmtlist stmtlist = stringify_list  (List.map cast_to_c_stmt stmtlist)
 
 and ifstmt_to_str level (ifexpr, body) =
+    let cbody = Format.sprintf "{\n %s \n}" (cast_to_cstmtlist body) in
     match ifexpr with
-    | Some(ifpred)   ->  if level <> 0 then
-       "elseif( " ^ (expr_to_cstr ifpred) ^" ) {\n"
-        ^(cast_to_cstmtlist body)^"\n}\n"
-        else
-        "if( "^(expr_to_cstr ifpred)^" ) {\n"^(cast_to_cstmtlist body)^"\n}\n "
-    | None           ->  "else {\n"^(cast_to_cstmtlist body)^" }\n"
-
+    | Some(ifpred) ->
+        let thisif = Format.sprintf "if ( %s ) %s\n" (expr_to_cstr ifpred) cbody in
+        if level = 0 then thisif else "else " ^ thisif
+    | None -> Format.sprintf "else %s\n" cbody
 
 (**
     Output a statement in c
@@ -103,18 +112,12 @@ and ifstmt_to_str level (ifexpr, body) =
 and cast_to_c_stmt caststmt =
     let c_stmt =
         match caststmt with
-        | Decl(vdecl, Some(expr), env) ->
-            (vdecl_to_cstr vdecl)^" = "^(expr_to_cstr expr)^";\n"
-        | Decl(vdecl, None, env) ->
-            (vdecl_to_cstr vdecl)^";\n"
-        | If(iflist, env) ->
-            stringify_list (List.mapi ifstmt_to_str iflist)
-        | While(pred, body, env) ->
-            "while( "^(expr_to_cstr pred)^" ) {\n"^(cast_to_cstmtlist body)^"\n}\n"
-        | Expr(expr, env)  ->
-            (expr_to_cstr expr)^";\n"
-        | Return(Some(expr), env) ->
-            "return ("^(expr_to_cstr expr)^");\n"
+        | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);\n" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
+        | Decl(vdecl, None, env) -> Format.sprintf "%s;\n" (vdecl_to_cstr vdecl)
+        | If(iflist, env) -> stringify_list (List.mapi ifstmt_to_str iflist)
+        | While(pred, body, env) -> Format.sprintf "while ( %s ) {\n %s \n}\n" (expr_to_cstr pred) (cast_to_cstmtlist body)
+        | Expr(expr, env) -> Format.sprintf "( %s );\n" (expr_to_cstr expr)
+        | Return(Some(expr), env) -> "return ( %s );\n" (expr_to_cstr expr)
         | _ ->
             "Yet to implement this statement"
     in
