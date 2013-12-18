@@ -2,13 +2,15 @@ open Cast
 
 let c_indent = "  "
 
+let dispatches = ref []
+let dispatchon = ref []
+
 let lit_to_str lit =
     match lit with
       Ast.Int(i) -> string_of_int i
     | Ast.Float(f) -> string_of_float f
     | Ast.String(s) -> "\"" ^ s ^ "\""  (* escapes were escaped during lexing *)
     | Ast.Bool(b) ->if b then "1" else "0"
-
 
 let stringify_unop op rop =
     match op with
@@ -60,8 +62,7 @@ and exprdetail_to_cstr castexpr_detail =
         Format.sprintf "((%s *)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
 
     let generate_field obj field =
-        (* Put it off until later, via MACROS! *)
-        Format.sprintf "DEREF(%s, %s)" (expr_to_cstr obj) field in
+        Format.sprintf "(%s)->%s" (expr_to_cstr obj) field in
 
     let generate_invocation recvr fname args =
         let this = expr_to_cstr recvr in
@@ -70,22 +71,44 @@ and exprdetail_to_cstr castexpr_detail =
             | [] -> Format.sprintf "%s(%s)" fname this
             | args -> Format.sprintf "%s(%s, %s)" fname this (String.concat ", " vals) in
 
-    let get_vreference vname = function
+    let generate_vreference vname = function
         | Sast.Local -> vname
         | Sast.Instance(_) -> "this->" ^ vname in
+
+    let generate_allocation klass fname args =
+        let vals = List.map expr_to_cstr args in
+        match args with
+            | [] -> Format.sprintf "%s(MakeNew(%s))" fname klass
+            | _ -> Format.sprintf "%s(MakeNew(%s), %s)" fname klass (String.concat ", " vals) in
+
+    let generate_refine args ret = function
+        | Sast.Switch(cases, dispatch) ->
+          dispatches := (ret, args, dispatch)::(!dispatches);
+          let vals = List.map expr_to_cstr args in
+          (match args with
+              | [] -> Format.sprintf "%s(this)" dispatch
+              | _ -> Format.sprintf "%s(this, %s)" dispatch (String.concat ", " vals))
+        | _ -> raise(Failure("Wrong switch applied to refine -- compiler error.")) in
+    let generate_refinable = function
+        | Sast.Test(klasses, dispatchby) ->
+          dispatchon := (klasses, dispatchby)::(!dispatchon);
+          Format.sprintf "%s(this)" dispatchby
+        | _ -> raise(Failure("Wrong switch applied to refinable -- compiler error.")) in
 
     match castexpr_detail with
     | This                           -> "this" (* There is no way this is right with implicit object passing *)
     | Null                           -> "NULL"
-    | Id(vname, varkind)             -> get_vreference(vname, varkind)
-    | NewObj(classname, fname, args) -> allocate_obj classname fname args
+    | Id(vname, varkind)             -> generate_vreference vname varkind
+    | NewObj(classname, fname, args) -> generate_allocation classname fname args
     | Literal(lit)                   -> lit_to_str lit
     | Assign(memory, data)           -> (expr_to_cstr memory)^" = "^(expr_to_cstr data)
     | Deref(carray, index)           -> generate_deref carray index
     | Field(obj, fieldname)          -> generate_field obj fieldname
-    | Invoc(recvr, fname, args)      -> generate_invocation rcvr fname args
+    | Invoc(recvr, fname, args)      -> generate_invocation recvr fname args
     | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr)
-    | Binop(lop, op, rop)            -> "( "^(stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop))^" )"
+    | Binop(lop, op, rop)            -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop)
+    | Refine(args, ret, switch)      -> generate_refine args ret switch
+    | Refinable(switch)              -> generate_refinable switch
 
 and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
@@ -110,17 +133,14 @@ and ifstmt_to_str level (ifexpr, body) =
     @returm A c statement
 *)
 and cast_to_c_stmt caststmt =
-    let c_stmt =
-        match caststmt with
+    let c_stmt = match caststmt with
         | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);\n" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
         | Decl(vdecl, None, env) -> Format.sprintf "%s;\n" (vdecl_to_cstr vdecl)
         | If(iflist, env) -> stringify_list (List.mapi ifstmt_to_str iflist)
         | While(pred, body, env) -> Format.sprintf "while ( %s ) {\n %s \n}\n" (expr_to_cstr pred) (cast_to_cstmtlist body)
         | Expr(expr, env) -> Format.sprintf "( %s );\n" (expr_to_cstr expr)
-        | Return(Some(expr), env) -> "return ( %s );\n" (expr_to_cstr expr)
-        | _ ->
-            "Yet to implement this statement"
-    in
+        | Return(Some(expr), env) -> Format.sprintf "return ( %s );\n" (expr_to_cstr expr)
+        | Return(_, env) -> "return;\n" in
     c_indent ^ c_stmt
 
 (**
