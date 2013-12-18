@@ -7,6 +7,7 @@ open GlobalData
 
 let to_fname fuid fname = Format.sprintf "f_%s_%s" fuid fname
 let to_rname fuid fhost fname = Format.sprintf "f_%s_%s_%s" fuid fhost fname
+let to_dispatch fuid fhost fname = Format.sprintf "d_%s_%s_%s" fuid fhost fname
 
 let get_fname (f : Sast.func_def) = to_fname f.uid f.name
 let get_rname (f : Sast.func_def) = match f.host with
@@ -14,61 +15,69 @@ let get_rname (f : Sast.func_def) = match f.host with
     | Some(host) -> to_rname f.uid host f.name
 let get_vname vname = "v_" ^ vname
 let get_tname tname = "t_" ^ tname
+let opt_tname = function
+    | None -> None
+    | Some(atype) -> Some(get_tname atype)
+let get_vdef (vtype, vname) = (get_tname vtype, get_vname vtype)
+
+let cast_switch meth refine =
+    let update_dispatch (klass, uid) = (get_tname klass, to_rname uid meth refine) in
+    let update_test klass = get_tname klass in
+    function
+        | Switch((cases, uid)) -> Switch((List.map update_dispatch cases, to_dispatch uid meth refine))
+        | Test((klasses, uid)) -> Test((List.map update_test klasses, to_dispatch uid meth refine))
 
 (*Convert the sast expr to cast expr*)
-let rec sast_to_castexpr env sast_expr = (fst sast_expr, c_expr_detail (snd sast_expr) env)
-and sast_to_castexprlist env explist = List.map (sast_to_castexpr env) explist
+let rec sast_to_castexpr mname env (typetag, sastexpr) = (get_tname typetag, c_expr_detail mname sastexpr env)
+and sast_to_castexprlist mname env explist = List.map (sast_to_castexpr mname env) explist
 
-(*Conver the sast expr_detail to cast_expr detail*)
-and c_expr_detail sastexp env =
-    match sastexp with
-      Sast.This              -> Cast.This
-    | Sast.Null              -> Cast.Null
-    | Sast.Id(vname)         -> Cast.Id(get_vname vname, snd (StringMap.find vname env))
-    | Sast.NewObj(classname, args, fuid) -> Cast.NewObj(classname, to_fname fuid "init", sast_to_castexprlist env args)
-    | Sast.Literal(lit)      -> Cast.Literal(lit)
-    | Sast.Assign(e1, e2)    -> Cast.Assign(sast_to_castexpr env e1, sast_to_castexpr env e2)
-    | Sast.Deref(e1, e2)     -> Cast.Deref(sast_to_castexpr env e1, sast_to_castexpr env e2)
-    | Sast.Field(e1, e2)     -> Cast.Field(sast_to_castexpr env e1, e2)
-    | Sast.Invoc(recv, fname, args, fuid) -> Cast.Invoc(sast_to_castexpr env recv, to_fname fuid fname, sast_to_castexprlist env args)
-    | Sast.Unop(op, expr)    -> Cast.Unop(op, sast_to_castexpr env expr)
-    | Sast.Binop(e1, op, e2) -> Cast.Binop(sast_to_castexpr env e1, op, sast_to_castexpr env e2)
-    | Sast.Refine(name, args, rtype, switch) -> Cast.Refine(name, sast_to_castexprlist env args, rtype, switch)
-    | Sast.Refinable(name, switch) -> Cast.Refinable(name, switch)
-    | Anonymous(_, _, _)     -> raise(Failure("Anonymous objects should have been deanonymized."))
+(* Convert the sast expr_detail to cast_expr detail; convert names / types / etc *)
+and c_expr_detail mname sastexp env = match sastexp with
+    | Sast.This                               -> Cast.This
+    | Sast.Null                               -> Cast.Null
+    | Sast.Id(vname)                          -> Cast.Id(get_vname vname, snd (StringMap.find vname env))
+    | Sast.NewObj(klass, args, fuid)          -> Cast.NewObj(klass, to_fname fuid "init", sast_to_castexprlist mname env args)
+    | Sast.Literal(lit)                       -> Cast.Literal(lit)
+    | Sast.Assign(e1, e2)                     -> Cast.Assign(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
+    | Sast.Deref(e1, e2)                      -> Cast.Deref(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
+    | Sast.Field(e1, field)                   -> Cast.Field(sast_to_castexpr mname env e1, get_vname field)
+    | Sast.Invoc(recv, fname, args, fuid)     -> Cast.Invoc(sast_to_castexpr mname env recv, to_fname fuid fname, sast_to_castexprlist mname env args)
+    | Sast.Unop(op, expr)                     -> Cast.Unop(op, sast_to_castexpr mname env expr)
+    | Sast.Binop(e1, op, e2)                  -> Cast.Binop(sast_to_castexpr mname env e1, op, sast_to_castexpr mname env e2)
+    | Sast.Refine(name, args, rtype, switch)  -> Cast.Refine(sast_to_castexprlist mname env args, opt_tname rtype, cast_switch mname name switch)
+    | Sast.Refinable(name, switch)            -> Cast.Refinable(cast_switch mname name switch)
+    | Anonymous(_, _, _)                      -> raise(Failure("Anonymous objects should have been deanonymized."))
 
 (*Convert the statement list by invoking cstmt on each of the sast stmt*)
-let rec cstmtlist slist =  List.map cstmt slist
+let rec cstmtlist mname slist =  List.map (cstmt mname) slist
 
 (* Prepend suffixes *)
-and cdef (vtype, vname) = (get_tname vtype, get_vname vname)
+and cdef vdef = get_vdef vdef
 
 (*convert sast statement to c statements*)
-and cstmt sstmt =
-    let getoptexpr env optexpr =
-        match optexpr with
-          Some exp -> Some(sast_to_castexpr env exp)
+and cstmt mname sstmt =
+    let getoptexpr env = function
+        | Some exp -> Some(sast_to_castexpr mname env exp)
         | None     -> None in
 
-    let rec getiflist env iflist =
-        match iflist with
-              []                   -> []
-            | [(optexpr, slist)]   -> [(getoptexpr env optexpr, cstmtlist slist)]
-            | (optexpr, slist)::tl -> (getoptexpr env optexpr, cstmtlist slist):: getiflist env tl in
+    let rec getiflist env = function
+        | []                   -> []
+        | [(optexpr, slist)]   -> [(getoptexpr env optexpr, cstmtlist mname slist)]
+        | (optexpr, slist)::tl -> (getoptexpr env optexpr, cstmtlist mname slist)::(getiflist env tl) in
 
     let getsuper args fuid env =
-        let recvr = ("This", Cast.This) in
+        let recvr = (get_tname "Object", Cast.This) in
         let init = to_fname fuid "init" in
-        let cargs = sast_to_castexprlist env args in
+        let cargs = sast_to_castexprlist mname env args in
         Cast.Invoc((recvr, init, cargs)) in
 
     match sstmt with
-      Sast.Decl(var_def, optexpr, env) -> Cast.Decl(cdef var_def, getoptexpr env optexpr, env)
-    | Sast.If(iflist, env)             -> Cast.If(getiflist env iflist, env)
-    | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr env expr, cstmtlist sstmtlist, env)
-    | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr env exp, env)
-    | Sast.Return(optexpr, env)        -> Cast.Return(getoptexpr env optexpr, env)
-    | Sast.Super(args, fuid, env)      -> Cast.Expr(("Void", getsuper args fuid env), env)
+        | Sast.Decl(var_def, optexpr, env) -> Cast.Decl(cdef var_def, getoptexpr env optexpr, env)
+        | Sast.If(iflist, env)             -> Cast.If(getiflist env iflist, env)
+        | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr mname env expr, cstmtlist mname sstmtlist, env)
+        | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr mname env exp, env)
+        | Sast.Return(optexpr, env)        -> Cast.Return(getoptexpr env optexpr, env)
+        | Sast.Super(args, fuid, env)      -> Cast.Expr((get_tname "Void", getsuper args fuid env), env)
 
 (**
     Trim up the sast func_def to the cast cfunc_def
@@ -79,11 +88,11 @@ let sast_to_cast_func (func : Sast.func_def) : cfunc =
     let name = match func.host with
         | None -> get_fname func
         | Some(host) -> get_rname func in
-    {   returns = func.returns;
+    {   returns = opt_tname func.returns;
         name = name;
-        formals = func.formals;
+        formals = List.map get_vdef func.formals;
         static = func.static;
-        body = cstmtlist func.body;
+        body = cstmtlist func.name func.body;
         builtin = func.builtin; }
 
 let build_class_struct_map klass_data (sast_classes : Sast.class_def list) =
@@ -91,18 +100,19 @@ let build_class_struct_map klass_data (sast_classes : Sast.class_def list) =
     let klass_to_struct klass_name (aklass : Ast.class_def) =
         let compare (_, n1) (_, n2) = Pervasives.compare n1 n2 in
         let ivars = List.flatten (List.map snd (Klass.klass_to_variables aklass)) in
-        [(klass_name, List.sort compare ivars)] in
+        let renamed = List.map get_vdef ivars in
+        [(klass_name, List.sort compare renamed)] in
 
     (* Map each individial class to a basic class_struct *)
     let struct_map = StringMap.mapi klass_to_struct klass_data.classes in
 
     (* Now, assuming we get parents before children, update the maps appropriately *)
     let folder map = function
-        | "Object" -> StringMap.add "Object" (StringMap.find "Object" struct_map) map
+        | "Object" -> StringMap.add (get_tname "Object") (StringMap.find "Object" struct_map) map
         | aklass ->
             let parent = StringMap.find (StringMap.find aklass klass_data.parents) map in
             let this = StringMap.find aklass struct_map in
-            StringMap.add aklass (this @ parent) map in
+            StringMap.add (get_tname aklass) (this @ parent) map in
 
     (* Update the map so that each child has information from parents *)
     let struct_map = List.fold_left folder StringMap.empty (Klass.get_class_names klass_data) in
