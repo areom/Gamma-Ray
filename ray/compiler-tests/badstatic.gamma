@@ -1,0 +1,8 @@
+class BadStatic:
+  public:
+    Integer getZero():
+      return 0
+    init():
+  main():
+    getZero()
+
