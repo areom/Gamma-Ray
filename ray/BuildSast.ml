@@ -161,7 +161,7 @@ let rec eval klass_data kname mname isstatic env exp =
         | _ -> raise(Failure("Unknown binary operator " ^ Inspector.inspect_ast_op op ^ " given.")) in
 
     let lookup_type id = match map_lookup id env with
-        | None -> "Unknown id " ^ id ^ " in environment built around " ^ kname ^ ", " ^ mname ^ "."
+        | None -> raise(Failure("Unknown id " ^ id ^ " in environment built around " ^ kname ^ ", " ^ mname ^ "."))
         | Some((vtype, _)) -> vtype in
 
     match exp with
@@ -301,6 +301,19 @@ let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
         | Ast.InitMem(m) -> Sast.InitMem(change m) in
     transformed
 
+let init_calls_super (aklass : Sast.class_def) =
+    let validate_init func_def = match func_def.builtin, func_def.body with
+        | true, _ -> true
+        | _, (Super(_,_,_)::_) -> true
+        | _, _ -> false in
+    let grab_init = function
+        | InitMem(m) -> Some(m)
+        | _ -> None in
+    let get_inits mems = Util.filter_option (List.map grab_init mems) in
+    let s = aklass.sections in
+    let inits = List.flatten (List.map get_inits [s.publics; s.protects; s.privates]) in
+    List.for_all validate_init inits
+
 (**
     Given a class_data object and an Ast.class_def, return a Sast.class_def
     object. May fail when there are issues in the statements / expressions.
@@ -334,8 +347,8 @@ let ast_to_sast_klass klass_data (ast_klass : Ast.class_def) =
             parent = ast_klass.parent;
             sections = sections } in
 
-    sast_klass
-
+    if init_calls_super sast_klass then sast_klass
+    else raise(Failure(Format.sprintf "%s's inits don't always call super as their first statement (maybe empty body, maybe something else)." sast_klass.klass))
 
 (**
     @param ast An ast program
