@@ -21,8 +21,11 @@ let sections : Ast.class_sections_def =
       refines = [];
       mains = [] }
 
-let mem f = if f.name = "init" then InitMem(f) else MethodMem(f)
-let members = List.map mem
+let func f = if f.name = "init" then InitMem(f) else MethodMem(f)
+let var v = VarMem(v)
+let variables = List.map var
+let functions = List.map func
+let members f v = (functions f) @ (variables v)
 
 let class_object : Ast.class_def =
     let name = "Object" in
@@ -38,11 +41,12 @@ let class_object : Ast.class_def =
           name = "init";
           section = Protects;
           uid = "object_init" } in
+    let system = ("System", "system") in
 
     let sections : Ast.class_sections_def =
         { sections with
-          publics = [mem get_id];
-          protects = [mem init_obj] } in
+          publics = [func get_id];
+          protects = [func init_obj; var system] } in
 
     { klass = name; parent = None; sections = sections }
 
@@ -72,7 +76,7 @@ let class_scanner : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          publics = members [scan_line; scan_int; scan_float; scan_init] } in
+          publics = functions [scan_line; scan_int; scan_float; scan_init] } in
 
     { klass = name; parent = None; sections = sections }
 
@@ -103,9 +107,9 @@ let class_printer : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          publics = members [print_string; print_int; print_float; print_init] } in
+          publics = functions [print_string; print_int; print_float; print_init] } in
 
-    { klass = name; parent = Some("Object"); sections = sections }
+    { klass = name; parent = None; sections = sections }
 
 let class_string : Ast.class_def =
     let name = "String" in
@@ -118,9 +122,9 @@ let class_string : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [mem string_init] } in
+          protects = [func string_init] } in
 
-    { klass = name; parent = Some("Object"); sections = sections }
+    { klass = name; parent = None; sections = sections }
 
 
 let class_boolean : Ast.class_def =
@@ -134,9 +138,9 @@ let class_boolean : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [mem boolean_init] } in
+          protects = [func boolean_init] } in
 
-    { klass = name; parent = Some("Object"); sections = sections }
+    { klass = name; parent = None; sections = sections }
 
 let class_integer : Ast.class_def =
     let name = "Integer" in
@@ -149,9 +153,9 @@ let class_integer : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [mem integer_init] } in
+          protects = [func integer_init] } in
 
-    { klass = name; parent = Some("Object"); sections = sections }
+    { klass = name; parent = None; sections = sections }
 
 let class_float : Ast.class_def =
     let name = "Float" in
@@ -164,11 +168,33 @@ let class_float : Ast.class_def =
 
     let sections : Ast.class_sections_def =
         { sections with
-          protects = [mem float_init] } in
+          protects = [func float_init] } in
 
-    { klass = name; parent = Some("Object"); sections = sections }
+    { klass = name; parent = None; sections = sections }
+
+let class_system : Ast.class_def =
+    let name = "System" in
+    let built_in = { built_in with inklass = name } in
+
+    let system_init : Ast.func_def =
+        { built_in with
+          name = "init";
+          uid = "system_init" } in
+    let system_exit : Ast.func_def =
+        { built_in with
+          name = "exit";
+          formals = [("Integer", "code")];
+          uid = "system_exit"; } in
+    let system_out = ("Printer", "out") in
+    let system_err = ("Printer", "err") in
+    let system_in = ("Scanner", "in") in
+
+    let sections : Ast.class_sections_def =
+        { sections with
+          publics = members [system_init; system_exit] [system_out; system_err; system_in]; } in
+
+    { klass = name; parent = None; sections = sections }
 
 (** The list of built in classes and their methods *)
 let built_in_classes =
-  [ class_object; class_string; class_boolean; class_integer; class_float; class_printer; class_scanner ]
-
+  [ class_object; class_string; class_boolean; class_integer; class_float; class_printer; class_scanner; class_system ]
