@@ -3,6 +3,7 @@ class Math:
     Float xyz
   public:
     init():
+      super()
     Integer add(Integer a, Integer b):
     Integer sub(Integer a, Integer c):
   main():
@@ -12,5 +13,6 @@ class NonMath:
     String shakespeare
   public:
     init():
+      super()
     String recite():
   main():
