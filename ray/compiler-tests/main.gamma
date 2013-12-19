@@ -3,5 +3,4 @@ class MainTest:
     init():
   main():
     Integer a
-    Printer p
-    p.printInteger(1 + a)
+    a += 1

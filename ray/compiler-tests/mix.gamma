@@ -1,0 +1,26 @@
+class IOTest:
+  public:
+    Integer a
+    Integer b
+    init():
+      a := 1
+      b := 2
+    Integer overview():
+      Printer p := new Printer(true)
+      p.printInteger(a)
+      p.printInteger(b)
+    Integer incre_ab():
+      Scanner s := new Scanner()
+      Integer delta
+      delta := s.scanInteger()
+      a := a + delta
+      b := b + delta
+
+class Main:
+  public:
+    init():
+  main():
+    IOTest ab := new IOTest()
+    ab.overview()
+    ab.incre_ab()
+    ab.overview()
