@@ -17,12 +17,14 @@ let stringify_unop op rop rtype = match op with
     | Ast.CombTest(Ast.Not)   -> "NEG_"^rtype^rop
     | _   -> raise (Failure "Unknown operator")
 
-let stringify_arith op lop rop = match op with
-    | Ast.Add  -> lop^" + "^rop
-    | Ast.Sub  -> lop^" - "^rop
-    | Ast.Prod -> lop^" * "^rop
-    | Ast.Div  -> lop^" / "^rop
-    | Ast.Mod  -> lop^" % "^rop
+let stringify_arith op lop rop suffix = 
+    let ops = suffix^"("^lop^" , "^rop^")" in
+    match op with
+    | Ast.Add  -> "ADD_"^ops
+    | Ast.Sub  -> "SUB_"^ops
+    | Ast.Prod -> "PROD_"^ops
+    | Ast.Div  -> "DIV_"^ops
+    | Ast.Mod  -> "MOD_"^ops
     | Ast.Neg  ->  raise(Failure "Unary operator")
     | Ast.Pow  -> Format.sprintf "pow(%s,%s)" lop rop
 
@@ -42,8 +44,16 @@ let stringify_combtest op lop rop = match op with
     | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
     | Ast.Not  -> raise(Failure "Unary operator")
 
-let stringify_binop op lop rop = match op with
-    | Ast.Arithmetic(arith)  -> stringify_arith arith lop rop
+let stringify_binop op lop rop types = 
+    let suffix = match types with
+        | ("Integer", "Integer") -> "INT_INT"
+        | ("Float", "Float")     -> "FLOAT_FLOAT"
+        | ("Integer", "Float")   -> "INT_FLOAT"
+        | ("Float", "Integer")   -> "FLOAT_INT" 
+        | ("Boolean", "Boolean") -> "BOOL_BOOL" 
+        | (_, _)                 -> raise(Failure "Binary operator")in
+    match op with
+    | Ast.Arithmetic(arith)  -> stringify_arith arith lop rop suffix
     | Ast.NumTest(numtest)   -> stringify_numtest numtest lop rop
     | Ast.CombTest(combtest) -> stringify_combtest combtest lop rop
 
@@ -100,7 +110,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Field(obj, fieldname)          -> generate_field obj fieldname
     | Invoc(recvr, fname, args)      -> generate_invocation recvr fname args
     | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr) (fst expr)
-    | Binop(lop, op, rop)            -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop)
+    | Binop(lop, op, rop)            -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop) ((fst lop), (fst rop))
     | Refine(args, ret, switch)      -> generate_refine args ret switch
     | Refinable(switch)              -> generate_refinable switch
 
