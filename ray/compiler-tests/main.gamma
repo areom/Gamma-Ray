@@ -1,0 +1,11 @@
+class MainTest:
+  public:
+    Integer a
+    init():
+      a := 1
+  private:
+    incre_a(Integer b):
+      return a := a+b
+  main():
+    printInteger(1+a)
+    printInteger(incre_a(2))
