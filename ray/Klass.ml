@@ -180,7 +180,7 @@ let class_method_lookup data klass_name func_name =
     @return A list of methods with the given name.
   *)
 let class_ancestor_method_lookup data klass_name method_name this =
-    let (startsects, recsects) = if this then ([Publics; Protects; Publics], [Publics; Protects]) else ([Publics], [Publics]) in
+    let (startsects, recsects) = if this then ([Publics; Protects; Privates], [Publics; Protects]) else ([Publics], [Publics]) in
     let rec find_methods found aklass sects =
         let accessible f = List.mem f.section sects in
         let funcs = List.filter accessible (class_method_lookup data aklass method_name) in
