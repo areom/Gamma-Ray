@@ -2,6 +2,7 @@
 class WhileLoopTest:
   public:
     init():
+      super()
       Integer a
       while(true):
         a := 4
