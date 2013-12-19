@@ -714,9 +714,10 @@ let print_class_data data =
         print_string (name ^ ":\n");
         print_lookup_map map printer in
 
-    let func_list funcs =
-        let sigs = List.map (fun f -> "\n\t\t" ^ (full_signature_string f)) funcs in
-        String.concat "" sigs in
+    let func_list = function
+        | [one] -> full_signature_string one
+        | list -> let sigs = List.map (fun f -> "\n\t\t" ^ (full_signature_string f)) list in
+            String.concat "" sigs in
 
     let func_of_list funcs =
         let sigs = List.map (fun f -> "\n\t\t" ^ f.inklass ^ "->" ^ (full_signature_string f)) funcs in
@@ -729,17 +730,14 @@ let print_class_data data =
             | [] -> raise(Failure("The impossible happened -- searching for a section that should exist doesn't exist.")) in
         let vars = klass_to_variables cdef in
         let funcs = klass_to_functions cdef in
-        let format = "class %s extends %s and has\n" ^^
-                                  "\t\t(%d/%d/%d) methods -- private, protected, public (non-inherited)\n" ^^
-                                  "\t\t(%d/%d/%d) fields -- private, protected, public (non-inherited)\n" ^^
-                                  "\t\t%d refinements, %d mains" in
+        let format = ""^^"from %s:  M(%d/%d/%d) F(%d/%d/%d) R(%d) M(%d)" in
         let parent = match cdef.klass with
             | "Object" -> "----"
             | _ -> klass_to_parent cdef in
-        Format.sprintf format cdef.klass parent
+        Format.sprintf format parent
             (count Privates funcs) (count Protects funcs) (count Publics funcs)
-            (count Refines funcs) (count Mains funcs)
-            (count Privates vars) (count Protects vars) (count Publics vars) in
+            (count Privates vars) (count Protects vars) (count Publics vars)
+            (count Refines funcs) (count Mains funcs) in
 
     let print_list list =
         let rec list_printer spaces endl space = function
