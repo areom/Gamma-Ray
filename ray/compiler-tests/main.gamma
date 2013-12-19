@@ -4,8 +4,10 @@ class MainTest:
     init():
       a := 1
   private:
-    incre_a(Integer b):
-      return a := a+b
+    Integer incre_a(Integer b):
+        a := a + b
+        return a
   main():
-    printInteger(1+a)
-    printInteger(incre_a(2))
+    Printer p
+    p.printInteger(1 + a)
+    p.printInteger(incre_a(2))
