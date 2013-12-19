@@ -17,18 +17,35 @@ let stringify_unop op rop rtype = match op with
     | Ast.CombTest(Ast.Not)   -> "NEG_"^rtype^rop
     | _   -> raise (Failure "Unknown operator")
 
-let stringify_arith op lop rop suffix = 
-    let ops = suffix^"("^lop^" , "^rop^")" in
+let stringify_arith op suffix = 
     match op with
-    | Ast.Add  -> "ADD_"^ops
-    | Ast.Sub  -> "SUB_"^ops
-    | Ast.Prod -> "PROD_"^ops
-    | Ast.Div  -> "DIV_"^ops
-    | Ast.Mod  -> "MOD_"^ops
+    | Ast.Add  -> "ADD_"^suffix
+    | Ast.Sub  -> "SUB_"^suffix
+    | Ast.Prod -> "PROD_"^suffix
+    | Ast.Div  -> "DIV_"^suffix
+    | Ast.Mod  -> "MOD_"^suffix
     | Ast.Neg  ->  raise(Failure "Unary operator")
-    | Ast.Pow  -> Format.sprintf "pow(%s,%s)" lop rop
+    | Ast.Pow  -> "POW_"^suffix
+  (*| Ast.Pow  -> Format.sprintf "pow(%s,%s)" lop rop*)
 
-let stringify_numtest op lop rop = match op with
+let stringify_numtest op suffix = match op with
+    | Ast.Eq   -> "NTEST_EQ_"^suffix
+    | Ast.Neq  -> "NTEST_NEQ_"^suffix
+    | Ast.Less -> "NTEST_LESS_"^suffix
+    | Ast.Grtr -> "NTEST_GRTR_"^suffix
+    | Ast.Leq  -> "NTEST_LEQ_"^suffix
+    | Ast.Geq  -> "NTEST_GEQ_"^suffix
+
+let stringify_combtest op suffix = match op with
+    | Ast.And  -> "CTEST_AND_"^suffix
+    | Ast.Or   -> "CTEST_OR_"^suffix
+    | Ast.Nand -> "CTEST_NAND_"^suffix
+    | Ast.Nor  -> "CTEST_NOR_"^suffix
+    | Ast.Xor  -> "CTEST_XOR_"^suffix
+    | Ast.Not  -> raise(Failure "Unary operator")
+
+(*
+let stringify_numtest op lop rop suffix = match op with
     | Ast.Eq   -> lop^" == "^rop
     | Ast.Neq  -> lop^" != "^rop
     | Ast.Less -> lop^" < "^rop
@@ -43,19 +60,21 @@ let stringify_combtest op lop rop = match op with
     | Ast.Nor  -> "!( "^lop^" || "^rop^" )"
     | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
     | Ast.Not  -> raise(Failure "Unary operator")
+*)
 
 let stringify_binop op lop rop types = 
-    let suffix = match types with
+    let prefix = match types with
         | ("Integer", "Integer") -> "INT_INT"
         | ("Float", "Float")     -> "FLOAT_FLOAT"
         | ("Integer", "Float")   -> "INT_FLOAT"
         | ("Float", "Integer")   -> "FLOAT_INT" 
         | ("Boolean", "Boolean") -> "BOOL_BOOL" 
-        | (_, _)                 -> raise(Failure "Binary operator")in
+        | (_, _)                 -> raise(Failure "Binary operator") in
+    let suffix = prefix^"( "^lop^" , "^rop^" )" in
     match op with
-    | Ast.Arithmetic(arith)  -> stringify_arith arith lop rop suffix
-    | Ast.NumTest(numtest)   -> stringify_numtest numtest lop rop
-    | Ast.CombTest(combtest) -> stringify_combtest combtest lop rop
+    | Ast.Arithmetic(arith)  -> stringify_arith arith suffix
+    | Ast.NumTest(numtest)   -> stringify_numtest numtest suffix
+    | Ast.CombTest(combtest) -> stringify_combtest combtest suffix
 
 let stringify_list stmtlist = String.concat "\n" stmtlist
 
