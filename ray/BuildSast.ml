@@ -73,8 +73,8 @@ let getRetType ret_type = match ret_type with
     @param exp An expression to eval to a Sast.expr value
     @return A Sast.expr expression, failing when there are issues.
   *)
-let rec eval klass_data kname mname env exp =
-    let eval' expr = eval klass_data kname mname env expr in
+let rec eval klass_data kname mname isstatic env exp =
+    let eval' expr = eval klass_data kname mname isstatic env expr in
     let eval_exprlist elist = List.map eval' elist in
 
     let get_field expr mbr =
@@ -91,10 +91,13 @@ let rec eval klass_data kname mname env exp =
         let (recvr_type, _) as recvr = eval' expr in
         let arglist = eval_exprlist elist in
         let this = (recvr_type = current_class) in
+        let _ = if (this && isstatic)
+            then raise(Failure(Format.sprintf "Cannot invoke %s on %s in %s for %s is static." methd mname kname mname))
+            else () in
         let recvr_type = if this then kname else recvr_type in
         let argtypes = List.map fst arglist in
         let mfdef = match Klass.best_inherited_method klass_data recvr_type methd argtypes this with
-            | None when this -> raise(Failure("Method " ^ methd ^ " not found ancestrally in " ^ recvr_type ^ "."))
+            | None when this -> raise(Failure(Format.sprintf "Method %s not found ancestrally in %s (this=%b)" methd recvr_type this))
             | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
             | Some(fdef) -> fdef in
         (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
@@ -188,10 +191,10 @@ let rec eval klass_data kname mname env exp =
     @param initial_env An initial environment
     @return A list of Sast statements
   *)
-let rec attach_bindings klass_data kname mname isvoid stmts initial_env =
+let rec attach_bindings klass_data kname mname isvoid isstatic stmts initial_env =
     (* Calls that go easy on the eyes *)
-    let eval' = eval klass_data kname mname in
-    let attach' = attach_bindings klass_data kname mname isvoid in
+    let eval' = eval klass_data kname mname isstatic in
+    let attach' = attach_bindings klass_data kname mname isvoid isstatic in
     let eval_exprlist env elist = List.map (eval' env) elist in
 
     let rec get_superinit kname arglist =
@@ -274,7 +277,7 @@ let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data func.inklass func.name isvoid func.body with_params;
+            body = attach_bindings klass_data func.inklass func.name isvoid func.static func.body with_params;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;
