@@ -3,6 +3,6 @@ class BadStatic:
     Integer getZero():
       return 0
     init():
+      super()
   main():
     getZero()
-
