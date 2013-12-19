@@ -1,6 +1,7 @@
 class MainTest:
   public:
     init():
+      super()
   main():
     Integer a
     a += 1

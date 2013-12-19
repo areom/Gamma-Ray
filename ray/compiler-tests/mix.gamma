@@ -3,6 +3,7 @@ class IOTest:
     Integer a
     Integer b
     init():
+      super()
       a := 1
       b := 2
     Integer overview():
@@ -19,6 +20,7 @@ class IOTest:
 class Main:
   public:
     init():
+      super()
   main():
     IOTest ab := new IOTest()
     ab.overview()
