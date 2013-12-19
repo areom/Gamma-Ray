@@ -1,0 +1,14 @@
+class MainTest:
+  public:
+    Integer a
+    init():
+      a := 1
+  private:
+    Integer incre_a(Integer b):
+        a := a + b
+        return a
+    Integer incre_a_twice(Integer b):
+        incre_a(b)
+        incre_a(b)
+        return a
+  main():

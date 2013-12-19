@@ -1,13 +1,7 @@
 class MainTest:
   public:
-    Integer a
     init():
-      a := 1
-  private:
-    Integer incre_a(Integer b):
-        a := a + b
-        return a
   main():
+    Integer a
     Printer p
     p.printInteger(1 + a)
-    p.printInteger(incre_a(2))
