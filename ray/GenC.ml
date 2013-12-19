@@ -7,14 +7,14 @@ let dispatches = ref []
 let dispatchon = ref []
 
 let lit_to_str lit = match lit with
-    | Ast.Int(i) -> string_of_int i
-    | Ast.Float(f) -> string_of_float f
-    | Ast.String(s) -> "\"" ^ s ^ "\""  (* escapes were escaped during lexing *)
-    | Ast.Bool(b) ->if b then "1" else "0"
+    | Ast.Int(i) -> "LIT_INT("^(string_of_int i)^")"
+    | Ast.Float(f) -> "LIT_FLOAT("^(string_of_float f)^")"
+    | Ast.String(s) -> "LIT_STRING(\"" ^ s ^ "\")"  (* escapes were escaped during lexing *)
+    | Ast.Bool(b) ->if b then "LIT_BOOL(1)" else "LIT_BOOL(0)"
 
-let stringify_unop op rop = match op with
-    | Ast.Arithmetic(Ast.Neg) -> "-"^rop
-    | Ast.CombTest(Ast.Not)   -> "!"^rop
+let stringify_unop op rop rtype = match op with
+    | Ast.Arithmetic(Ast.Neg) -> "NEG_"^rtype^rop
+    | Ast.CombTest(Ast.Not)   -> "NEG_"^rtype^rop
     | _   -> raise (Failure "Unknown operator")
 
 let stringify_arith op lop rop = match op with
@@ -99,7 +99,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Deref(carray, index)           -> generate_deref carray index
     | Field(obj, fieldname)          -> generate_field obj fieldname
     | Invoc(recvr, fname, args)      -> generate_invocation recvr fname args
-    | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr)
+    | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr) (fst expr)
     | Binop(lop, op, rop)            -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop)
     | Refine(args, ret, switch)      -> generate_refine args ret switch
     | Refinable(switch)              -> generate_refinable switch
