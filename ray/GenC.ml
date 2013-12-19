@@ -17,7 +17,7 @@ let stringify_unop op rop rtype = match op with
     | Ast.CombTest(Ast.Not)   -> "NEG_"^rtype^rop
     | _   -> raise (Failure "Unknown operator")
 
-let stringify_arith op suffix = 
+let stringify_arith op suffix =
     match op with
     | Ast.Add  -> "ADD_"^suffix
     | Ast.Sub  -> "SUB_"^suffix
@@ -62,13 +62,13 @@ let stringify_combtest op lop rop = match op with
     | Ast.Not  -> raise(Failure "Unary operator")
 *)
 
-let stringify_binop op lop rop types = 
+let stringify_binop op lop rop types =
     let prefix = match types with
         | ("Integer", "Integer") -> "INT_INT"
         | ("Float", "Float")     -> "FLOAT_FLOAT"
         | ("Integer", "Float")   -> "INT_FLOAT"
-        | ("Float", "Integer")   -> "FLOAT_INT" 
-        | ("Boolean", "Boolean") -> "BOOL_BOOL" 
+        | ("Float", "Integer")   -> "FLOAT_INT"
+        | ("Boolean", "Boolean") -> "BOOL_BOOL"
         | (_, _)                 -> raise(Failure "Binary operator") in
     let suffix = prefix^"( "^lop^" , "^rop^" )" in
     match op with
