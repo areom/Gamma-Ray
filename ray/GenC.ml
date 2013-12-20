@@ -153,7 +153,7 @@ let generate_refinesw (ret, args, dispatchuid, cases) =
     let rettype = match ret with
         | None -> "void "
         | Some(atype) -> Format.sprintf "%s *" atype in
-    let rec generate_args num =  if num = 1 then "varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
+    let rec generate_args num =  if num =0 then " " else if num = 1 then ", varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
     in
     let decorate index typ = (GenCast.get_tname typ)^" * v_arg"^string_of_int(index)
     in
@@ -162,20 +162,19 @@ let generate_refinesw (ret, args, dispatchuid, cases) =
     in
     let signature =
         match args with
-            | [] -> Format.sprintf "%s" "receiver"
+            | [] -> Format.sprintf "%s" "t_??? receiver"
             | args -> Format.sprintf "%s, %s" "t_??? *receiver" (String.concat ", " formals)
     in
-    let generate_invoc fuid = "(receiver,"^(generate_args (List.length args))^")"
+    let generate_invoc fuid = fuid^"(receiver"^(generate_args (List.length args))^")"
     in
     let unroll_cases (kname, fuid) =
-        Format.sprintf "%s\n return %s" "if(IS_CLASS(receiver,kname))" (generate_invoc fuid)
+        Format.sprintf "\t%s\n\t\treturn %s;\n" "if( IS_CLASS( receiver, kname ) )" (generate_invoc fuid) 
     in 
-    let generate_cases =
-        match cases with
-            | [] -> Format.sprintf "%s" "{\n}\n"
-            | hd::tl  -> unroll_cases hd
+    let rec generate_cases = function
+             [] -> Format.sprintf "%s" "\n"
+            | hd::tl  ->  unroll_cases hd^"\n"^generate_cases tl
     in
-    Format.sprintf "%s%s(%s)%s\n\n" rettype dispatchuid signature generate_cases
+    Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (generate_cases cases)
 (**
     Take a list of cast_stmts and return a body of c statements
     @param stmtlist A list of statements
@@ -277,12 +276,11 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
         else out (cast_to_c_class_struct klass data) in
     StringMap.iter print_class cdefs;
 
-   comment "Dispatch looks like this.";
-   if ((List.length !dispatches) > 0) then
-        out (generate_refinesw (List.hd(!dispatches)));
-
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
 
+   comment "Dispatch looks like this.";
+   if ((List.length !dispatches) > 0) then
+        out (generate_refinesw (List.hd(!dispatches)));
     comment "The main.";
     out (cast_to_c_main mains);
