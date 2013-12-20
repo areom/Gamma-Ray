@@ -139,14 +139,21 @@ let sast_functions (klasses : Sast.class_def list) =
 
     (all_functions, all_mains)
 
+let leaf_ancestors klass_data =
+    let leaves = get_leaves klass_data in
+    let mangled l = List.map get_tname (map_lookup_list l klass_data.ancestors) in
+    let ancestors l = (l, List.rev (mangled l)) in
+    List.map ancestors leaves
+
 let sast_to_cast klass_data (klasses : Sast.class_def list) : Cast.program =
     let (funcs, mains) = sast_functions klasses in
     let main_case (f : Sast.func_def) = (f.inklass, get_fname f) in
     let cfuncs = List.map sast_to_cast_func funcs in
     let main_switch = List.map main_case mains in
     let struct_map = build_class_struct_map klass_data klasses in
+    let ancestor_data = leaf_ancestors klass_data in
 
-    (struct_map, cfuncs, main_switch)
+    (struct_map, cfuncs, main_switch, ancestor_data)
 
 let built_in_names =
     let klass_names = List.map (fun (f : Ast.class_def) -> get_tname f.klass) BuiltIns.built_in_classes in

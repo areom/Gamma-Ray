@@ -211,12 +211,19 @@ let cast_to_c_main mains =
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 1;\n}" switch
 
-let cast_to_c ((cdefs, funcs, mains) : Cast.program) channel =
+let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
     let comment string =
         let comments = Str.split (Str.regexp "\n") string in
         let commented = List.map (Format.sprintf " * %s") comments in
         out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
+
+    comment "Ancestry meta-info to link to later.";
+    let print_ancestors (klass, ancestors) =
+        let string = Format.sprintf "\"%s\"" in
+        let ancestors = String.concat ", " (List.map string ancestors) in
+        out (Format.sprintf "const char *a_%s[] = { %s };" klass ancestors) in
+    List.map print_ancestors ancestry;
 
     comment "Structures for each of the objects.";
     let print_class klass data =
