@@ -247,38 +247,28 @@ let cast_to_c_main mains =
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 1;\n}" switch
 
+let commalines input =
+    let newline string = String.length string >= 75 in
+    let rec line_builder line rlines = function
+        | [] -> List.rev (line::rlines)
+        | str::rest ->
+            let comma = match rest with [] -> false | _ -> true in
+            let str = if comma then str ^ ", " else str in
+            if newline line then line_builder str (line::rlines) rest
+            else line_builder (line ^ str) rlines rest in
+    match input with
+        | str::rest -> line_builder (str ^ ", ") [] rest
+        | otherwise -> otherwise
 
 let print_class_strings = function
     | [] -> raise(Failure("Not even built in classes?"))
-    | obj::rest ->
-        let newline string = String.length string >= 75 in
-        let rec line_builder line rlines strings =
-            let recurse kls rest =
-                let comma = match rest with [] -> false | _ -> true in
-                let kls = "\"" ^ kls ^ "\"" in
-                let kls = if comma then kls ^ ", " else kls in
-                if newline line then line_builder kls (line::rlines) rest
-                else line_builder (line ^ kls) rlines rest in
-            match strings with
-                | [] -> List.rev (line::rlines)
-                | kls::klasses -> recurse kls klasses in
-        line_builder ("\"" ^ obj ^ "\", ") [] rest
+    | classes -> commalines (List.map (fun k -> "\"" ^ k ^ "\"") classes)
 
 let print_class_enums = function
     | [] -> raise(Failure("Not even built in classes?"))
-    | obj::rest ->
-        let newline string = String.length string >= 75 in
-        let rec line_builder line rlines strings =
-            let recurse kls rest =
-                let comma = match rest with [] -> false | _ -> true in
-                let kls = String.uppercase kls in
-                let kls = if comma then kls ^ ", " else kls in
-                if newline line then line_builder kls (line::rlines) rest
-                else line_builder (line ^ kls) rlines rest in
-            match strings with
-                | [] -> List.rev(line::rlines)
-                | kls::klasses -> recurse kls klasses in
-        line_builder (String.uppercase obj ^ " = 0, ") [] rest
+    | first::rest ->
+        let first = first ^ " = 0" in
+        commalines (List.map String.uppercase (first::rest))
 
 let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
