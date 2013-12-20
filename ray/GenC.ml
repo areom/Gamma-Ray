@@ -230,8 +230,8 @@ let cast_to_c_func cfunc =
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
     if cfunc.builtin
-        then Format.sprintf "/* Place-holder for %s%s(%s) */\n\n" ret_type cfunc.name signature
-        else Format.sprintf "%s%s(%s)%s\n\n" ret_type cfunc.name signature body
+        then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
+        else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
 
 let cast_to_c_proto cfunc =
     let ret_type = match cfunc.returns with
@@ -275,6 +275,11 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
         let comments = Str.split (Str.regexp "\n") string in
         let commented = List.map (Format.sprintf " * %s") comments in
         out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
+
+    let func_compare f g =
+       let strcmp = Pervasives.compare f.name g.name in
+       if f.builtin = g.builtin then strcmp else if f.builtin then -1 else 1 in
+    let funcs = List.sort func_compare funcs in
 
     comment "Ancestry meta-info to link to later.";
     let classes = List.map fst (StringMap.bindings ancestry) in
