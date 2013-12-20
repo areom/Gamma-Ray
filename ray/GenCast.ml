@@ -151,7 +151,7 @@ let sast_to_cast klass_data (klasses : Sast.class_def list) : Cast.program =
     let cfuncs = List.map sast_to_cast_func funcs in
     let main_switch = List.map main_case mains in
     let struct_map = build_class_struct_map klass_data klasses in
-    let ancestor_data = leaf_ancestors klass_data in
+    let ancestor_data = klass_data.ancestors in
 
     (struct_map, cfuncs, main_switch, ancestor_data)
 

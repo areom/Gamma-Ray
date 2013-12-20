@@ -44,8 +44,8 @@ type class_struct = (string * Ast.var_def list) list (* All the data for this ob
 (* A main is a class name and a function name for that main *)
 type main_func = (string * string)
 
-(* Ancestry information necessary for meta information -- only the leaves should be given -- but everything with changed names *)
-type ancestry_info = (string * string list) list
+(* We actually need all the ancestry information, cause we're gonna do it the right way *)
+type ancestry_info = (string list) lookup_map
 
 (* A program is a map from all classes to their struct's, a list of all functions, and a list of mainfuncs *)
 type program = class_struct lookup_map * cfunc list * main_func list * ancestry_info

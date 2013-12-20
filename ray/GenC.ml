@@ -188,8 +188,7 @@ let cast_to_c_class_struct klass_name ancestors =
         | [] -> Format.sprintf "struct { BYTE empty_vars; } %s;" ancestor
         | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s;\n" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
-    let metain = String.concat "\n\t\t" ["char **ancestor;"; "int generation;"; "char *class;"] in
-    let meta = Format.sprintf "\tstruct {\n\t\t%s\n\t} meta;" metain in
+    let meta = "\tClassInfo *meta;" in
     Format.sprintf "typedef struct {\n%s\n\n\t%s\n} %s;\n\n" meta internals klass_name
 
 let cast_to_c_func cfunc =
@@ -211,6 +210,23 @@ let cast_to_c_main mains =
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 1;\n}" switch
 
+
+let print_class_strings = function
+    | [] -> raise(Failure("Not even built in classes?"))
+    | obj::rest ->
+        let newline string = String.length string >= 75 in
+        let rec line_builder line rlines strings =
+            let recurse kls rest =
+                let comma = match rest with [] -> false | _ -> true in
+                let kls = "\"" ^ kls ^ "\"" in
+                let kls = if comma then kls ^ ", " else kls in
+                if newline line then line_builder kls (line::rlines) rest
+                else line_builder (line ^ kls) rlines rest in
+            match strings with
+                | [] -> List.rev (line::rlines)
+                | kls::klasses -> recurse kls klasses in
+        line_builder ("\"" ^ obj ^ "\", ") [] rest
+
 let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
     let comment string =
@@ -219,11 +235,12 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
         out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
 
     comment "Ancestry meta-info to link to later.";
-    let print_ancestors (klass, ancestors) =
-        let string = Format.sprintf "\"%s\"" in
-        let ancestors = String.concat ", " (List.map string ancestors) in
-        out (Format.sprintf "const char *a_%s[] = { %s };" klass ancestors) in
-    List.map print_ancestors ancestry;
+    let classes = List.map fst (StringMap.bindings ancestry) in
+    out "char *m_classes[] = {";
+    let classes = List.map (Format.sprintf "\t%s") (print_class_strings classes) in
+    out (String.concat "\n" classes);
+    out "};";
+
 
     comment "Structures for each of the objects.";
     let print_class klass data =
