@@ -155,7 +155,7 @@ let generate_refinesw (ret, args, dispatchuid, cases) =
         | Some(atype) -> Format.sprintf "%s *" atype in
     let rec generate_args num =  if num =0 then " " else if num = 1 then ", varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
     in
-    let decorate index typ = (GenCast.get_tname typ)^" * v_arg"^string_of_int(index)
+    let decorate index typ = (typ)^" * v_arg"^string_of_int(index)
     in
     let formals  =
         List.mapi decorate (List.map fst args)
@@ -168,10 +168,11 @@ let generate_refinesw (ret, args, dispatchuid, cases) =
     let generate_invoc fuid = fuid^"(receiver"^(generate_args (List.length args))^")"
     in
     let unroll_cases (kname, fuid) =
-        Format.sprintf "\t%s\n\t\treturn %s;\n" "if( IS_CLASS( receiver, kname ) )" (generate_invoc fuid) 
+        Format.sprintf "\tif( IS_CLASS( receiver, %s) )\n\t\treturn %s;\n" (kname) (generate_invoc fuid) 
     in 
     let rec generate_cases = function
-             [] -> Format.sprintf "%s" "\n"
+             [] ->  "\n"
+            |[hd] ->  unroll_cases hd^"\n"
             | hd::tl  ->  unroll_cases hd^"\n"^generate_cases tl
     in
     Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (generate_cases cases)
@@ -302,6 +303,8 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
 
    comment "Dispatch looks like this.";
    if ((List.length !dispatches) > 0) then
-        out (generate_refinesw (List.hd(!dispatches)));
+        List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
+
+
     comment "The main.";
     out (cast_to_c_main mains);
