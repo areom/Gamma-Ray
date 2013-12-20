@@ -118,7 +118,7 @@ and exprdetail_to_cstr castexpr_detail =
 
     let generate_refine args ret = function
         | Sast.Switch(cases, dispatch) ->
-          dispatches := (ret, args, dispatch)::(!dispatches);
+          dispatches := (ret, args, dispatch, cases)::(!dispatches);
           let vals = List.map expr_to_cstr args in
           (match args with
               | [] -> Format.sprintf "%s(this)" dispatch
