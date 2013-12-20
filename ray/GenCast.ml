@@ -92,7 +92,6 @@ let sast_to_cast_func (func : Sast.func_def) : cfunc =
     {   returns = opt_tname func.returns;
         name = name;
         formals = List.map get_vdef func.formals;
-        static = func.static;
         body = cstmtlist func.name func.body;
         builtin = func.builtin;
         inklass = func.inklass; }
@@ -153,7 +152,7 @@ let sast_to_cast klass_data (klasses : Sast.class_def list) : Cast.program =
     let struct_map = build_class_struct_map klass_data klasses in
     let ancestor_data = klass_data.ancestors in
 
-    (struct_map, cfuncs, main_switch, ancestor_data)
+    (struct_map, cfuncs, main_switch, StringMap.map List.rev ancestor_data)
 
 let built_in_names =
     let klass_names = List.map (fun (f : Ast.class_def) -> get_tname f.klass) BuiltIns.built_in_classes in
