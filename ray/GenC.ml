@@ -150,24 +150,29 @@ and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
 
 let rec generate_refinesw dispatch (rettype, args,dispatchuid, cases) =
-let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
 
-    let decorate index typ = (get_tname typ)^" * v_arg"^string_of_int(index)
+    let rec generate_args num =  if num = 1 then "varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
+    in
+    let decorate index typ = (GenCast.get_tname typ)^" * v_arg"^string_of_int(index)
     in
     let formals  =
         List.mapi decorate (List.map fst args)
     in
     let signature =
         match args with
-            | [] -> Format.sprintf "%s" "this"
-            | args -> Format.sprintf "%s, %s" "t_??? *this" (String.concat ", " formals)
+            | [] -> Format.sprintf "%s" "receiver"
+            | args -> Format.sprintf "%s, %s" "t_??? *receiver" (String.concat ", " formals)
     in
-
+    let generate_invoc fuid = "(receiver,"^(generate_args (List.length args))^")"
+    in
+    let unroll_cases (kname, fuid) =
+        Format.sprintf "%s\n return %s" "if(IS_CLASS(receiver,kname))" (generate_invoc fuid)
+    in 
     let generate_cases =
         match cases with
             | [] -> Format.sprintf "%s" "{\n}\n"
-            (*| _ ->  List.map (fun (kname,uid) ->         cases*)
-
+            | hd::tl  -> unroll_cases hd
+    in
     Format.sprintf "%s%s(%s)%s\n\n" rettype dispatchuid signature generate_cases
 (**
     Take a list of cast_stmts and return a body of c statements
