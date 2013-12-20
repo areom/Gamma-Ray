@@ -327,13 +327,9 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
 
-   comment "Dispatch looks like this.";
-   if ((List.length !dispatchon) > 0) then
-        List.iter (fun func -> out (generate_testsw func)) (!dispatchon);
-
-   if ((List.length !dispatches) > 0) then
-        List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
-
+    comment "Dispatch looks like this.";
+    List.iter (fun func -> out (generate_testsw func)) (!dispatchon);
+    List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
 
     comment "The main.";
     out (cast_to_c_main mains);
