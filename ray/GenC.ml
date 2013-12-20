@@ -206,7 +206,7 @@ let cast_to_c_func cfunc =
         else Format.sprintf "%s%s(%s)%s\n\n" ret_type cfunc.name signature body
 
 let cast_to_c_main mains =
-    let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0;}" in
+    let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 1;\n}" switch
