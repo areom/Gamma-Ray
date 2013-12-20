@@ -155,20 +155,20 @@ let generate_refinesw (ret, args, dispatchuid, cases) =
         | Some(atype) -> Format.sprintf "%s *" atype in
     let rec generate_args num =  if num =0 then " " else if num = 1 then ", varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
     in
-    let decorate index typ = (typ)^" * v_arg"^string_of_int(index)
+    let decorate index typ = (typ)^"* v_arg"^string_of_int(index)
     in
     let formals  =
         List.mapi decorate (List.map fst args)
     in
     let signature =
         match args with
-            | [] -> Format.sprintf "%s" "t_??? receiver"
-            | args -> Format.sprintf "%s, %s" "t_??? *receiver" (String.concat ", " formals)
+            | [] -> Format.sprintf "%s" "t_Object this"
+            | args -> Format.sprintf "%s, %s" "t_Object *this" (String.concat ", " formals)
     in
-    let generate_invoc fuid = fuid^"(receiver"^(generate_args (List.length args))^")"
+    let generate_invoc fuid kname = fuid^"(("^kname^" *) this"^(generate_args (List.length args))^")"
     in
     let unroll_cases (kname, fuid) =
-        Format.sprintf "\tif( IS_CLASS( receiver, %s) )\n\t\treturn %s;\n" (kname) (generate_invoc fuid) 
+        Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\treturn %s;\n" (kname) (generate_invoc fuid kname) 
     in 
     let rec generate_cases = function
              [] ->  "\n"
