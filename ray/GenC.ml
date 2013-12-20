@@ -182,7 +182,7 @@ and cast_to_c_if_chain indent pieces =
 
 
 let cast_to_c_class_struct klass_name ancestors =
-    let ancestor_var (vtype, vname) = Format.sprintf "%s %s;" vtype vname in
+    let ancestor_var (vtype, vname) = Format.sprintf "%s *%s;" vtype vname in
     let ancestor_vars vars = String.concat "\n\t\t" (List.map ancestor_var vars) in
     let internal_struct (ancestor, vars) = match vars with
         | [] -> Format.sprintf "struct { BYTE empty_vars; } %s;" ancestor
