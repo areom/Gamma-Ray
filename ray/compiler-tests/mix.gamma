@@ -2,20 +2,25 @@ class IOTest:
   public:
     Integer a
     Integer b
+    Integer c
     init():
       super()
       a := 1
       b := 2
+      c := 0
     Integer overview():
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
+      p.printInteger(c)
     Integer incre_ab():
       Scanner s := new Scanner()
       Integer delta
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
+    Integer arith():
+      c := -(a + b)
 
 class Main:
   public:
@@ -25,4 +30,6 @@ class Main:
     IOTest ab := new IOTest()
     ab.overview()
     ab.incre_ab()
+    ab.overview()
+    ab.arith()
     ab.overview()
