@@ -140,6 +140,16 @@ let generate_testsw (klasses, fuid) =
     Format.sprintf "int %s (t_Object *this)\n{\n%s\n}\n\n" fuid body
 
 
+(**
+     Takes a dispatch element of the global dispatches list
+     And generates the dispatch function - dispatcher which dispatches
+     calls to refinable methods based on the RTTI of the this.
+     @param ret - return type of the function
+            args - arguments to the dispatcher and the dispatched method
+            dispatch uid - unique function name for the dispatcher
+            cases - list of classes and their corresponding uid of the invokable refinable methods.
+**)
+
 let generate_refinesw (ret, args, dispatchuid, cases) =
     let rettype = match ret with
         | None -> "void "
