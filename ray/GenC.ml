@@ -147,6 +147,15 @@ and exprdetail_to_cstr castexpr_detail =
 
 and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
+let generate_testsw (klasses, fuid) =
+    let body = 
+        match klasses with 
+          [] -> "\treturn false;"
+        | _  -> 
+                let predlist = List.map (fun kname -> "( this, "^kname^")") klasses in
+                let ifpred  = String.concat " || " predlist in
+                Format.sprintf "\tif ( %s )\n\t\treturn 1;\n\telse\n\t\treturn 0;\n" ifpred in
+    Format.sprintf "int %s (t_Object *this)\n{\n%s\n}\n\n" fuid body
 
 
 let generate_refinesw (ret, args, dispatchuid, cases) =
@@ -324,6 +333,9 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
 
    comment "Dispatch looks like this.";
+   if ((List.length !dispatchon) > 0) then
+        List.iter (fun func -> out (generate_testsw func)) (!dispatchon);
+
    if ((List.length !dispatches) > 0) then
         List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
 
