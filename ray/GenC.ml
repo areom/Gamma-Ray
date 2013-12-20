@@ -247,8 +247,8 @@ let cast_to_c_main mains =
     let switch = String.concat "\n" (List.map for_main mains) in
     Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 1;\n}" switch
 
-let commalines input =
-    let newline string = String.length string >= 75 in
+let commalines input n =
+    let newline string = String.length string >= n in
     let rec line_builder line rlines = function
         | [] -> List.rev (line::rlines)
         | str::rest ->
@@ -257,18 +257,27 @@ let commalines input =
             if newline line then line_builder str (line::rlines) rest
             else line_builder (line ^ str) rlines rest in
     match input with
+        | [] -> []
+        | [one] -> [one]
         | str::rest -> line_builder (str ^ ", ") [] rest
-        | otherwise -> otherwise
 
 let print_class_strings = function
     | [] -> raise(Failure("Not even built in classes?"))
-    | classes -> commalines (List.map (fun k -> "\"" ^ k ^ "\"") classes)
+    | classes -> commalines (List.map (fun k -> "\"" ^ k ^ "\"") classes) 75
 
 let print_class_enums = function
     | [] -> raise(Failure("Not even built in classes?"))
     | first::rest ->
         let first = first ^ " = 0" in
-        commalines (List.map String.uppercase (first::rest))
+        commalines (List.map String.uppercase (first::rest)) 75
+
+let setup_meta klass ancestors =
+    let gen = List.length ancestors - 1 in
+    let to_ptr klass = Format.sprintf "m_classes[%s]" (String.uppercase (GenCast.get_tname klass)) in
+    let classes = List.map to_ptr ancestors in
+    let ancestor_ptrs = List.map (fun f -> "\t\t" ^ f) (commalines classes 70) in
+    Format.sprintf "ClassInfo M_%s = {\n\t.ancestors = {\n%s\n\t},\n\t.generation = %d,\n\t.class = m_classes[%s]\n};"
+        (String.uppercase klass) (String.concat "\n" ancestor_ptrs) gen (String.uppercase (GenCast.get_tname klass))
 
 let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
@@ -294,6 +303,12 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     comment "Enums used to reference into ancestry meta-info strings.";
     let class_enums = List.map (Format.sprintf "\t%s") (print_class_enums classes) in
     out (Format.sprintf "enum m_class_idx {\n%s\n};" (String.concat "\n" class_enums));
+
+    comment "Meta structures for each class.";
+    let print_meta (klass, ancestors) =
+        if StringSet.mem (GenCast.get_tname klass) GenCast.built_in_names then ()
+        else out ((setup_meta klass ancestors) ^ "\n") in
+    List.iter print_meta (StringMap.bindings ancestry);
 
     comment "Structures for each of the objects.";
     let print_class klass data =
