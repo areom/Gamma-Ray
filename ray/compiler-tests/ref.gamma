@@ -11,7 +11,7 @@ class IOTest:
       c := 0
 
     Integer overview():
-      Integer success := refine toExtra() to Integer
+      Integer success := refine toExtra(a,b) to Integer
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
@@ -29,8 +29,8 @@ class IOTest:
 
 class DIOTest extends IOTest:
   refinement:
-    Integer overview.toExtra():
-      Integer success :=  5
+    Integer overview.toExtra(Integer a, Integer b):
+      Integer success :=  a + b
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
