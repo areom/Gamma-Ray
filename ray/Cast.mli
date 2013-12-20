@@ -31,7 +31,6 @@ and cstmt =
 and cfunc = {
     returns : string option;
     name    : string;  (* Combine uid and name into this *)
-    static  : bool;
     formals : Ast.var_def list;
     body    : cstmt list;
     builtin : bool;

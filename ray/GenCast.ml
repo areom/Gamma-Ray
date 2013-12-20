@@ -92,7 +92,6 @@ let sast_to_cast_func (func : Sast.func_def) : cfunc =
     {   returns = opt_tname func.returns;
         name = name;
         formals = List.map get_vdef func.formals;
-        static = func.static;
         body = cstmtlist func.name func.body;
         builtin = func.builtin;
         inklass = func.inklass; }
