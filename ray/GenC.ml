@@ -54,24 +54,6 @@ let stringify_combtest op suffix = match op with
     | Ast.Xor  -> "CTEST_XOR_"^suffix
     | Ast.Not  -> raise(Failure "Unary operator")
 
-(*
-let stringify_numtest op lop rop suffix = match op with
-    | Ast.Eq   -> lop^" == "^rop
-    | Ast.Neq  -> lop^" != "^rop
-    | Ast.Less -> lop^" < "^rop
-    | Ast.Grtr -> lop^" > "^rop
-    | Ast.Leq  -> lop^" <= "^rop
-    | Ast.Geq  -> lop^" >= "^rop
-
-let stringify_combtest op lop rop = match op with
-    | Ast.And  -> lop^" && "^rop
-    | Ast.Or   -> lop^" || "^rop
-    | Ast.Nand -> "!( "^lop^" && "^rop^" )"
-    | Ast.Nor  -> "!( "^lop^" || "^rop^" )"
-    | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
-    | Ast.Not  -> raise(Failure "Unary operator")
-*)
-
 let stringify_binop op lop rop types =
     let (is_int, is_flt, is_bool) = (matches "Integer", matches "Float", matches "Boolean") in
     let is_type = (is_int (fst types), is_flt (fst types), is_bool (fst types), is_int (snd types), is_flt (snd types), is_bool (snd types)) in
