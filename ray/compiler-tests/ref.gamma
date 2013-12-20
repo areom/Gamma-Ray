@@ -100,3 +100,5 @@ class Main:
     IOTest ab := new IOTest()
     ab.overview()
     ab.overview()
+    DIOTest d1 := new DIOTest()
+    refinable(d1)
