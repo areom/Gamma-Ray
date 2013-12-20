@@ -69,7 +69,7 @@ let stringify_binop op lop rop types =
         | ("Integer", "Float")   -> "INT_FLOAT"
         | ("Float", "Integer")   -> "FLOAT_INT"
         | ("Boolean", "Boolean") -> "BOOL_BOOL"
-        | (_, _)                 -> raise(Failure "Binary operator") in
+        | (l, r)                 -> raise(Failure(Format.sprintf "Binary operator applied to %s, %s" l r)) in
     let suffix = prefix^"( "^lop^" , "^rop^" )" in
     match op with
     | Ast.Arithmetic(arith)  -> stringify_arith arith suffix
