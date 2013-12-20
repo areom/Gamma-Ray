@@ -6,15 +6,25 @@ let c_indent = "  "
 let dispatches = ref []
 let dispatchon = ref []
 
+let matches type1 type2 = ((GenCast.get_tname type1) = type2)
+
 let lit_to_str lit = match lit with
     | Ast.Int(i) -> "LIT_INT("^(string_of_int i)^")"
     | Ast.Float(f) -> "LIT_FLOAT("^(string_of_float f)^")"
     | Ast.String(s) -> "LIT_STRING(\"" ^ s ^ "\")"  (* escapes were escaped during lexing *)
     | Ast.Bool(b) ->if b then "LIT_BOOL(1)" else "LIT_BOOL(0)"
 
-let stringify_unop op rop rtype = match op with
-    | Ast.Arithmetic(Ast.Neg) -> "NEG_"^rtype^rop
-    | Ast.CombTest(Ast.Not)   -> "NEG_"^rtype^rop
+let stringify_unop op rop rtype =
+    let (is_int, is_flt, is_bool) = (matches "Integer", matches "Float", matches "Boolean") in
+    let is_type = (is_int rtype, is_flt rtype, is_bool rtype) in
+    let type_capital = match is_type with
+        | (true, _, _) -> "INTEGER"
+        | (_, true, _) -> "FLOAT"
+        | (_, _, true) -> "BOOLEAN"
+        | (_, _, _)    -> raise(Failure "Imcompatible type with unop") in
+    match op with
+    | Ast.Arithmetic(Ast.Neg) -> "NEG_"^type_capital^"( "^rop^" )"
+    | Ast.CombTest(Ast.Not)   -> "NOT_"^type_capital^"( "^rop^" )"
     | _   -> raise (Failure "Unknown operator")
 
 let stringify_arith op suffix =
@@ -63,7 +73,6 @@ let stringify_combtest op lop rop = match op with
 *)
 
 let stringify_binop op lop rop types =
-    let matches type1 type2 = ((GenCast.get_tname type1) = type2) in
     let (is_int, is_flt, is_bool) = (matches "Integer", matches "Float", matches "Boolean") in
     let is_type = (is_int (fst types), is_flt (fst types), is_bool (fst types), is_int (snd types), is_flt (snd types), is_bool (snd types)) in
     let prefix = match is_type with
