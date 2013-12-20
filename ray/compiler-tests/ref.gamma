@@ -3,57 +3,66 @@ class IOTest:
     Integer a
     Integer b
     Integer c
+
     init():
       super()
       a := 1
       b := 2
       c := 0
+
     Integer overview():
       Integer success := refine toExtra() to Integer
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
       p.printInteger(c)
+
     Integer incre_ab():
       Scanner s := new Scanner()
       Integer delta
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
+
     Integer arith():
       c := -(a + b)
 
 class DIOTest extends IOTest:
-  public:
-    Integer a1
-    Integer b1
-    Integer c1
-    init():
-      super()
-      a1 := 1
-      b1 := 2
-      c1 := 0
-    Integer overviewtoExtra():
+  refinement:
+    Integer overview.toExtra():
       Integer success :=  5
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
       p.printInteger(c)
       return 5
+
+  public:
+    Integer a1
+    Integer b1
+    Integer c1
+
+    init():
+      super()
+      a1 := 1
+      b1 := 2
+      c1 := 0
+
     Integer incre_acb():
       Scanner s := new Scanner()
       Integer delta
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
+
     Integer arithc():
       c := -(a + b)
-
 
 class Main:
   public:
     init():
       super()
+
   main():
     IOTest ab := new IOTest()
     ab.overview()
