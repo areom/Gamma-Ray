@@ -54,24 +54,6 @@ let stringify_combtest op suffix = match op with
     | Ast.Xor  -> "CTEST_XOR_"^suffix
     | Ast.Not  -> raise(Failure "Unary operator")
 
-(*
-let stringify_numtest op lop rop suffix = match op with
-    | Ast.Eq   -> lop^" == "^rop
-    | Ast.Neq  -> lop^" != "^rop
-    | Ast.Less -> lop^" < "^rop
-    | Ast.Grtr -> lop^" > "^rop
-    | Ast.Leq  -> lop^" <= "^rop
-    | Ast.Geq  -> lop^" >= "^rop
-
-let stringify_combtest op lop rop = match op with
-    | Ast.And  -> lop^" && "^rop
-    | Ast.Or   -> lop^" || "^rop
-    | Ast.Nand -> "!( "^lop^" && "^rop^" )"
-    | Ast.Nor  -> "!( "^lop^" || "^rop^" )"
-    | Ast.Xor  -> "!( "^lop^" == "^rop^" )"
-    | Ast.Not  -> raise(Failure "Unary operator")
-*)
-
 let stringify_binop op lop rop types =
     let (is_int, is_flt, is_bool) = (matches "Integer", matches "Float", matches "Boolean") in
     let is_type = (is_int (fst types), is_flt (fst types), is_bool (fst types), is_int (snd types), is_flt (snd types), is_bool (snd types)) in
@@ -294,6 +276,7 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let noblanks = function
         | "" -> ()
         | string -> Printf.fprintf channel "%s\n" string in
+    let incl file = out (Format.sprintf "#include \"%s.h\"\n" file) in
 
     let comment string =
         let comments = Str.split (Str.regexp "\n") string in
@@ -305,6 +288,9 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
        if f.builtin = g.builtin then strcmp else if f.builtin then -1 else 1 in
     let funcs = List.sort func_compare funcs in
 
+    comment "Gamma preamble -- macros and such needed by various things";
+    incl "gamma-preamble";
+
     comment "Ancestry meta-info to link to later.";
     let classes = List.map (fun (kls, _) -> GenCast.get_tname kls) (StringMap.bindings ancestry) in
     let class_strs = List.map (Format.sprintf "\t%s") (print_class_strings classes) in
@@ -314,11 +300,17 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let class_enums = List.map (Format.sprintf "\t%s") (print_class_enums classes) in
     out (Format.sprintf "enum m_class_idx {\n%s\n};" (String.concat "\n" class_enums));
 
+    comment "Header file containing meta information for built in classes.";
+    incl "gamma-builtin-meta";
+
     comment "Meta structures for each class.";
     let print_meta (klass, ancestors) =
         if StringSet.mem (GenCast.get_tname klass) GenCast.built_in_names then ()
         else out ((setup_meta klass ancestors) ^ "\n") in
     List.iter print_meta (StringMap.bindings ancestry);
+
+    comment "Header file containing structure information for built in classes.";
+    incl "gamma-builtin-struct";
 
     comment "Structures for each of the objects.";
     let print_class klass data =
@@ -326,19 +318,18 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
         else out (cast_to_c_class_struct klass data) in
     StringMap.iter print_class cdefs;
 
+    comment "Header file containing information regarding built in functions.";
+    incl "gamma-builtin-functions";
+
     comment "All of the function prototypes we need to do magic.";
     List.iter (fun func -> noblanks (cast_to_c_proto func)) funcs;
 
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
 
-   comment "Dispatch looks like this.";
-   if ((List.length !dispatchon) > 0) then
-        List.iter (fun func -> out (generate_testsw func)) (!dispatchon);
-
-   if ((List.length !dispatches) > 0) then
-        List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
-
+    comment "Dispatch looks like this.";
+    List.iter (fun func -> out (generate_testsw func)) (!dispatchon);
+    List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
 
     comment "The main.";
     out (cast_to_c_main mains);
