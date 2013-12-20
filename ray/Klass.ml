@@ -436,3 +436,17 @@ let get_class_names data =
         | items -> let next = List.flatten (List.map kids items) in
             append (items@found) next in
     append [] ["Object"]
+
+
+(**
+    Get leaf classes
+    @param data A class_data record
+    @return A list of leaf classes
+  *)
+let get_leaves data =
+    let is_leaf f = match map_lookup_list f data.children with
+        | [] -> true
+        | _ -> false in
+    let leaves = StringSet.filter is_leaf data.known in
+    StringSet.elements leaves
+

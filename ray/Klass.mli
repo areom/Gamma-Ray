@@ -28,3 +28,5 @@ val best_method : GlobalData.class_data -> string -> string -> string list -> As
 val best_inherited_method : GlobalData.class_data -> string -> string -> string list -> bool -> Ast.func_def option
 val refine_on : GlobalData.class_data -> string -> string -> string -> string list -> string option -> Ast.func_def list
 val get_class_names : GlobalData.class_data -> string list
+val get_leaves : GlobalData.class_data -> string list
+
