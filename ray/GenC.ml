@@ -63,13 +63,16 @@ let stringify_combtest op lop rop = match op with
 *)
 
 let stringify_binop op lop rop types =
-    let prefix = match types with
-        | ("Integer", "Integer") -> "INT_INT"
-        | ("Float", "Float")     -> "FLOAT_FLOAT"
-        | ("Integer", "Float")   -> "INT_FLOAT"
-        | ("Float", "Integer")   -> "FLOAT_INT"
-        | ("Boolean", "Boolean") -> "BOOL_BOOL"
-        | (l, r)                 -> raise(Failure(Format.sprintf "Binary operator applied to %s, %s" l r)) in
+    let matches type1 type2 = ((GenCast.get_tname type1) = type2) in
+    let (is_int, is_flt, is_bool) = (matches "Integer", matches "Float", matches "Boolean") in
+    let is_type = (is_int (fst types), is_flt (fst types), is_bool (fst types), is_int (snd types), is_flt (snd types), is_bool (snd types)) in
+    let prefix = match is_type with
+        | (true, _, _, true, _, _) -> "INT_INT"
+        | (_, true, _, _, true, _) -> "FLOAT_FLOAT"
+        | (true, _, _, _, true, _) -> "INT_FLOAT"
+        | (_, true, _, true, _, _) -> "FLOAT_INT"
+        | (_, _, true, _, _, true) -> "BOOL_BOOL"
+        | (_, _, _, _, _, _)       -> raise(Failure(Format.sprintf "Binary operator applied to %s, %s" (fst types) (snd types))) in
     let suffix = prefix^"( "^lop^" , "^rop^" )" in
     match op with
     | Ast.Arithmetic(arith)  -> stringify_arith arith suffix
