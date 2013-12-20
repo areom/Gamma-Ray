@@ -151,8 +151,8 @@ let rec cast_to_c_stmt indent cast =
         | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
         | Decl(vdecl, None, env) -> Format.sprintf "%s;" (vdecl_to_cstr vdecl)
         | If(iflist, env) -> cast_to_c_if_chain indent iflist
-        | While(pred, [], env) -> Format.sprintf "while ( %s ) { }" (expr_to_cstr pred)
-        | While(pred, body, env) -> Format.sprintf "while ( %s ) {\n%s\n%s}" (expr_to_cstr pred) (stmts body) indents
+        | While(pred, [], env) -> Format.sprintf "while ( BOOL_OF( %s ) ) { }" (expr_to_cstr pred)
+        | While(pred, body, env) -> Format.sprintf "while ( BOOL_OF( %s ) ) {\n%s\n%s}" (expr_to_cstr pred) (stmts body) indents
         | Expr(expr, env) -> Format.sprintf "( %s );" (expr_to_cstr expr)
         | Return(Some(expr), env) -> Format.sprintf "return ( %s );" (expr_to_cstr expr)
         | Return(_, env) -> "return;" in
@@ -163,7 +163,7 @@ and cast_to_c_stmtlist indent stmts =
 
 and cast_to_c_if_pred = function
     | None -> "else"
-    | Some(ifpred) -> Format.sprintf "if ( %s )" (expr_to_cstr ifpred)
+    | Some(ifpred) -> Format.sprintf "if ( BOOL_OF( %s ) )" (expr_to_cstr ifpred)
 
 and cast_to_c_if_chain indent pieces =
     let indents = String.make indent '\t' in
