@@ -24,6 +24,9 @@ class IOTest:
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
+      if (a = b) {
+          a := 0
+      }
 
     Integer arith():
       c := -(a + b)
@@ -100,5 +103,3 @@ class Main:
     IOTest ab := new IOTest()
     ab.overview()
     ab.overview()
-    DIOTest d1 := new DIOTest()
-    refinable(d1)
