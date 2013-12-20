@@ -149,8 +149,10 @@ and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
 
 
-let rec generate_refinesw dispatch (rettype, args,dispatchuid, cases) =
-
+let generate_refinesw (ret, args, dispatchuid, cases) =
+    let rettype = match ret with
+        | None -> "void "
+        | Some(atype) -> Format.sprintf "%s *" atype in
     let rec generate_args num =  if num = 1 then "varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
     in
     let decorate index typ = (GenCast.get_tname typ)^" * v_arg"^string_of_int(index)
@@ -274,6 +276,10 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
         if StringSet.mem klass GenCast.built_in_names then ()
         else out (cast_to_c_class_struct klass data) in
     StringMap.iter print_class cdefs;
+
+   comment "Dispatch looks like this.";
+   if ((List.length !dispatches) > 0) then
+        out (generate_refinesw (List.hd(!dispatches)));
 
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
