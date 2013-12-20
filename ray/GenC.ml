@@ -265,6 +265,22 @@ let print_class_strings = function
                 | kls::klasses -> recurse kls klasses in
         line_builder ("\"" ^ obj ^ "\", ") [] rest
 
+let print_class_enums = function
+    | [] -> raise(Failure("Not even built in classes?"))
+    | obj::rest ->
+        let newline string = String.length string >= 75 in
+        let rec line_builder line rlines strings =
+            let recurse kls rest =
+                let comma = match rest with [] -> false | _ -> true in
+                let kls = String.uppercase kls in
+                let kls = if comma then kls ^ ", " else kls in
+                if newline line then line_builder kls (line::rlines) rest
+                else line_builder (line ^ kls) rlines rest in
+            match strings with
+                | [] -> List.rev(line::rlines)
+                | kls::klasses -> recurse kls klasses in
+        line_builder (String.uppercase obj ^ " = 0, ") [] rest
+
 let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
     let noblanks = function
@@ -282,12 +298,13 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let funcs = List.sort func_compare funcs in
 
     comment "Ancestry meta-info to link to later.";
-    let classes = List.map fst (StringMap.bindings ancestry) in
-    out "char *m_classes[] = {";
-    let classes = List.map (Format.sprintf "\t%s") (print_class_strings classes) in
-    out (String.concat "\n" classes);
-    out "};";
+    let classes = List.map (fun (kls, _) -> GenCast.get_tname kls) (StringMap.bindings ancestry) in
+    let class_strs = List.map (Format.sprintf "\t%s") (print_class_strings classes) in
+    out (Format.sprintf "char *m_classes[] = {\n%s\n};" (String.concat "\n" class_strs));
 
+    comment "Enums used to reference into ancestry meta-info strings.";
+    let class_enums = List.map (Format.sprintf "\t%s") (print_class_enums classes) in
+    out (Format.sprintf "enum m_class_idx {\n%s\n};" (String.concat "\n" class_enums));
 
     comment "Structures for each of the objects.";
     let print_class klass data =
