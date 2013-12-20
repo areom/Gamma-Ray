@@ -147,6 +147,27 @@ and exprdetail_to_cstr castexpr_detail =
 
 and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
+
+
+let rec generate_refinesw dispatch (rettype, args,dispatchuid, cases) = 
+
+    let decorate index typ = "Struct "^typ^" v_arg"^string_of_int(index)
+    in
+    let generate_cases = 
+        match cases with
+            | [] -> Format.sprintf "%s" "{\n}\n" 
+            | hd::tl -> 
+
+
+    let formals  = 
+        List.mapi decorate (List.map fst args)
+    in
+    let signature = 
+        match args with
+            | [] -> Format.sprintf "%s" "this"
+            | args -> Format.sprintf "%s, %s" "Struct meta *this" (String.concat ", " formals) 
+    in
+    Format.sprintf "%s%s(%s)%s\n\n" rettype dispatchuid signature generate_cases
 (**
     Take a list of cast_stmts and return a body of c statements
     @param stmtlist A list of statements
