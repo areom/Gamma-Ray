@@ -149,24 +149,25 @@ and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
 
 
-let rec generate_refinesw dispatch (rettype, args,dispatchuid, cases) = 
+let rec generate_refinesw dispatch (rettype, args,dispatchuid, cases) =
+let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
 
-    let decorate index typ = "Struct "^typ^" v_arg"^string_of_int(index)
+    let decorate index typ = (get_tname typ)^" * v_arg"^string_of_int(index)
     in
-    let generate_cases = 
-        match cases with
-            | [] -> Format.sprintf "%s" "{\n}\n" 
-            | hd::tl -> 
-
-
-    let formals  = 
+    let formals  =
         List.mapi decorate (List.map fst args)
     in
-    let signature = 
+    let signature =
         match args with
             | [] -> Format.sprintf "%s" "this"
-            | args -> Format.sprintf "%s, %s" "Struct meta *this" (String.concat ", " formals) 
+            | args -> Format.sprintf "%s, %s" "t_??? *this" (String.concat ", " formals)
     in
+
+    let generate_cases =
+        match cases with
+            | [] -> Format.sprintf "%s" "{\n}\n"
+            (*| _ ->  List.map (fun (kname,uid) ->         cases*)
+
     Format.sprintf "%s%s(%s)%s\n\n" rettype dispatchuid signature generate_cases
 (**
     Take a list of cast_stmts and return a body of c statements
