@@ -18,7 +18,6 @@ let empty_data : class_data = {
     mains = StringMap.empty;
     ancestors = StringMap.empty;
     distance = StringMap.empty;
-    dispatcher = StringMap.empty;
     refinable = StringMap.empty;
 }
 
@@ -470,38 +469,6 @@ let build_distance_map data =
     @param table The refinement dispatch table
     @return The updated table
   *)
-let update_dispatch parent refines table =
-    let folder amap f = StringMap.add f (UID.uid_counter ()) amap in
-    let toname f = match f.host with
-        | Some(host) -> host ^ "." ^ f.name
-        | _ -> raise(Invalid_argument("Compiler error; we have refinement without host for " ^ f.name ^ " in " ^ f.inklass ^ ".")) in
-
-    let map = if StringMap.mem parent table then StringMap.find parent table else StringMap.empty in
-    let unknown f = not (StringMap.mem f map) in
-    let names = List.filter unknown (List.map toname refines) in
-    let map = List.fold_left folder map names in
-    StringMap.add parent map table
-
-(**
-    Add a class (class name - string) -> full method name (host.name - string) -> uid (string)
-    table so that dispatching can be done later on.
-    @param data A class_data record.
-    @return The class_data record with the dispatching identifier added.
-  *)
-let build_dispatch_map data =
-    let updater klass_name aklass table = match klass_name with
-        | "Object" -> table (* Object has no refinements *)
-        | _ -> let parent = klass_to_parent aklass in update_dispatch parent aklass.sections.refines table in
-    let dispatcher = StringMap.fold updater data.classes StringMap.empty in
-    { data with dispatcher = dispatcher }
-
-(**
-    Update the refinement dispatch uid table with a given set of refinements.
-    @param parent The class the refinements will come from
-    @param refines A list of refinements
-    @param table The refinement dispatch table
-    @return The updated table
-  *)
 let update_refinable parent refines table =
     let toname f = match f.host with
         | Some(host) -> host
@@ -559,7 +526,6 @@ let append_refines data = match build_class_refinement_map data with
 let test_signatures data = match type_check_signatures data with
     | Left(data) -> Left(data)
     | Right(bad) -> Right(PoorlyTypedSigs(bad))
-let append_dispatcher data = Left(build_dispatch_map data)
 let append_refinable data = Left(build_refinable_map data)
 let append_mains data = match build_main_map data with
     | Left(data) -> Left(data)
@@ -569,7 +535,7 @@ let test_list =
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
       append_distance ; append_variables ; test_fields ; test_types ;
       append_methods ; test_init ; test_inherited_methods ; append_refines ;
-      test_signatures ; append_dispatcher ; append_refinable ; append_mains ]
+      test_signatures ; append_refinable ; append_mains ]
 
 let production_list =
     [ append_children ; append_parent ; test_tree ; append_ancestor ;
@@ -666,10 +632,6 @@ let append_leaf_distance aklass data =
     let distance = build_distance aklass.klass ancestors in
     let updated = StringMap.add aklass.klass distance data.distance in
     Left({ data with distance = updated })
-let append_leaf_dispatch aklass data =
-    let parent = klass_to_parent aklass in
-    let updated = update_dispatch parent aklass.sections.refines data.dispatcher in
-    Left({ data with dispatcher = updated })
 let append_leaf_refinable aklass data =
     let parent = klass_to_parent aklass in
     let updated = update_refinable parent aklass.sections.refines data.refinable in
@@ -684,7 +646,7 @@ let test_leaf =
     [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
       append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
       append_leaf_type_vars ; append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ;
-      append_leaf_refines ; append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ]
+      append_leaf_refines ; append_leaf_refinable ; append_leaf_mains ]
 
 let leaf_with_klass actions data klass = seq (Left(data)) (List.map (fun f -> f klass) actions)
 let append_leaf = leaf_with_klass test_leaf (* production_leaf *)
@@ -696,7 +658,7 @@ let append_leaf_test data aklass =
         [ append_leaf_known ; append_leaf_classes ; append_leaf_children ; append_leaf_parent ;
           append_leaf_ancestor ; append_leaf_distance ; append_leaf_variables ; append_leaf_test_fields ;
           append_leaf_type_vars ; append_leaf_methods ; append_leaf_instantiable ; append_leaf_test_inherited ;
-          append_leaf_refines ; append_leaf_dispatch ; append_leaf_refinable ; append_leaf_mains ] in
+          append_leaf_refines ; append_leaf_refinable ; append_leaf_mains ] in
     seq (Left(data)) (List.map with_klass actions)
 
 (**
@@ -770,8 +732,6 @@ let print_class_data data =
     table_printer data.refines "Refines" func_list;
     print_newline ();
     map_printer data.mains "Mains" full_signature_string;
-    print_newline ();
-    table_printer data.dispatcher "Dispatch" id;
     print_newline ();
     table_printer data.refinable "Refinable" func_of_list
 

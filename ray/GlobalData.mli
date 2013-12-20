@@ -15,7 +15,6 @@ type class_data = {
     mains : func_def lookup_map; (** class name -> main map *)
     ancestors : (string list) lookup_map; (** class name -> ancestor list (given to Object) *)
     distance : int lookup_table; (** subtype -> supertype -> # hops map *)
-    dispatcher : string lookup_table; (** class -> host.refinement -> uid map *)
     refinable : (func_def list) lookup_table (** class -> host -> refinements (in subclasses) *)
 }
 
