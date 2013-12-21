@@ -250,9 +250,10 @@ let get_distance data klass1 klass2 =
     @param atype The name of a class (string)
     @return True if the atype is a known type, false otherwise.
   *)
-let is_type data atype = match map_lookup atype data.classes with
-    | None -> false
-    | _ -> true
+let is_type data atype =
+    let lookup = try String.sub atype 0 (String.index atype '[') with
+        | Not_found -> atype in
+    StringSet.mem lookup data.known
 
 (**
     Check if a class is a subclass of another given a class_data record
