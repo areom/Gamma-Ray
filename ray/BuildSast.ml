@@ -37,6 +37,9 @@ let current_class = "_CurrentClassMarker_"
 (** Marker for the null type -- ADT next time *)
 let null_class = "_Null_"
 
+(** Empty environment *)
+let empty_environment = StringMap.empty
+
 (** Return whether an expression is a valid lvalue or not *)
 let is_lvalue (expr : Ast.expr) = match expr with
     | Ast.Id(_) -> true
@@ -289,6 +292,19 @@ and does_return_clauses pieces =
     List.mem None preds && List.for_all does_return_stmts bodies
 
 (**
+    Change inits so that they return this
+  *)
+let init_returns (func : Sast.func_def) =
+    let body = if func.builtin then [] else func.body @ [Sast.Return(None, empty_environment)] in
+    let this_val = (current_class, Sast.This) in
+    let return_this (stmt : Sast.sstmt) = match stmt with
+        | Return(None, env) -> Return(Some(this_val), env)
+        | _ -> stmt in
+    { func with
+        returns = Some(func.inklass);
+        body = List.map return_this body }
+
+(**
     Given a class_data record, an Ast.func_def, an an initial environment,
     convert the func_def to a Sast.func_def. Can raise failure when there
     are issues with the statements / expressions in the function.
@@ -297,7 +313,7 @@ and does_return_clauses pieces =
     @param initial_env The initial environment
     @return A Sast.func_def value
   *)
-let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
+let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env isinit =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
     let sast_func : Sast.func_def =
         {   returns = func.returns;
@@ -313,7 +329,7 @@ let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
     let isvoid = match func.returns with None -> true | _ -> false in
     if not func.builtin && not isvoid && not (does_return_stmts func.body)
         then raise(Failure(Format.sprintf "The function %s in %s does not return on all execution paths" (full_signature_string func) func.inklass))
-        else sast_func
+        else if isinit then init_returns sast_func else sast_func
 
 (**
     Given a class_data record, an Ast.member_def, and an initial environment,
@@ -325,11 +341,11 @@ let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
     @return A Sast.member_def
   *)
 let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
-    let change func = ast_func_to_sast_func klass_data func initial_env in
+    let change isinit func = ast_func_to_sast_func klass_data func initial_env isinit in
     let transformed : Sast.member_def = match mem with
         | Ast.VarMem(v) -> Sast.VarMem(v)
-        | Ast.MethodMem(m) -> Sast.MethodMem(change m)
-        | Ast.InitMem(m) -> Sast.InitMem(change m) in
+        | Ast.MethodMem(m) -> Sast.MethodMem(change false m)
+        | Ast.InitMem(m) -> Sast.InitMem(change true m) in
     transformed
 
 let init_calls_super (aklass : Sast.class_def) =
@@ -365,10 +381,10 @@ let ast_to_sast_klass klass_data (ast_klass : Ast.class_def) =
             | _ -> let parent = Klass.klass_to_parent klass in
                    let pclass = StringMap.find parent klass_data.classes in
                    update_env env Protects pclass in
-    let env = update_env StringMap.empty Privates ast_klass in
+    let env = update_env empty_environment Privates ast_klass in
 
     let mems = List.map (fun m -> ast_mem_to_sast_mem klass_data m env) in
-    let funs = List.map (fun f -> ast_func_to_sast_func klass_data f env) in
+    let funs = List.map (fun f -> ast_func_to_sast_func klass_data f env false) in
 
     let sections : Sast.class_sections_def =
         {   publics = mems s.publics;
