@@ -1,18 +1,27 @@
 open Ast
+open Str
 
 (** Built in classes *)
 
-let built_in : Ast.func_def =
-    { returns = None;
-      host = None;
-      name = "";
-      static = false;
-      formals = [];
-      body = [];
-      section = Publics;
-      inklass = "";
-      uid = "";
-      builtin = true }
+let built_in cname : Ast.func_def = match Str.split (regexp "_") cname with
+    | [] -> raise(Failure "Bad cname -- empty.")
+    | [klass] -> raise(Failure("Bad cname -- just class: " ^ klass))
+    | klass::func ->
+        let methname = match func with
+            | [] -> raise(Failure("Impossible!"))
+            | func::rest -> func ^ (String.concat "" (List.map String.capitalize rest)) in
+        { returns = None;
+          host = None;
+          name = methname;
+          static = false;
+          formals = [];
+          body = [];
+          section = Publics;
+          inklass = String.capitalize klass;
+          uid = cname;
+          builtin = true }
+let breturns cname atype = { (built_in cname) with returns = Some(atype) }
+let btakes cname formals = { (built_in cname) with formals = formals }
 
 let sections : Ast.class_sections_def =
     { publics = [];
@@ -29,18 +38,9 @@ let members f v = (functions f) @ (variables v)
 
 let class_object : Ast.class_def =
     let name = "Object" in
-    let built_in = { built_in with inklass = name } in
 
-    let get_id : Ast.func_def =
-        { built_in with
-          returns = Some("String");
-          name = "getId";
-          uid = "object_get_id" } in
-    let init_obj : Ast.func_def =
-        { built_in with
-          name = "init";
-          section = Protects;
-          uid = "object_init" } in
+    let get_id : Ast.func_def = breturns "object_get_id" "String" in
+    let init_obj : Ast.func_def = { (built_in "object_init") with section = Protects } in
     let system = ("System", "system") in
 
     let sections : Ast.class_sections_def =
@@ -52,27 +52,11 @@ let class_object : Ast.class_def =
 
 let class_scanner : Ast.class_def =
     let name = "Scanner" in
-    let built_in = { built_in with inklass = name } in
 
-    let scan_line : Ast.func_def =
-        { built_in with
-          name = "scanString";
-          returns = Some("String");
-          uid = "scanner_scan_string" } in
-    let scan_int : Ast.func_def =
-        { built_in with
-          name = "scanInteger";
-          returns = Some("Integer");
-          uid = "scanner_scan_integer" } in
-    let scan_float : Ast.func_def =
-        { built_in with
-          name = "scanFloat";
-          returns = Some("Float");
-          uid = "scanner_scan_float" } in
-    let scan_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          uid = "scanner_init" } in
+    let scan_line : Ast.func_def = breturns "scanner_scan_string" "String" in
+    let scan_int : Ast.func_def = breturns "scanner_scan_integer" "Integer" in
+    let scan_float : Ast.func_def = breturns "scanner_scan_float" "Float" in
+    let scan_init : Ast.func_def = built_in "scanner_init" in
 
     let sections : Ast.class_sections_def =
         { sections with
@@ -82,28 +66,11 @@ let class_scanner : Ast.class_def =
 
 let class_printer : Ast.class_def =
     let name = "Printer" in
-    let built_in = { built_in with inklass = name } in
 
-    let print_string : Ast.func_def =
-        { built_in with
-          name = "printString";
-          formals = [("String", "arg")];
-          uid = "printer_print_string" } in
-    let print_int : Ast.func_def =
-        { built_in with
-          name = "printInteger";
-          formals = [("Integer", "arg")];
-          uid = "printer_print_int" } in
-    let print_float : Ast.func_def =
-        { built_in with
-          name = "printFloat";
-          formals = [("Float", "arg")];
-          uid = "printer_print_float" } in
-    let print_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          formals = [("Boolean", "stdout")];
-          uid = "printer_init" } in
+    let print_string : Ast.func_def = btakes "printer_print_string" [("String", "arg")] in
+    let print_int : Ast.func_def = btakes "printer_print_integer" [("Integer", "arg")] in
+    let print_float : Ast.func_def = btakes "printer_print_float" [("Float", "arg")] in
+    let print_init : Ast.func_def = btakes "printer_init" [("Boolean", "stdout")] in
 
     let sections : Ast.class_sections_def =
         { sections with
@@ -113,12 +80,8 @@ let class_printer : Ast.class_def =
 
 let class_string : Ast.class_def =
     let name = "String" in
-    let built_in = { built_in with inklass = name } in
 
-    let string_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          uid = "string_init" } in
+    let string_init : Ast.func_def = built_in "string_init" in
 
     let sections : Ast.class_sections_def =
         { sections with
@@ -129,12 +92,8 @@ let class_string : Ast.class_def =
 
 let class_boolean : Ast.class_def =
     let name = "Boolean" in
-    let built_in = { built_in with inklass = name } in
 
-    let boolean_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          uid = "boolean_init" } in
+    let boolean_init : Ast.func_def = built_in "boolean_init" in
 
     let sections : Ast.class_sections_def =
         { sections with
@@ -144,12 +103,8 @@ let class_boolean : Ast.class_def =
 
 let class_integer : Ast.class_def =
     let name = "Integer" in
-    let built_in = { built_in with inklass = name } in
 
-    let integer_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          uid = "integer_init" } in
+    let integer_init : Ast.func_def = built_in "integer_init" in
 
     let sections : Ast.class_sections_def =
         { sections with
@@ -159,12 +114,8 @@ let class_integer : Ast.class_def =
 
 let class_float : Ast.class_def =
     let name = "Float" in
-    let built_in = { built_in with inklass = name } in
 
-    let float_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          uid = "float_init" } in
+    let float_init : Ast.func_def = built_in "float_init" in
 
     let sections : Ast.class_sections_def =
         { sections with
@@ -174,17 +125,10 @@ let class_float : Ast.class_def =
 
 let class_system : Ast.class_def =
     let name = "System" in
-    let built_in = { built_in with inklass = name } in
 
-    let system_init : Ast.func_def =
-        { built_in with
-          name = "init";
-          uid = "system_init" } in
-    let system_exit : Ast.func_def =
-        { built_in with
-          name = "exit";
-          formals = [("Integer", "code")];
-          uid = "system_exit"; } in
+    let system_init : Ast.func_def = built_in "system_init" in
+    let system_exit : Ast.func_def = btakes "system_exit" [("Integer", "code")] in
+
     let system_out = ("Printer", "out") in
     let system_err = ("Printer", "err") in
     let system_in = ("Scanner", "in") in
