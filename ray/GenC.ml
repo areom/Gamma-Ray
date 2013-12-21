@@ -271,11 +271,11 @@ let cast_to_c_proto cfunc =
     if cfunc.builtin then Format.sprintf "" else signature
 
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
-    Format.sprintf "t_Boolean %s(%s *);" uid klass
+    Format.sprintf "t_Boolean *%s(%s *);" uid klass
 
 let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
     let types = List.map (fun t -> t ^ "*") (klass::args) in
-    let proto rtype = Format.sprintf "%s %s(%s);" rtype uid (String.concat ", " types) in
+    let proto rtype = Format.sprintf "%s*%s(%s);" rtype uid (String.concat ", " types) in
     match ret with
         | None -> proto "void"
         | Some(t) -> proto t
