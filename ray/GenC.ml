@@ -159,7 +159,7 @@ and collect_dispatch_on = function
     | Sast.Switch(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_func func = collect_dispatches_stmts func.body
 
-(**  
+(**
     Takes an element from the dispatchon list and generates the test function for refinable.
     @param  klasses - list of klasses in which the refinable method is defined for the method
              fuid - unique function name for the test function.
@@ -170,10 +170,10 @@ and collect_dispatch_func func = collect_dispatches_stmts func.body
 
 
 let generate_testsw (klass, klasses, fuid) =
-    let body = 
-        match klasses with 
+    let body =
+        match klasses with
           [] -> "\treturn LIT_BOOL(0);"
-        | _  -> 
+        | _  ->
                 let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
