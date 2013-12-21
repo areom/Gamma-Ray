@@ -345,6 +345,10 @@ let init_calls_super (aklass : Sast.class_def) =
     let inits = List.flatten (List.map get_inits [s.publics; s.protects; s.privates]) in
     List.for_all validate_init inits
 
+let check_main (func : Ast.func_def) = match func.formals with
+    | [("String[]", _)] -> func
+    | _ -> raise(Failure(Format.sprintf "Main in %s does not have String[] arguments" func.inklass))
+
 (**
     Given a class_data object and an Ast.class_def, return a Sast.class_def
     object. May fail when there are issues in the statements / expressions.
@@ -371,7 +375,7 @@ let ast_to_sast_klass klass_data (ast_klass : Ast.class_def) =
             protects = mems s.protects;
             privates = mems s.privates;
             refines = funs s.refines;
-            mains = funs s.mains } in
+            mains = funs (List.map check_main s.mains) } in
 
     let sast_klass : Sast.class_def =
         {   klass = ast_klass.klass;
