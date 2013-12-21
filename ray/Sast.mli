@@ -12,8 +12,8 @@ type varkind = Instance of string | Local
 (** The environment at any given statement. *)
 type environment = (string * varkind) Map.Make(String).t
 
-(** The ID can be built in (and so won't get mangled. *)
-type funcid = BuiltIn of string | FuncId of string
+(** The ID can be built in (and so won't get mangled) or an array allocator. *)
+type funcid = BuiltIn of string | FuncId of string | ArrayAlloc of string
 
 (** An expression value -- like in AST *)
 type expr_detail =
@@ -21,6 +21,7 @@ type expr_detail =
     | Null
     | Id of string
     | NewObj of string * expr list * funcid
+    | NewArr of string * expr list * funcid
     | Anonymous of string * Ast.expr list * Ast.func_def list (* Evaluation is delayed *)
     | Literal of Ast.lit
     | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
