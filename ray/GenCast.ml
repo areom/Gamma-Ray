@@ -25,7 +25,7 @@ in
 fixtypes (get_pointer tname)
 
 
-let from_tname tname = String.sub tname 2 (String.length tname - 2)
+let from_tname tname = String.sub tname 2 (String.length tname - 3)
 let opt_tname = function
     | None -> None
     | Some(atype) -> Some(get_tname atype)
