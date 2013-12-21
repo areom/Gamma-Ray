@@ -161,9 +161,9 @@ and collect_dispatch_func func = collect_dispatches_stmts func.body
 
 (**  
     Takes an element from the dispatchon list and generates the test function for refinable.
-    @param:  klasses - list of klasses in which the refinable method is defined for the method
+    @param  klasses - list of klasses in which the refinable method is defined for the method
              fuid - unique function name for the test function.
-    @return: true or false
+    @return true or false
     Checks if the object on which refinable was invoked has an associated refinable method
     dispatched via this function that's being generated in one of the classes.
 **)
