@@ -89,7 +89,7 @@ and exprdetail_to_cstr castexpr_detail =
 
     let generate_vreference vname = function
         | Sast.Local -> vname
-        | Sast.Instance(_) -> "this->" ^ vname in
+        | Sast.Instance(klass) -> Format.sprintf "(this->%s).%s" klass vname in
 
     let generate_allocation klass fname args =
         let vals = List.map expr_to_cstr args in
