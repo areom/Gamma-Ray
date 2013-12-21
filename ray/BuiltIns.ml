@@ -105,9 +105,11 @@ let class_integer : Ast.class_def =
     let name = "Integer" in
 
     let integer_init : Ast.func_def = built_in "integer_init" in
+    let integer_float : Ast.func_def = breturns "integer_to_f" "Float" in
 
     let sections : Ast.class_sections_def =
         { sections with
+          publics = [func integer_float];
           protects = [func integer_init] } in
 
     { klass = name; parent = None; sections = sections }
@@ -116,9 +118,11 @@ let class_float : Ast.class_def =
     let name = "Float" in
 
     let float_init : Ast.func_def = built_in "float_init" in
+    let float_integer : Ast.func_def = breturns "float_to_i" "Integer" in
 
     let sections : Ast.class_sections_def =
         { sections with
+          publics = [func float_integer];
           protects = [func float_init] } in
 
     { klass = name; parent = None; sections = sections }
