@@ -99,17 +99,14 @@ and exprdetail_to_cstr castexpr_detail =
             | _ -> Format.sprintf "%s(MakeNew(%s), %s)" fname klass (String.concat ", " vals) in
 
     let generate_refine args ret = function
-        | Sast.Switch(cases, dispatch) ->
-          dispatches := (ret, args, dispatch, cases)::(!dispatches);
+        | Sast.Switch(_, dispatch) ->
           let vals = List.map expr_to_cstr args in
           (match args with
               | [] -> Format.sprintf "%s(this)" dispatch
               | _ -> Format.sprintf "%s(this, %s)" dispatch (String.concat ", " vals))
         | _ -> raise(Failure("Wrong switch applied to refine -- compiler error.")) in
     let generate_refinable = function
-        | Sast.Test(klasses, dispatchby) ->
-          dispatchon := (klasses, dispatchby)::(!dispatchon);
-          Format.sprintf "%s(this)" dispatchby
+        | Sast.Test(_, dispatchby) -> Format.sprintf "%s(this)" dispatchby
         | _ -> raise(Failure("Wrong switch applied to refinable -- compiler error.")) in
 
     match castexpr_detail with
@@ -128,6 +125,43 @@ and exprdetail_to_cstr castexpr_detail =
     | Refinable(switch)              -> generate_refinable switch
 
 and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
+
+
+let rec collect_dispatches_exprs exprs = List.iter collect_dispatches_expr exprs
+and collect_dispatches_stmts stmts = List.iter collect_dispatches_stmt stmts
+and collect_dispatches_expr (_, detail) = match detail with
+    | This -> ()
+    | Null -> ()
+    | Id(_,_) -> ()
+    | NewObj(_, _, args) -> collect_dispatches_exprs args
+    | Literal(_) -> ()
+    | Assign(mem, data) -> collect_dispatches_exprs [mem; data]
+    | Deref(arr, idx) -> collect_dispatches_exprs [arr; idx]
+    | Field(obj, _) -> collect_dispatches_expr obj
+    | Invoc(recvr, _, args) -> collect_dispatches_exprs (recvr::args)
+    | Unop(_, expr) -> collect_dispatches_expr expr
+    | Binop(l, _, r) -> collect_dispatches_exprs [l; r]
+    | Refine(args, ret, switch) -> collect_dispatch args ret switch
+    | Refinable(switch) -> collect_dispatch_on switch
+and collect_dispatches_stmt = function
+    | Decl(_, Some(expr), _) -> collect_dispatches_expr expr
+    | Decl(_, None, _) -> ()
+    | If(iflist, env) -> collect_dispatches_clauses iflist
+    | While(pred, body, _) -> collect_dispatches_expr pred; collect_dispatches_stmts body
+    | Expr(expr, _) -> collect_dispatches_expr expr
+    | Return(Some(expr), _) -> collect_dispatches_expr expr
+    | Return(None, _) -> ()
+and collect_dispatches_clauses pieces =
+    let (preds, bodies) = List.split pieces in
+    collect_dispatches_exprs (Util.filter_option preds);
+    collect_dispatches_stmts (List.flatten bodies)
+and collect_dispatch args ret = function
+    | Sast.Switch(cases, dispatch) -> dispatches := (ret, args, dispatch, cases)::(!dispatches);
+    | Sast.Test(_, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
+and collect_dispatch_on = function
+    | Sast.Test(klasses, dispatchby) -> dispatchon := (klasses, dispatchby)::(!dispatchon);
+    | Sast.Switch(_, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
+and collect_dispatch_func func = collect_dispatches_stmts func.body
 
 (**  
     Takes an element from the dispatchon list and generates the test function for refinable.
@@ -253,6 +287,17 @@ let cast_to_c_proto cfunc =
     let signature = Format.sprintf "%s%s(%s);" ret_type cfunc.name types in
     if cfunc.builtin then Format.sprintf "" else signature
 
+let cast_to_c_proto_dispatch_on (_, uid) =
+    Format.sprintf "t_Boolean %s(t_Object *);" uid
+
+let cast_to_c_proto_dispatch (ret, args, uid, _) =
+    let types = List.map fst args in
+    let types = List.map (fun t -> t ^ " *") ((GenCast.get_tname "Object")::types) in
+    let proto rtype = Format.sprintf "%s %s(%s);" rtype uid (String.concat ", " types) in
+    match ret with
+        | None -> proto "void"
+        | Some(t) -> proto t
+
 let cast_to_c_main mains =
     let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
@@ -308,6 +353,9 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
        if f.builtin = g.builtin then strcmp else if f.builtin then -1 else 1 in
     let funcs = List.sort func_compare funcs in
 
+    comment "Passing over code to find dispatch data.";
+    List.iter collect_dispatch_func funcs;
+
     comment "Gamma preamble -- macros and such needed by various things";
     incl "gamma-preamble";
 
@@ -343,6 +391,10 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
 
     comment "All of the function prototypes we need to do magic.";
     List.iter (fun func -> noblanks (cast_to_c_proto func)) funcs;
+
+    comment "All the dispatching functions we need to continue the magic.";
+    List.iter (fun d -> out (cast_to_c_proto_dispatch_on d)) (!dispatchon);
+    List.iter (fun d -> out (cast_to_c_proto_dispatch d)) (!dispatches);
 
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
