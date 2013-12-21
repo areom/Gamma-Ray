@@ -79,7 +79,8 @@ and exprdetail_to_cstr castexpr_detail =
         Format.sprintf "((%s *)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
 
     let generate_field obj field =
-        Format.sprintf "(%s)->%s" (expr_to_cstr obj) field in
+        let exptype = fst obj in
+        Format.sprintf "(%s)->%s.%s" (expr_to_cstr obj) (GenCast.from_tname exptype) field in
 
     let generate_invocation recvr fname args =
         let this = expr_to_cstr recvr in
@@ -99,6 +100,7 @@ and exprdetail_to_cstr castexpr_detail =
           let vals = List.map expr_to_cstr args in
           Format.sprintf "%s(%s)" dispatch (String.concat ", " ("this"::vals))
         | _ -> raise(Failure("Wrong switch applied to refine -- compiler error.")) in
+
     let generate_refinable = function
         | Sast.Test(_, _, dispatchby) -> Format.sprintf "%s(this)" dispatchby
         | _ -> raise(Failure("Wrong switch applied to refinable -- compiler error.")) in
@@ -118,7 +120,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Refine(args, ret, switch)      -> generate_refine args ret switch
     | Refinable(switch)              -> generate_refinable switch
 
-and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
+and vdecl_to_cstr (vtype, vname) = vtype ^ " *" ^ vname
 
 
 let rec collect_dispatches_exprs exprs = List.iter collect_dispatches_expr exprs
