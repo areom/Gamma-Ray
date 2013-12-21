@@ -6,6 +6,7 @@ type cexpr_detail =
     | Null
     | Id of string * Sast.varkind (* name, local/instance *)
     | NewObj of string * string * cexpr list (* ctype * fname * args *)
+    | NewArr of string * string * cexpr list (* type (with []'s) * fname * args (sizes) *)
     | Literal of Ast.lit
     | Assign of cexpr * cexpr  (* memory := data -- whether memory is good is a semantic issue *)
     | Deref of cexpr * cexpr (* road[pavement] *)
