@@ -14,7 +14,8 @@ let get_rname (f : Sast.func_def) = match f.host with
     | None -> raise(Failure("Generating refine name for non-refinement " ^ f.name ^ " in class " ^ f.inklass ^ "."))
     | Some(host) -> to_rname f.uid host f.name
 let get_vname vname = "v_" ^ vname
-let get_tname tname = "t_" ^ tname
+let get_pointer typ = ("t_"^(Str.global_replace (Str.regexp "\\[\\]") "*" typ));;
+let get_tname tname = get_pointer tname;;
 let from_tname tname = String.sub tname 2 (String.length tname - 2)
 let opt_tname = function
     | None -> None
