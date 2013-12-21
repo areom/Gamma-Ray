@@ -192,10 +192,10 @@ let rec eval klass_data kname mname isstatic env exp =
     @param initial_env An initial environment
     @return A list of Sast statements
   *)
-let rec attach_bindings klass_data kname mname isvoid isstatic stmts initial_env =
+let rec attach_bindings klass_data kname mname meth_ret isstatic stmts initial_env =
     (* Calls that go easy on the eyes *)
     let eval' = eval klass_data kname mname isstatic in
-    let attach' = attach_bindings klass_data kname mname isvoid isstatic in
+    let attach' = attach_bindings klass_data kname mname meth_ret isstatic in
     let eval_exprlist env elist = List.map (eval' env) elist in
 
     let rec get_superinit kname arglist =
@@ -232,10 +232,18 @@ let rec attach_bindings klass_data kname mname isvoid isstatic stmts initial_env
     let build_declstmt ((vtype, vname) as vdef) opt_expr decl_env =
         if Klass.is_type klass_data vtype then Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env)
         else raise(Failure("Variable " ^ vname ^ " in the method " ^ mname ^ " in the class " ^ kname ^ " has unknown type " ^ vtype ^ ".")) in
-    let build_returnstmt opt_expr ret_env = match opt_expr, isvoid with
-        | None, false -> raise(Failure("Void return from non-void function " ^ mname ^ " in klass " ^ kname ^ "."))
-        | Some(_), true -> raise(Failure("Non-void return from void function " ^ mname ^ " in klass " ^ kname ^ "."))
-        | _, _ -> Sast.Return(opt_eval opt_expr ret_env, ret_env) in
+
+    let check_ret_type ret_type = match ret_type, meth_ret with
+        | None, Some(_) -> raise(Failure("Void return from non-void function " ^ mname ^ " in klass " ^ kname ^ "."))
+        | Some(_), None -> raise(Failure("Non-void return from void function " ^ mname ^ " in klass " ^ kname ^ "."))
+        | Some(r), Some(t) -> if not (Klass.is_subtype klass_data r t) then raise(Failure(Format.sprintf "Method %s in %s returns %s despite being declared returning %s" mname kname r t))
+        | _, _ -> () in
+
+    let build_returnstmt opt_expr ret_env =
+        let ret_val = opt_eval opt_expr ret_env in
+        let ret_type = match ret_val with Some(t, _) -> Some(t) | _ -> None in
+        check_ret_type ret_type;
+        Sast.Return(ret_val, ret_env) in
     let build_exprstmt expr expr_env = Sast.Expr(eval' expr_env expr, expr_env) in
     let build_superstmt expr_list super_env =
         let arglist = eval_exprlist super_env expr_list in
@@ -291,18 +299,18 @@ and does_return_clauses pieces =
   *)
 let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
-    let isvoid = match func.returns with None -> true | _ -> false in
     let sast_func : Sast.func_def =
         {   returns = func.returns;
             host = func.host;
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data func.inklass func.name isvoid func.static func.body with_params;
+            body = attach_bindings klass_data func.inklass func.name func.returns func.static func.body with_params;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;
             builtin = func.builtin } in
+    let isvoid = match func.returns with None -> true | _ -> false in
     if not func.builtin && not isvoid && not (does_return_stmts func.body)
         then raise(Failure(Format.sprintf "The function %s in %s does not return on all execution paths" (full_signature_string func) func.inklass))
         else sast_func
