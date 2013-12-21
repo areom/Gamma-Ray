@@ -6,7 +6,7 @@ let c_indent = "  "
 let dispatches = ref []
 let dispatchon = ref []
 
-let matches type1 type2 = ((GenCast.get_tname type1) = type2)
+let matches type1 type2 = (GenCast.get_tname type1) = type2
 
 let lit_to_str lit = match lit with
     | Ast.Int(i) -> "LIT_INT("^(string_of_int i)^")"

@@ -1,0 +1,13 @@
+class AddTest:
+  public:
+    Integer a
+    Integer b
+
+    init():
+      super()
+
+    Integer add():
+      a := 10 % 2
+      b := 5 % 2
+      return 0
+

@@ -1,0 +1,13 @@
+class AddTest:
+  public:
+    Integer a
+    Float   b
+
+    init():
+      super()
+
+    Integer add():
+      a := (10 / 5) / -2
+      b := (10.0 / 5.0) / -2.0
+      return 0
+
