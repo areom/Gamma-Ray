@@ -20,12 +20,12 @@ class IOTest:
     Integer incre_ab():
       Scanner s := new Scanner()
       Integer delta
-      Integer delta2 := refine toAddon(delta) to Integer
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
-      if (a = b) {
-          a := 0
+      if (refinable(toAddon)) {
+          a := 0;
+          Integer delta2 := refine toAddon(delta) to Integer;
       }
 
     Integer arith():

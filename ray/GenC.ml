@@ -129,15 +129,25 @@ and exprdetail_to_cstr castexpr_detail =
 
 and vdecl_to_cstr (vtype, vname) = vtype ^ " " ^ vname
 
+(**  
+    Takes an element from the dispatchon list and generates the test function for refinable.
+    @param:  klasses - list of klasses in which the refinable method is defined for the method
+             fuid - unique function name for the test function.
+    @return: true or false
+    Checks if the object on which refinable was invoked has an associated refinable method
+    dispatched via this function that's being generated in one of the classes.
+**)
+
+
 let generate_testsw (klasses, fuid) =
     let body = 
         match klasses with 
-          [] -> "\treturn false;"
+          [] -> "\treturn LIT_BOOL(0);"
         | _  -> 
-                let predlist = List.map (fun kname -> "( this, "^kname^")") klasses in
+                let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
                 let ifpred  = String.concat " || " predlist in
-                Format.sprintf "\tif ( %s )\n\t\treturn 1;\n\telse\n\t\treturn 0;\n" ifpred in
-    Format.sprintf "int %s (t_Object *this)\n{\n%s\n}\n\n" fuid body
+                Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
+    Format.sprintf "t_Boolean %s (t_Object *this)\n{\n%s\n}\n\n" fuid body
 
 
 (**
