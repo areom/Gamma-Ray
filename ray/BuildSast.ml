@@ -169,10 +169,9 @@ let rec eval klass_data kname mname isstatic env exp =
 
     let get_new_arr atype args =
         let arglist = eval_exprlist args in
-        let basetype = String.sub atype 0 (String.index atype '[') in
         if List.exists (fun (t, _) -> t <> "Integer") arglist
            then raise(Failure "Size of an array dimensions does not correspond to an integer.")
-           else (atype, Sast.NewArr(basetype, arglist, ArrayAlloc(UID.uid_counter ()))) in
+           else (atype, Sast.NewObj(atype, arglist, ArrayAlloc(UID.uid_counter ()))) in
 
     let get_new_obj atype args = try
         let index = String.index atype '[' in
