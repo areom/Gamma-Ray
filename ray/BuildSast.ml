@@ -261,6 +261,26 @@ let rec attach_bindings klass_data kname mname isvoid isstatic stmts initial_env
     List.rev (fst(List.fold_left build_env ([], initial_env) stmts))
 
 (**
+    Given a list of statements, return whether every execution path therein returns
+    @param stmts A bunch of Ast.stmts
+    @return true or false based on whether everything returns a value.
+  *)
+let rec does_return_stmts (stmts : Ast.stmt list) = match stmts with
+    | [] -> false
+    | Return(None)::_ -> false
+    | Return(_)::_ -> true
+    | If(pieces)::rest -> does_return_clauses pieces || does_return_stmts rest
+    | _::rest -> does_return_stmts rest
+(**
+    Given a collection of if clauses, return whether they represent a return from the function.
+    @param pieces If clauses (option expr, stmt list)
+    @return whether or not it can be determined that a return is guaranteed here.
+  *)
+and does_return_clauses pieces =
+    let (preds, bodies) = List.split pieces in
+    List.mem None preds && List.for_all does_return_stmts bodies
+
+(**
     Given a class_data record, an Ast.func_def, an an initial environment,
     convert the func_def to a Sast.func_def. Can raise failure when there
     are issues with the statements / expressions in the function.
@@ -283,7 +303,9 @@ let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env =
             inklass = func.inklass;
             uid = func.uid;
             builtin = func.builtin } in
-    sast_func
+    if not func.builtin && not isvoid && not (does_return_stmts func.body)
+        then raise(Failure(Format.sprintf "The function %s in %s does not return on all execution paths" (full_signature_string func) func.inklass))
+        else sast_func
 
 (**
     Given a class_data record, an Ast.member_def, and an initial environment,
