@@ -156,7 +156,7 @@ and collect_dispatches_clauses pieces =
     collect_dispatches_exprs (Util.filter_option preds);
     collect_dispatches_stmts (List.flatten bodies)
 and collect_dispatch args ret = function
-    | Sast.Switch(klass, cases, dispatch) -> dispatches := (klass, ret, args, dispatch, cases)::(!dispatches);
+    | Sast.Switch(klass, cases, dispatch) -> dispatches := (klass, ret, (List.map fst args), dispatch, cases)::(!dispatches);
     | Sast.Test(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_on = function
     | Sast.Test(klass, klasses, dispatchby) -> dispatchon := (klass, klasses, dispatchby)::(!dispatchon);
@@ -198,29 +198,17 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let rettype = match ret with
         | None -> "void "
         | Some(atype) -> Format.sprintf "%s *" atype in
-    let rec generate_args num =  if num =0 then " " else if num = 1 then ", varg_0" else (generate_args (num-1))^", varg_"^string_of_int(num-1)
-    in
-    let decorate index typ = (typ)^"* v_arg"^string_of_int(index)
-    in
-    let formals  =
-        List.mapi decorate (List.map fst args)
-    in
-    let signature =
-        match args with
-            | [] -> Format.sprintf "%s *this" klass
-            | args -> Format.sprintf "%s *this, %s" klass (String.concat ", " formals)
-    in
-    let generate_invoc fuid kname = fuid^"(("^kname^" *) this"^(generate_args (List.length args))^")"
-    in
-    let unroll_cases (kname, fuid) =
-        Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\treturn %s;\n" (kname) (generate_invoc fuid kname) 
-    in 
-    let rec generate_cases = function
-             [] ->  "\n"
-            |[hd] ->  unroll_cases hd^"\n"
-            | hd::tl  ->  unroll_cases hd^"\n"^generate_cases tl
-    in
-    Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (generate_cases cases)
+    let this = (Format.sprintf "%s *" klass, "this") in
+    let formals = List.mapi (fun i t -> (Format.sprintf "%s *" t, Format.sprintf "varg_%d" i)) args in
+    let signature = String.concat ", " (List.map (fun (t, v) -> t ^ v) (this::formals)) in
+    let actuals = List.map snd formals in
+    let withthis kname = String.concat ", " ((Format.sprintf "(%s *) this" kname)::actuals) in
+    let invoc fuid kname = Format.sprintf "%s(%s)" fuid (withthis kname) in
+    let unroll_case (kname, fuid) =
+        Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\t%s;\n" kname (invoc fuid kname) in
+    let generated = List.map unroll_case cases in
+    Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated)
+
 (**
     Take a list of cast_stmts and return a body of c statements
     @param stmtlist A list of statements
@@ -290,8 +278,7 @@ let cast_to_c_proto_dispatch_on (klass, _, uid) =
     Format.sprintf "t_Boolean %s(%s *);" uid klass
 
 let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
-    let types = List.map fst args in
-    let types = List.map (fun t -> t ^ " *") (klass::types) in
+    let types = List.map (fun t -> t ^ " *") (klass::args) in
     let proto rtype = Format.sprintf "%s %s(%s);" rtype uid (String.concat ", " types) in
     match ret with
         | None -> proto "void"
@@ -399,8 +386,8 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
 
     comment "Dispatch looks like this.";
-    List.iter (fun func -> out (generate_testsw func)) (!dispatchon);
-    List.iter (fun func -> out (generate_refinesw func)) (!dispatches);
+    List.iter (fun d -> out (generate_testsw d)) (!dispatchon);
+    List.iter (fun d -> out (generate_refinesw d)) (!dispatches);
 
     comment "The main.";
     out (cast_to_c_main mains);
