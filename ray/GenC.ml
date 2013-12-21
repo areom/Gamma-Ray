@@ -251,7 +251,7 @@ and cast_to_c_if_pred = function
 and cast_to_c_if_chain indent pieces =
     let indents = String.make indent '\t' in
     let stmts = cast_to_c_stmtlist (indent + 1) in
-    let combine (pred, body) = Format.sprintf "%s {\n%s%s}" (cast_to_c_if_pred pred) (stmts body) indents in
+    let combine (pred, body) = Format.sprintf "%s {\n%s\n%s}" (cast_to_c_if_pred pred) (stmts body) indents in
     String.concat " else " (List.map combine pieces)
 
 
