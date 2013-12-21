@@ -5,8 +5,10 @@ class Math:
     init():
       super()
     Integer add(Integer a, Integer b):
+      return 6
     Integer sub(Integer a, Integer c):
-  main():
+      return 4
+  main(String[] args):
 
 class NonMath:
   private:
@@ -15,4 +17,5 @@ class NonMath:
     init():
       super()
     String recite():
-  main():
+      return "hey"
+  main(String[] hey):
