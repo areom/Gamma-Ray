@@ -95,6 +95,14 @@ and exprdetail_to_cstr castexpr_detail =
         let vals = List.map expr_to_cstr args in
         Format.sprintf "%s(MakeNew(%s))" fname (String.concat ", " (klass::vals)) in
 
+    let splitter s n = (String.sub s 0 n, String.sub s n (String.length s - n)) in
+
+    let generate_array_alloc arrtype fname args =
+        let vals = List.map expr_to_cstr args in
+        let (base, brackets) = splitter arrtype (String.index arrtype '[') in
+        let dim = String.length brackets / 2 in
+        Format.sprintf "%s(%s)" fname (String.concat ", " (base::(String.make dim '*')::vals)) in
+
     let generate_refine args ret = function
         | Sast.Switch(_, _, dispatch) ->
           let vals = List.map expr_to_cstr args in
@@ -110,6 +118,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Null                           -> "NULL"
     | Id(vname, varkind)             -> generate_vreference vname varkind
     | NewObj(classname, fname, args) -> generate_allocation classname fname args
+    | NewArr(arrtype, fname, args)   -> generate_array_alloc arrtype fname args
     | Literal(lit)                   -> lit_to_str lit
     | Assign(memory, data)           -> (expr_to_cstr memory)^" = "^(expr_to_cstr data)
     | Deref(carray, index)           -> generate_deref carray index
@@ -130,6 +139,7 @@ and collect_dispatches_expr (_, detail) = match detail with
     | Null -> ()
     | Id(_,_) -> ()
     | NewObj(_, _, args) -> collect_dispatches_exprs args
+    | NewArr(arrtype, fname, args) -> collect_dispatch_arr arrtype fname args
     | Literal(_) -> ()
     | Assign(mem, data) -> collect_dispatches_exprs [mem; data]
     | Deref(arr, idx) -> collect_dispatches_exprs [arr; idx]
@@ -158,6 +168,7 @@ and collect_dispatch_on = function
     | Sast.Test(klass, klasses, dispatchby) -> dispatchon := (klass, klasses, dispatchby)::(!dispatchon);
     | Sast.Switch(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_func func = collect_dispatches_stmts func.body
+and collect_dispatch_arr arrtype fname args = raise(Failure "IMPLEMENT THIS")
 
 (**
     Takes an element from the dispatchon list and generates the test function for refinable.
