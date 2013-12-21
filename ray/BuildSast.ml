@@ -100,16 +100,17 @@ let rec eval klass_data kname mname isstatic env exp =
             | None when this -> raise(Failure(Format.sprintf "Method %s not found ancestrally in %s (this=%b)" methd recvr_type this))
             | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
             | Some(fdef) -> fdef in
-        (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfdef.uid)) in
+        let mfid = if mfdef.builtin then BuiltIn mfdef.uid else FuncId mfdef.uid in
+        (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfid)) in
 
     let get_init class_name exprlist =
         let arglist = eval_exprlist exprlist in
         let argtypes = List.map fst arglist in
-        let mfdef =
-        match best_method klass_data class_name "init" argtypes [Ast.Publics] with
+        let mfdef = match best_method klass_data class_name "init" argtypes [Ast.Publics] with
             | None       -> raise(Failure "Constructor not found")
             | Some(fdef) -> fdef in
-        (class_name, Sast.NewObj(class_name, arglist, mfdef.uid)) in
+        let mfid = if mfdef.builtin then BuiltIn mfdef.uid else FuncId mfdef.uid in
+        (class_name, Sast.NewObj(class_name, arglist, mfid)) in
 
     let get_assign e1 e2 =
         let (t1, t2) = (eval' e1, eval' e2) in

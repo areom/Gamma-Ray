@@ -34,20 +34,22 @@ and sast_to_castexprlist mname env explist = List.map (sast_to_castexpr mname en
 
 (* Convert the sast expr_detail to cast_expr detail; convert names / types / etc *)
 and c_expr_detail mname sastexp env = match sastexp with
-    | Sast.This                               -> Cast.This
-    | Sast.Null                               -> Cast.Null
-    | Sast.Id(vname)                          -> Cast.Id(get_vname vname, snd (StringMap.find vname env))
-    | Sast.NewObj(klass, args, fuid)          -> Cast.NewObj(klass, to_fname fuid "init", sast_to_castexprlist mname env args)
-    | Sast.Literal(lit)                       -> Cast.Literal(lit)
-    | Sast.Assign(e1, e2)                     -> Cast.Assign(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
-    | Sast.Deref(e1, e2)                      -> Cast.Deref(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
-    | Sast.Field(e1, field)                   -> Cast.Field(sast_to_castexpr mname env e1, get_vname field)
-    | Sast.Invoc(recv, fname, args, fuid)     -> Cast.Invoc(sast_to_castexpr mname env recv, to_fname fuid fname, sast_to_castexprlist mname env args)
-    | Sast.Unop(op, expr)                     -> Cast.Unop(op, sast_to_castexpr mname env expr)
-    | Sast.Binop(e1, op, e2)                  -> Cast.Binop(sast_to_castexpr mname env e1, op, sast_to_castexpr mname env e2)
-    | Sast.Refine(name, args, rtype, switch)  -> Cast.Refine(sast_to_castexprlist mname env args, opt_tname rtype, cast_switch mname name switch)
-    | Sast.Refinable(name, switch)            -> Cast.Refinable(cast_switch mname name switch)
-    | Anonymous(_, _, _)                      -> raise(Failure("Anonymous objects should have been deanonymized."))
+    | Sast.This                                     -> Cast.This
+    | Sast.Null                                     -> Cast.Null
+    | Sast.Id(vname)                                -> Cast.Id(get_vname vname, snd (StringMap.find vname env))
+    | Sast.NewObj(klass, args, BuiltIn(fuid))       -> Cast.NewObj(klass, fuid, sast_to_castexprlist mname env args)
+    | Sast.NewObj(klass, args, FuncId(fuid))        -> Cast.NewObj(klass, to_fname fuid "init", sast_to_castexprlist mname env args)
+    | Sast.Literal(lit)                             -> Cast.Literal(lit)
+    | Sast.Assign(e1, e2)                           -> Cast.Assign(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
+    | Sast.Deref(e1, e2)                            -> Cast.Deref(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
+    | Sast.Field(e1, field)                         -> Cast.Field(sast_to_castexpr mname env e1, get_vname field)
+    | Sast.Invoc(recv, fname, args, BuiltIn(fuid))  -> Cast.Invoc(sast_to_castexpr mname env recv, fuid, sast_to_castexprlist mname env args)
+    | Sast.Invoc(recv, fname, args, FuncId(fuid))   -> Cast.Invoc(sast_to_castexpr mname env recv, to_fname fuid fname, sast_to_castexprlist mname env args)
+    | Sast.Unop(op, expr)                           -> Cast.Unop(op, sast_to_castexpr mname env expr)
+    | Sast.Binop(e1, op, e2)                        -> Cast.Binop(sast_to_castexpr mname env e1, op, sast_to_castexpr mname env e2)
+    | Sast.Refine(name, args, rtype, switch)        -> Cast.Refine(sast_to_castexprlist mname env args, opt_tname rtype, cast_switch mname name switch)
+    | Sast.Refinable(name, switch)                  -> Cast.Refinable(cast_switch mname name switch)
+    | Anonymous(_, _, _)                            -> raise(Failure("Anonymous objects should have been deanonymized."))
 
 (*Convert the statement list by invoking cstmt on each of the sast stmt*)
 let rec cstmtlist mname slist =  List.map (cstmt mname) slist

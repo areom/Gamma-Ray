@@ -93,7 +93,7 @@ let deanon_expr_detail init_state env expr_deets =
             let freedefs = deanon_freedefs state env refines in
             let (init_id, ast_class) = deanon_klass freedefs newklass klass refines in
             let args = List.map (fun (t, v) -> (t, Sast.Id(v))) freedefs in
-            let instance = Sast.NewObj(newklass, args, init_id) in
+            let instance = Sast.NewObj(newklass, args, Sast.FuncId init_id) in
             let state = { state with deanon = ast_class::state.deanon } in
             (instance, state)
         | _ -> (expr_deets, init_state)

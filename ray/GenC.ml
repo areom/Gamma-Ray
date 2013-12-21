@@ -274,9 +274,8 @@ let cast_to_c_func cfunc =
         | body -> Format.sprintf "\n{\n%s\n}" (cast_to_c_stmtlist 1 body) in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
-    if cfunc.builtin
-        then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
-        else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
+    if cfunc.builtin then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
+    else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
 
 let cast_to_c_proto cfunc =
     let ret_type = match cfunc.returns with

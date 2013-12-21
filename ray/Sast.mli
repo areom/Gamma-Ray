@@ -12,21 +12,24 @@ type varkind = Instance of string | Local
 (** The environment at any given statement. *)
 type environment = (string * varkind) Map.Make(String).t
 
+(** The ID can be built in (and so won't get mangled. *)
+type funcid = BuiltIn of string | FuncId of string
+
 (** An expression value -- like in AST *)
 type expr_detail =
     | This
     | Null
     | Id of string
-    | NewObj of string * expr list * string
+    | NewObj of string * expr list * funcid
     | Anonymous of string * Ast.expr list * Ast.func_def list (* Evaluation is delayed *)
     | Literal of Ast.lit
     | Assign of expr * expr  (* memory := data -- whether memory is good is a semantic issue *)
     | Deref of expr * expr (* road[pavement] *)
     | Field of expr * string (* road.pavement *)
-    | Invoc of expr * string * expr list * string (* receiver.method(args) * bestmethod_uid  *)
+    | Invoc of expr * string * expr list * funcid (* receiver.method(args) * bestmethod_uid  *)
     | Unop of Ast.op * expr (* !x *)
     | Binop of expr * Ast.op * expr (* x + y *)
-    | Refine of string * expr list * string option * refine_switch (* refinement, arg list, opt ret type, switch id *)
+    | Refine of string * expr list * string option * refine_switch (* refinement, arg list, opt ret type, switch *)
     | Refinable of string * refine_switch (* desired refinement, list of classes supporting refinement *)
 
 (** An expression with a type tag *)
