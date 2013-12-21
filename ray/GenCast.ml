@@ -15,7 +15,16 @@ let get_rname (f : Sast.func_def) = match f.host with
     | Some(host) -> to_rname f.uid host f.name
 let get_vname vname = "v_" ^ vname
 let get_pointer typ = ("t_"^(Str.global_replace (Str.regexp "\\[\\]") "*" typ));;
-let get_tname tname = get_pointer tname;;
+
+let get_tname tname =
+let fixtypes str = try
+let splitter str n = (String.sub str 0 n, String.sub str n (String.length str - n)) in
+ let (before, after) = splitter str (String.index str '*') in (String.trim before) ^ " " ^ (String.trim after)
+with Not_found -> str
+in 
+fixtypes (get_pointer tname)
+
+
 let from_tname tname = String.sub tname 2 (String.length tname - 2)
 let opt_tname = function
     | None -> None
