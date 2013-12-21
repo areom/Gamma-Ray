@@ -16,6 +16,7 @@ class IOTest:
       p.printInteger(a)
       p.printInteger(b)
       p.printInteger(c)
+      return 0
 
     Integer incre_ab():
       Scanner s := new Scanner()
@@ -27,9 +28,11 @@ class IOTest:
           a := 0;
           Integer delta2 := refine toAddon(delta) to Integer;
       }
+      return a+b
 
     Integer arith():
       c := -(a + b)
+      return c
 
 class DIOTest extends IOTest:
   refinement:
@@ -62,6 +65,7 @@ class DIOTest extends IOTest:
 
     Integer arithc():
       c := -(a + b)
+      return c
 
 class DIOTest2 extends IOTest:
   refinement:
@@ -90,16 +94,18 @@ class DIOTest2 extends IOTest:
       delta := s.scanInteger()
       a := a2 + delta
       b := b2 + delta
+      return a-b
 
     Integer arithd():
       c := -(a + b)
+      return c
 
 class Main:
   public:
     init():
       super()
 
-  main():
+  main(String[] args):
     IOTest ab := new IOTest()
     ab.overview()
     ab.overview()
