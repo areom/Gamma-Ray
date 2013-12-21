@@ -123,7 +123,7 @@ let rec eval klass_data kname mname isstatic env exp =
         let isCompatible typ1 typ2 =
             if is_subtype klass_data typ1 typ2 then typ2
             else if is_subtype klass_data typ2 typ1 then typ1
-            else raise (Failure "Binop takes incompatible types") in
+            else raise (Failure (Format.sprintf "Binop takes incompatible types: %s %s" typ1 typ2)) in
         let (t1, t2) = (eval' e1, eval' e2) in
         let gettype op (typ1,_) (typ2,_) = match op with
             | Ast.Arithmetic(Neg) -> raise(Failure("Negation is not a binary operation!"))
