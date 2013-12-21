@@ -15,6 +15,7 @@ let get_rname (f : Sast.func_def) = match f.host with
     | Some(host) -> to_rname f.uid host f.name
 let get_vname vname = "v_" ^ vname
 let get_tname tname = "t_" ^ tname
+let from_tname tname = String.sub tname 2 (String.length tname - 2)
 let opt_tname = function
     | None -> None
     | Some(atype) -> Some(get_tname atype)
