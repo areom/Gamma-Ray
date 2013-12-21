@@ -20,7 +20,7 @@ let get_tname tname =
 let fixtypes str = try
 let splitter str n = (String.sub str 0 n, String.sub str n (String.length str - n)) in
  let (before, after) = splitter str (String.index str '*') in (String.trim before) ^ " " ^ (String.trim after)
-with Not_found -> str
+with Not_found -> str^" "
 in 
 fixtypes (get_pointer tname)
 
