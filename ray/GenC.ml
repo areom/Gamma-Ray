@@ -84,9 +84,7 @@ and exprdetail_to_cstr castexpr_detail =
     let generate_invocation recvr fname args =
         let this = expr_to_cstr recvr in
         let vals = List.map expr_to_cstr args in
-        match args with
-            | [] -> Format.sprintf "%s(%s)" fname this
-            | args -> Format.sprintf "%s(%s, %s)" fname this (String.concat ", " vals) in
+        Format.sprintf "%s(%s)" fname (String.concat ", " (this::vals)) in
 
     let generate_vreference vname = function
         | Sast.Local -> vname
@@ -94,16 +92,12 @@ and exprdetail_to_cstr castexpr_detail =
 
     let generate_allocation klass fname args =
         let vals = List.map expr_to_cstr args in
-        match args with
-            | [] -> Format.sprintf "%s(MakeNew(%s))" fname klass
-            | _ -> Format.sprintf "%s(MakeNew(%s), %s)" fname klass (String.concat ", " vals) in
+        Format.sprintf "%s(MakeNew(%s))" fname (String.concat ", " (klass::vals)) in
 
     let generate_refine args ret = function
         | Sast.Switch(_, _, dispatch) ->
           let vals = List.map expr_to_cstr args in
-          (match args with
-              | [] -> Format.sprintf "%s(this)" dispatch
-              | _ -> Format.sprintf "%s(this, %s)" dispatch (String.concat ", " vals))
+          Format.sprintf "%s(%s)" dispatch (String.concat ", " ("this"::vals))
         | _ -> raise(Failure("Wrong switch applied to refine -- compiler error.")) in
     let generate_refinable = function
         | Sast.Test(_, _, dispatchby) -> Format.sprintf "%s(this)" dispatchby
