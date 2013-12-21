@@ -76,7 +76,7 @@ let rec expr_to_cstr (exptype, expr_detail) = exprdetail_to_cstr expr_detail
 
 and exprdetail_to_cstr castexpr_detail =
     let generate_deref obj index =
-        Format.sprintf "((%s *)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
+        Format.sprintf "((%s*)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
 
     let generate_field obj field =
         let exptype = fst obj in
@@ -120,7 +120,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Refine(args, ret, switch)      -> generate_refine args ret switch
     | Refinable(switch)              -> generate_refinable switch
 
-and vdecl_to_cstr (vtype, vname) = vtype ^ " *" ^ vname
+and vdecl_to_cstr (vtype, vname) = vtype ^ "* " ^ vname
 
 
 let rec collect_dispatches_exprs exprs = List.iter collect_dispatches_expr exprs
@@ -159,7 +159,7 @@ and collect_dispatch_on = function
     | Sast.Switch(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_func func = collect_dispatches_stmts func.body
 
-(**  
+(**
     Takes an element from the dispatchon list and generates the test function for refinable.
     @param  klasses - list of klasses in which the refinable method is defined for the method
              fuid - unique function name for the test function.
@@ -170,14 +170,14 @@ and collect_dispatch_func func = collect_dispatches_stmts func.body
 
 
 let generate_testsw (klass, klasses, fuid) =
-    let body = 
-        match klasses with 
+    let body =
+        match klasses with
           [] -> "\treturn LIT_BOOL(0);"
-        | _  -> 
+        | _  ->
                 let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
-    Format.sprintf "t_Boolean %s (%s *this)\n{\n%s\n}\n\n" fuid klass body
+    Format.sprintf "t_Boolean* %s (%s* this)\n{\n%s\n}\n\n" fuid klass body
 
 
 (**
@@ -193,12 +193,12 @@ let generate_testsw (klass, klasses, fuid) =
 let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let rettype = match ret with
         | None -> "void "
-        | Some(atype) -> Format.sprintf "%s *" atype in
-    let this = (Format.sprintf "%s *" klass, "this") in
-    let formals = List.mapi (fun i t -> (Format.sprintf "%s *" t, Format.sprintf "varg_%d" i)) args in
+        | Some(atype) -> Format.sprintf "%s* " atype in
+    let this = (Format.sprintf "%s* " klass, "this") in
+    let formals = List.mapi (fun i t -> (Format.sprintf "%s* " t, Format.sprintf "varg_%d" i)) args in
     let signature = String.concat ", " (List.map (fun (t, v) -> t ^ v) (this::formals)) in
     let actuals = List.map snd formals in
-    let withthis kname = String.concat ", " ((Format.sprintf "(%s *) this" kname)::actuals) in
+    let withthis kname = String.concat ", " ((Format.sprintf "(%s* ) this" kname)::actuals) in
     let invoc fuid kname = Format.sprintf "%s(%s)" fuid (withthis kname) in
     let unroll_case (kname, fuid) =
         Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\t%s;\n" kname (invoc fuid kname) in
@@ -240,41 +240,41 @@ and cast_to_c_if_chain indent pieces =
 
 
 let cast_to_c_class_struct klass_name ancestors =
-    let ancestor_var (vtype, vname) = Format.sprintf "%s *%s;" vtype vname in
+    let ancestor_var (vtype, vname) = Format.sprintf "%s* %s;" vtype vname in
     let ancestor_vars vars = String.concat "\n\t\t" (List.map ancestor_var vars) in
     let internal_struct (ancestor, vars) = match vars with
         | [] -> Format.sprintf "struct { BYTE empty_vars; } %s;" ancestor
         | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s;\n" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
-    let meta = "\tClassInfo *meta;" in
+    let meta = "\tClassInfo* meta;" in
     Format.sprintf "typedef struct {\n%s\n\n\t%s\n} %s;\n\n" meta internals klass_name
 
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void "
-        | Some(atype) -> Format.sprintf "%s *" atype in
+        | Some(atype) -> Format.sprintf "%s* " atype in
     let body = match cfunc.body with
         | [] -> " { }"
         | body -> Format.sprintf "\n{\n%s\n}" (cast_to_c_stmtlist 1 body) in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
-    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ " *" ^ v) params) in
+    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ "* " ^ v) params) in
     if cfunc.builtin then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
     else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
 
 let cast_to_c_proto cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void "
-        | Some(atype) -> Format.sprintf "%s *" atype in
+        | Some(atype) -> Format.sprintf "%s* " atype in
     let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
-    let types = String.concat ", " (List.map (fun (t,v) -> t ^ " *") params) in
+    let types = String.concat ", " (List.map (fun (t,v) -> t ^ "* ") params) in
     let signature = Format.sprintf "%s%s(%s);" ret_type cfunc.name types in
     if cfunc.builtin then Format.sprintf "" else signature
 
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
-    Format.sprintf "t_Boolean %s(%s *);" uid klass
+    Format.sprintf "t_Boolean %s(%s* );" uid klass
 
 let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
-    let types = List.map (fun t -> t ^ " *") (klass::args) in
+    let types = List.map (fun t -> t ^ "* ") (klass::args) in
     let proto rtype = Format.sprintf "%s %s(%s);" rtype uid (String.concat ", " types) in
     match ret with
         | None -> proto "void"
@@ -327,7 +327,7 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
 
     let comment string =
         let comments = Str.split (Str.regexp "\n") string in
-        let commented = List.map (Format.sprintf " * %s") comments in
+        let commented = List.map (Format.sprintf "* %s") comments in
         out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
 
     let func_compare f g =
@@ -344,7 +344,7 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     comment "Ancestry meta-info to link to later.";
     let classes = List.map (fun (kls, _) -> GenCast.get_tname kls) (StringMap.bindings ancestry) in
     let class_strs = List.map (Format.sprintf "\t%s") (print_class_strings classes) in
-    out (Format.sprintf "char *m_classes[] = {\n%s\n};" (String.concat "\n" class_strs));
+    out (Format.sprintf "char* m_classes[] = {\n%s\n};" (String.concat "\n" class_strs));
 
     comment "Enums used to reference into ancestry meta-info strings.";
     let class_enums = List.map (Format.sprintf "\t%s") (print_class_enums classes) in

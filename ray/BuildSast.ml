@@ -158,7 +158,6 @@ let rec eval klass_data kname mname isstatic env exp =
             | "Integer" -> expectArray typ1
             | _ -> raise(Failure "Dereferencing invalid") in
         (getArrayType t1 t2, Sast.Deref(t1, t2)) in
-
     let get_unop op expr = match op with
         | Ast.Arithmetic(Neg) -> let (typ, _) as evaled = eval' expr in (typ, Sast.Unop(op, evaled))
         | Ast.CombTest(Not) -> ("Boolean", Sast.Unop(op, eval' expr))
@@ -168,12 +167,29 @@ let rec eval klass_data kname mname isstatic env exp =
         | None -> raise(Failure("Unknown id " ^ id ^ " in environment built around " ^ kname ^ ", " ^ mname ^ "."))
         | Some((vtype, _)) -> vtype in
 
+    let get_new_arr atype args =
+        let arglist = eval_exprlist args in
+        let basetype = String.sub atype 0 (String.index atype '[') in
+        if List.exists (fun (t, _) -> t <> "Integer") arglist
+           then raise(Failure "Size of an array dimensions does not correspond to an integer.")
+           else (atype, Sast.NewArr(basetype, arglist, ArrayAlloc(UID.uid_counter ()))) in
+
+    let get_new_obj atype args = try
+        let index = String.index atype '[' in
+        let dimensions = (String.length atype - index) / 2 in
+        match List.length args with
+            | n when n > dimensions -> raise(Failure("Cannot allocate array, too many dimensions given."))
+            | n when n < dimensions -> raise(Failure("Cannot allocate array, too few dimensions given."))
+            | 0 -> (null_class, Sast.Null)
+            | _ -> get_new_arr atype args
+        with Not_found -> get_init atype args in
+
     match exp with
         | Ast.This -> (current_class, Sast.This)
         | Ast.Null -> (null_class, Sast.Null)
         | Ast.Id(vname) -> (lookup_type vname, Sast.Id(vname))
         | Ast.Literal(lit) -> (getLiteralType lit, Sast.Literal(lit))
-        | Ast.NewObj(s1, elist) -> get_init s1 elist
+        | Ast.NewObj(s1, elist) -> get_new_obj s1 elist
         | Ast.Field(expr, mbr) -> get_field expr mbr
         | Ast.Invoc(expr, methd, elist) -> get_invoc expr methd elist
         | Ast.Assign(e1, e2) -> get_assign e1 e2

@@ -14,7 +14,7 @@ let basic_info_test () = from_basic KlassData.build_class_data_test
 let basic_info () = from_basic KlassData.build_class_data
 
 let test_info () = from_input KlassData.build_class_data_test
-let normal_info () = from_input KlassData.build_class_data    
+let normal_info () = from_input KlassData.build_class_data
 
 let exec name func = Printf.printf "Executing mode %s\n" name; flush stdout; func ()
 
