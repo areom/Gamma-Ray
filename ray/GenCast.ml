@@ -21,11 +21,12 @@ let opt_tname = function
 let get_vdef (vtype, vname) = (get_tname vtype, get_vname vname)
 
 let cast_switch meth refine =
+    let update_klass klass = get_tname klass in
     let update_dispatch (klass, uid) = (get_tname klass, to_rname uid meth refine) in
     let update_test klass = get_tname klass in
     function
-        | Switch(cases, uid) -> Switch(List.map update_dispatch cases, to_dispatch uid meth refine)
-        | Test(klasses, uid) -> Test(List.map update_test klasses, to_dispatch uid meth refine)
+        | Switch(klass, cases, uid) -> Switch(update_klass klass, List.map update_dispatch cases, to_dispatch uid meth refine)
+        | Test(klass, klasses, uid) -> Test(update_klass klass, List.map update_test klasses, to_dispatch uid meth refine)
 
 (*Convert the sast expr to cast expr*)
 let rec sast_to_castexpr mname env (typetag, sastexpr) = (get_tname typetag, c_expr_detail mname sastexpr env)

@@ -99,14 +99,14 @@ and exprdetail_to_cstr castexpr_detail =
             | _ -> Format.sprintf "%s(MakeNew(%s), %s)" fname klass (String.concat ", " vals) in
 
     let generate_refine args ret = function
-        | Sast.Switch(_, dispatch) ->
+        | Sast.Switch(_, _, dispatch) ->
           let vals = List.map expr_to_cstr args in
           (match args with
               | [] -> Format.sprintf "%s(this)" dispatch
               | _ -> Format.sprintf "%s(this, %s)" dispatch (String.concat ", " vals))
         | _ -> raise(Failure("Wrong switch applied to refine -- compiler error.")) in
     let generate_refinable = function
-        | Sast.Test(_, dispatchby) -> Format.sprintf "%s(this)" dispatchby
+        | Sast.Test(_, _, dispatchby) -> Format.sprintf "%s(this)" dispatchby
         | _ -> raise(Failure("Wrong switch applied to refinable -- compiler error.")) in
 
     match castexpr_detail with
@@ -156,11 +156,11 @@ and collect_dispatches_clauses pieces =
     collect_dispatches_exprs (Util.filter_option preds);
     collect_dispatches_stmts (List.flatten bodies)
 and collect_dispatch args ret = function
-    | Sast.Switch(cases, dispatch) -> dispatches := (ret, args, dispatch, cases)::(!dispatches);
-    | Sast.Test(_, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
+    | Sast.Switch(klass, cases, dispatch) -> dispatches := (klass, ret, args, dispatch, cases)::(!dispatches);
+    | Sast.Test(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_on = function
-    | Sast.Test(klasses, dispatchby) -> dispatchon := (klasses, dispatchby)::(!dispatchon);
-    | Sast.Switch(_, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
+    | Sast.Test(klass, klasses, dispatchby) -> dispatchon := (klass, klasses, dispatchby)::(!dispatchon);
+    | Sast.Switch(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_func func = collect_dispatches_stmts func.body
 
 (**  
@@ -173,7 +173,7 @@ and collect_dispatch_func func = collect_dispatches_stmts func.body
 **)
 
 
-let generate_testsw (klasses, fuid) =
+let generate_testsw (klass, klasses, fuid) =
     let body = 
         match klasses with 
           [] -> "\treturn LIT_BOOL(0);"
@@ -181,7 +181,7 @@ let generate_testsw (klasses, fuid) =
                 let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
-    Format.sprintf "t_Boolean %s (t_Object *this)\n{\n%s\n}\n\n" fuid body
+    Format.sprintf "t_Boolean %s (%s *this)\n{\n%s\n}\n\n" fuid klass body
 
 
 (**
@@ -194,7 +194,7 @@ let generate_testsw (klasses, fuid) =
             cases - list of classes and their corresponding uid of the invokable refinable methods.
 **)
 
-let generate_refinesw (ret, args, dispatchuid, cases) =
+let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let rettype = match ret with
         | None -> "void "
         | Some(atype) -> Format.sprintf "%s *" atype in
@@ -207,8 +207,8 @@ let generate_refinesw (ret, args, dispatchuid, cases) =
     in
     let signature =
         match args with
-            | [] -> Format.sprintf "%s" "t_Object this"
-            | args -> Format.sprintf "%s, %s" "t_Object *this" (String.concat ", " formals)
+            | [] -> Format.sprintf "%s *this" klass
+            | args -> Format.sprintf "%s *this, %s" klass (String.concat ", " formals)
     in
     let generate_invoc fuid kname = fuid^"(("^kname^" *) this"^(generate_args (List.length args))^")"
     in
@@ -287,12 +287,12 @@ let cast_to_c_proto cfunc =
     let signature = Format.sprintf "%s%s(%s);" ret_type cfunc.name types in
     if cfunc.builtin then Format.sprintf "" else signature
 
-let cast_to_c_proto_dispatch_on (_, uid) =
-    Format.sprintf "t_Boolean %s(t_Object *);" uid
+let cast_to_c_proto_dispatch_on (klass, _, uid) =
+    Format.sprintf "t_Boolean %s(%s *);" uid klass
 
-let cast_to_c_proto_dispatch (ret, args, uid, _) =
+let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
     let types = List.map fst args in
-    let types = List.map (fun t -> t ^ " *") ((GenCast.get_tname "Object")::types) in
+    let types = List.map (fun t -> t ^ " *") (klass::types) in
     let proto rtype = Format.sprintf "%s %s(%s);" rtype uid (String.concat ", " types) in
     match ret with
         | None -> proto "void"

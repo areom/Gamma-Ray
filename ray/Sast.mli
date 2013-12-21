@@ -3,8 +3,8 @@
 
 (** A switch for refinment or refinable checks *)
 type refine_switch =
-    | Switch of (string * string) list * string (* class/best-uid list, switch uid *)
-    | Test of string list * string  (* class list, uid of switch *)
+    | Switch of string * (string * string) list * string (* host class,  class/best-uid list, switch uid *)
+    | Test of string * string list * string  (* host class, class list, uid of switch *)
 
 (** The type of a variable in the environment *)
 type varkind = Instance of string | Local
