@@ -8,7 +8,7 @@ class IOTest:
       a := 1
       b := 2
       c := 0
-    Integer overview():
+    void overview():
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
@@ -19,14 +19,16 @@ class IOTest:
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
+      return c
     Integer arith():
       c := -(a + b)
+      return c
 
 class Main:
   public:
     init():
       super()
-  main():
+  main(String[] args):
     IOTest ab := new IOTest()
     ab.overview()
     ab.incre_ab()

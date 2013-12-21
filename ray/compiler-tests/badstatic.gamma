@@ -4,5 +4,6 @@ class BadStatic:
       return 0
     init():
       super()
-  main():
-    getZero()
+  main(String[] args):
+    BadStatic bad := new BadStatic()
+    bad.getZero()

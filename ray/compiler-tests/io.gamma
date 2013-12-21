@@ -10,9 +10,11 @@ class IOTest:
       Printer p := new Printer(true)
       p.printInteger(a)
       p.printInteger(b)
+      return 0
     Integer incre_ab():
       Scanner s := new Scanner()
       Integer delta
       delta := s.scanInteger()
       a := a + delta
       b := b + delta
+      return 0

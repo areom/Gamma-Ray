@@ -12,4 +12,4 @@ class MainTest:
         incre_a(b)
         incre_a(b)
         return a
-  main():
+  main(String[] args):
