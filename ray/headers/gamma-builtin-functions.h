@@ -38,14 +38,14 @@ t_Float *float_init(t_Float *this){
 }
 
 t_Integer *float_to_i(t_Float *this){
-    t_Integer *new_int = malloc(sizeof(t_Integer));
+    t_Integer *new_int = MAKE_NEW(Integer);
     new_int = integer_init(new_int);
     new_int->Integer.value = (int)(this->Float.value);
     return new_int;
 }
 
 t_Float *integer_to_f(t_Integer *this){
-    t_Float *new_float = malloc(sizeof(t_Float));
+    t_Float *new_float = MAKE_NEW(Float);
     new_float = float_init(new_float);
     new_float->Float.value = (float)(this->Integer.value);
     return new_float
