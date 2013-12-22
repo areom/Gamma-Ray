@@ -40,13 +40,15 @@ let class_object : Ast.class_def =
     let name = "Object" in
 
     let get_id : Ast.func_def = breturns "object_get_id" "String" in
+    let id = ("Integer", "obj_id") in
     let init_obj : Ast.func_def = { (built_in "object_init") with section = Protects } in
     let system = ("System", "system") in
 
     let sections : Ast.class_sections_def =
         { sections with
           publics = [func get_id];
-          protects = [func init_obj; var system] } in
+          protects = [func init_obj; var system];
+          privates = [var id] } in
 
     { klass = name; parent = None; sections = sections }
 
