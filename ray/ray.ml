@@ -49,11 +49,13 @@ let main _ =
         exit 0
     with excn ->
         let backtrace = Printexc.get_backtrace () in
+        let reraise = ref false in
         let out = match excn with
             | Failure(reason) -> Format.sprintf "Failed: %s\n" reason
             | Invalid_argument(msg) -> Format.sprintf "Argument issue somewhere: %s\n" msg
-            | _ -> "Unknown exception" in
+            | Parsing.Parse_error -> "Parsing error."
+            | _ -> reraise := true; "Unknown Exception" in
         Printf.fprintf stderr "%s\n%s\n" out backtrace;
-        exit 1
+        if !reraise then raise(excn) else exit 1
 
 let _ = main ()
