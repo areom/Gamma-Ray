@@ -6,6 +6,7 @@ open StringModules
 open GlobalData
 
 let to_fname fuid fname = Format.sprintf "f_%s_%s" fuid fname
+let to_aname fuid fname = Format.sprintf "a_%s_%s" fuid fname
 let to_rname fuid fhost fname = Format.sprintf "f_%s_%s_%s" fuid fhost fname
 let to_dispatch fuid fhost fname = Format.sprintf "d_%s_%s_%s" fuid fhost fname
 
@@ -50,7 +51,7 @@ and c_expr_detail mname sastexp env = match sastexp with
     | Sast.Id(vname)                                -> Cast.Id(get_vname vname, snd (StringMap.find vname env))
     | Sast.NewObj(klass, args, BuiltIn(fuid))       -> Cast.NewObj(klass, fuid, sast_to_castexprlist mname env args)
     | Sast.NewObj(klass, args, FuncId(fuid))        -> Cast.NewObj(klass, to_fname fuid "init", sast_to_castexprlist mname env args)
-    | Sast.NewObj(klass, args, ArrayAlloc(fuid))    -> Cast.NewArr(klass, to_fname fuid "array_alloc", sast_to_castexprlist mname env args)
+    | Sast.NewObj(klass, args, ArrayAlloc(fuid))    -> Cast.NewArr(get_tname klass, to_aname fuid "array_alloc", sast_to_castexprlist mname env args)
     | Sast.Literal(lit)                             -> Cast.Literal(lit)
     | Sast.Assign(e1, e2)                           -> Cast.Assign(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)
     | Sast.Deref(e1, e2)                            -> Cast.Deref(sast_to_castexpr mname env e1, sast_to_castexpr mname env e2)

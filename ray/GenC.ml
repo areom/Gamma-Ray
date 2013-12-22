@@ -5,6 +5,7 @@ let c_indent = "  "
 
 let dispatches = ref []
 let dispatchon = ref []
+let dispatcharr = ref []
 
 let matches type1 type2 = (GenCast.get_tname type1) = type2
 
@@ -95,13 +96,9 @@ and exprdetail_to_cstr castexpr_detail =
         let vals = List.map expr_to_cstr args in
         Format.sprintf "%s(MakeNew(%s))" fname (String.concat ", " (klass::vals)) in
 
-    let splitter s n = (String.sub s 0 n, String.sub s n (String.length s - n)) in
-
-    let generate_array_alloc arrtype fname args =
+    let generate_array_alloc _ fname args =
         let vals = List.map expr_to_cstr args in
-        let (base, brackets) = splitter arrtype (String.index arrtype '[') in
-        let dim = String.length brackets / 2 in
-        Format.sprintf "%s(%s)" fname (String.concat ", " (base::(String.make dim '*')::vals)) in
+        Format.sprintf "%s(%s)" fname (String.concat ", " vals) in
 
     let generate_refine args ret = function
         | Sast.Switch(_, _, dispatch) ->
@@ -168,7 +165,8 @@ and collect_dispatch_on = function
     | Sast.Test(klass, klasses, dispatchby) -> dispatchon := (klass, klasses, dispatchby)::(!dispatchon);
     | Sast.Switch(_, _, _) -> raise(Failure("Impossible (wrong switch -- compiler error)"))
 and collect_dispatch_func func = collect_dispatches_stmts func.body
-and collect_dispatch_arr arrtype fname args = raise(Failure "IMPLEMENT THIS")
+and collect_dispatch_arr arrtype fname args =
+    dispatcharr := (arrtype, fname, args)::(!dispatcharr)
 
 (**
     Takes an element from the dispatchon list and generates the test function for refinable.
@@ -189,7 +187,6 @@ let generate_testsw (klass, klasses, fuid) =
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
     Format.sprintf "t_Boolean *%s (%s*this)\n{\n%s\n}\n\n" fuid klass body
-
 
 (**
      Takes a dispatch element of the global dispatches list
@@ -215,6 +212,8 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
         Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\t%s;\n" kname (invoc fuid kname) in
     let generated = List.map unroll_case cases in
     Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated)
+
+let generate_arrayalloc (klass, ret, args) = "/* WILL DO SOON */"
 
 (**
     Take a list of cast_stmts and return a body of c statements
@@ -283,6 +282,11 @@ let cast_to_c_proto cfunc =
     let signature = Format.sprintf "%s%s(%s);" ret_type cfunc.name types in
     if cfunc.builtin then Format.sprintf "" else signature
 
+let cast_to_c_proto_dispatch_arr (arrtype, fname, args) =
+    let types = List.map fst args in
+    let ptrs = List.map (Format.sprintf "%s*") types in
+    Format.sprintf "%s%s(%s);" arrtype fname (String.concat ", " ptrs)
+
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
     Format.sprintf "t_Boolean *%s(%s *);" uid klass
 
@@ -340,7 +344,7 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
 
     let comment string =
         let comments = Str.split (Str.regexp "\n") string in
-        let commented = List.map (Format.sprintf "* %s") comments in
+        let commented = List.map (Format.sprintf " * %s") comments in
         out (Format.sprintf "\n\n/*\n%s\n */" (String.concat "\n" commented)) in
 
     let func_compare f g =
@@ -391,12 +395,18 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     List.iter (fun d -> out (cast_to_c_proto_dispatch_on d)) (!dispatchon);
     List.iter (fun d -> out (cast_to_c_proto_dispatch d)) (!dispatches);
 
+    comment "Array allocators also do magic.";
+    List.iter (fun d -> out (cast_to_c_proto_dispatch_arr d)) (!dispatcharr);
+
     comment "All of the functions we need to run the program.";
     List.iter (fun func -> out (cast_to_c_func func)) funcs;
 
     comment "Dispatch looks like this.";
     List.iter (fun d -> out (generate_testsw d)) (!dispatchon);
     List.iter (fun d -> out (generate_refinesw d)) (!dispatches);
+
+    comment "Array allocators.";
+    List.iter (fun d -> out (generate_arrayalloc d)) (!dispatcharr);
 
     comment "The main.";
     out (cast_to_c_main mains);
