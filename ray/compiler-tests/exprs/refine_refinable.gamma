@@ -11,9 +11,7 @@ class IOTest:
       c := 0
 
     Integer overview():
-      Integer success := 0
-      system.out.printInteger(refine toExtra(a,b) to Integer)
-/*      system.out.printInteger(success)*/
+      Integer success := refine toExtra(a,b) to Integer
       return success 
 
 class DIOTest extends IOTest:
@@ -44,6 +42,5 @@ class Main:
     IOTest ab := new IOTest()
     Printer p := system.out
     p.printString("Sum of integer = ")
-    ab.overview()
-/*    p.printInteger(ab.overview())*/
+    p.printInteger(ab.overview())
     p.printString("\n")
