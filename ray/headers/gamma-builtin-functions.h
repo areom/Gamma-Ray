@@ -105,11 +105,20 @@ t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
         this->Printer.target = stderr;
     return this;
 }
-/* t_Scanner *scanner_init(t_Scanner *this) */
-/* t_String *string_init(t_String *this) */
+t_String *string_init(t_String *this)
+{
+    this->Object = *object_init(&this->Object);
+    this->String.value = NULL;
+    return this;
+}
 /* void system_exit(t_System *this, t_Integer *v_code) */
 /* t_System *system_init(t_System *this) */
 
+t_Scanner *scanner_init(t_Scanner *this)
+{
+    this->Object = *object_init(&this->Object);
+    this->Printer.source = stdin;
+}
 
 t_Float *scanner_scan_float(t_Scanner *this)
 {
@@ -133,8 +142,8 @@ t_Integer *scanner_scan_integer(t_Scanner *this)
 
 t_String *scanner_scan_string(t_Scanner *this)
 {
-    int ret;
-    char *inpstr;
+    int ret = -1;
+    char *inpstr = NULL;
     ret = getline(&inpstr, 0, this->Scanner.source);
     if(ret == -1) {
         fprintf(stderr, "Error in string input\n");
