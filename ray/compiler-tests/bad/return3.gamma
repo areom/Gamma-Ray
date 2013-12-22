@@ -1,0 +1,8 @@
+class BadReturn:
+  public:
+    init():
+      super()
+
+    void badReturn():
+      return "Hey There"
+
