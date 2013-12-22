@@ -127,7 +127,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Refine(args, ret, switch)      -> generate_refine args ret switch
     | Refinable(switch)              -> generate_refinable switch
 
-and vdecl_to_cstr (vtype, vname) = vtype ^ " *" ^ vname
+and vdecl_to_cstr (vtype, vname) = "struct " ^ vtype ^ " *" ^ vname
 
 
 let rec collect_dispatches_exprs exprs = List.iter collect_dispatches_expr exprs
@@ -251,34 +251,35 @@ and cast_to_c_if_chain indent pieces =
 
 
 let cast_to_c_class_struct klass_name ancestors =
-    let ancestor_var (vtype, vname) = Format.sprintf "%s*%s;" vtype vname in
+    let ancestor_var (vtype, vname) = Format.sprintf "struct %s*%s;" vtype vname in
     let ancestor_vars vars = String.concat "\n\t\t" (List.map ancestor_var vars) in
     let internal_struct (ancestor, vars) = match vars with
         | [] -> Format.sprintf "struct { BYTE empty_vars; } %s;" ancestor
         | _ -> Format.sprintf "struct {\n\t\t%s\n\t} %s;\n" (ancestor_vars vars) ancestor in
     let internals = String.concat "\n\n\t" (List.map internal_struct ancestors) in
     let meta = "\tClassInfo *meta;" in
-    Format.sprintf "typedef struct {\n%s\n\n\t%s\n} %s;\n\n" meta internals klass_name
+    Format.sprintf "struct %s {\n%s\n\n\t%s\n};\n\n" (String.trim klass_name) meta internals
 
 let cast_to_c_func cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void "
-        | Some(atype) -> Format.sprintf "%s*" atype in
+        | Some(atype) -> Format.sprintf "struct %s*" atype in
     let body = match cfunc.body with
         | [] -> " { }"
         | body -> Format.sprintf "\n{\n%s\n}" (cast_to_c_stmtlist 1 body) in
     let params = if cfunc.static = false then (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals
                  else cfunc.formals in
-    let signature = String.concat ", " (List.map (fun (t,v) -> t ^ "*" ^ v) params) in
+    let signature = String.concat ", " (List.map (fun (t,v) -> "struct " ^ t ^ "*" ^ v) params) in
     if cfunc.builtin then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
     else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
 
 let cast_to_c_proto cfunc =
     let ret_type = match cfunc.returns with
         | None -> "void "
-        | Some(atype) -> Format.sprintf "%s*" atype in
-    let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
-    let types = String.concat ", " (List.map (fun (t,v) -> t ^ "*") params) in
+        | Some(atype) -> Format.sprintf "struct %s*" atype in
+    let first = if cfunc.static then [] else [(GenCast.get_tname cfunc.inklass, "this")] in
+    let params = first@cfunc.formals in
+    let types = String.concat ", " (List.map (fun (t,v) -> "struct " ^ t ^ "*") params) in
     let signature = Format.sprintf "%s%s(%s);" ret_type cfunc.name types in
     if cfunc.builtin then Format.sprintf "" else signature
 
@@ -298,7 +299,7 @@ let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
         | Some(t) -> proto t
 
 let cast_to_c_main mains =
-    let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
+    let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(&global_system, str_args); return 0; }" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
     let cases = Format.sprintf "\"%s\"" (String.concat ", " (List.map fst mains)) in
@@ -335,7 +336,7 @@ let meta_init bindings =
     let to_ptr klass = Format.sprintf "m_classes[%s]" (String.trim (String.uppercase (GenCast.get_tname klass))) in
     let init (klass, ancestors) =
         let ancestors_strings = String.concat ", " (List.map to_ptr ancestors) in
-        Format.sprintf "class_info_init(&M_%s, %d, %s)" klass (List.length ancestors) ancestors_strings in
+        Format.sprintf "class_info_init(&M_%s, %d, %s);" klass (List.length ancestors) ancestors_strings in
     let bindings = List.filter (fun (k, _) -> not (StringSet.mem (GenCast.get_tname k) GenCast.built_in_names)) bindings in
     let inits = List.map init bindings in
     let inits = List.map (Format.sprintf "\t%s") inits in
