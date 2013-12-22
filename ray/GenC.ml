@@ -327,13 +327,19 @@ let print_class_enums = function
         let first = first ^ " = 0" in
         commalines (List.map String.uppercase (first::rest)) 75
 
-let setup_meta klass ancestors =
-    let gen = List.length ancestors - 1 in
+let setup_meta klass =
+    Format.sprintf "ClassInfo M_%s;" (String.uppercase klass)
+
+let meta_init bindings =
     let to_ptr klass = Format.sprintf "m_classes[%s]" (String.uppercase (GenCast.get_tname klass)) in
-    let classes = List.map to_ptr ancestors in
-    let ancestor_ptrs = List.map (fun f -> "\t\t" ^ f) (commalines classes 70) in
-    Format.sprintf "ClassInfo M_%s = {\n\t.ancestors = {\n%s\n\t},\n\t.generation = %d,\n\t.class = m_classes[%s]\n};"
-        (String.uppercase klass) (String.concat "\n" ancestor_ptrs) gen (String.uppercase (GenCast.get_tname klass))
+    let init (klass, ancestors) =
+        let ancestors_strings = String.concat ", " (List.map to_ptr ancestors) in
+        Format.sprintf "class_info_init(&M_%s, %d, %s)" (String.uppercase klass) (List.length ancestors) ancestors_strings in
+    let bindings = List.filter (fun (k, _) -> not (StringSet.mem (GenCast.get_tname k) GenCast.built_in_names)) bindings in
+    let inits = List.map init bindings in
+    let inits = List.map (Format.sprintf "\t%s") inits in
+    let built_in_init = "\tinit_built_in_infos();" in
+    Format.sprintf "void init_class_infos() {\n%s\n}\n" (String.concat "\n" (built_in_init::inits))
 
 let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     let out string = Printf.fprintf channel "%s\n" string in
@@ -373,8 +379,9 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     comment "Meta structures for each class.";
     let print_meta (klass, ancestors) =
         if StringSet.mem (GenCast.get_tname klass) GenCast.built_in_names then ()
-        else out ((setup_meta klass ancestors) ^ "\n") in
+        else out (setup_meta klass) in
     List.iter print_meta (StringMap.bindings ancestry);
+    out (meta_init (StringMap.bindings ancestry));
 
     comment "Header file containing structure information for built in classes.";
     incl "gamma-builtin-struct";
