@@ -1,8 +1,11 @@
 class IfTest:
   private:
+    void line():
+      system.out.printString("\n")
+
     void out(String msg):
       system.out.printString(msg)
-      system.out.printString("\n")
+      line()
 
     void yes():
       out("This should print.")
@@ -13,14 +16,21 @@ class IfTest:
     init():
       super()
 
+      out("Simple (1/2)")
+      if (true)  { yes(); }
+      if (false) { no();  }
+      line()
+
       out("Basic (2/2)")
-      if (true)  { yes(); } else { no(); }
-      if (false) { no(); }  else { yes(); }
+      if (true)  { yes(); } else { no();  }
+      if (false) { no();  } else { yes(); }
+      line()
 
       out("Multiple (3/3)")
       if (true)  { yes(); } elsif (false) { no();  } else { no ();  }
       if (false) { no();  } elsif (true)  { yes(); } else { no ();  }
       if (false) { no();  } elsif (false) { no();  } else { yes (); }
+      line()
 
       out("Non-exhaustive (2/3)")
       if (true)  { yes(); } elsif (false) { no();  }
