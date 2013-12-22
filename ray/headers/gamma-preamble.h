@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #define PROMOTE_INTEGER(ival)   integer_value((ival))
 #define PROMOTE_FLOAT(fval)     float_value((fval))
 #define PROMOTE_STRING(sval)    string_value((sval))
