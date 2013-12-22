@@ -127,7 +127,7 @@ and exprdetail_to_cstr castexpr_detail =
     | Refine(args, ret, switch)          -> generate_refine args ret switch
     | Refinable(switch)                  -> generate_refinable switch
 
-and vdecl_to_cstr (vtype, vname) = "struct " ^ vtype ^ " *" ^ vname
+and vdecl_to_cstr (vtype, vname) = Format.sprintf "struct %s*%s" vtype vname
 
 
 let rec collect_dispatches_exprs exprs = List.iter collect_dispatches_expr exprs
@@ -311,7 +311,7 @@ let cast_to_c_main mains =
 let commalines input n =
     let newline string = String.length string >= n in
     let rec line_builder line rlines = function
-        | [] -> List.rev (line::rlines)
+        | [] -> List.map String.trim (List.rev (line::rlines))
         | str::rest ->
             let comma = match rest with [] -> false | _ -> true in
             let str = if comma then str ^ ", " else str in
