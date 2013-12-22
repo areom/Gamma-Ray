@@ -77,7 +77,8 @@ let rec expr_to_cstr (exptype, expr_detail) = exprdetail_to_cstr expr_detail
 
 and exprdetail_to_cstr castexpr_detail =
     let generate_deref obj index =
-        Format.sprintf "((%s*)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
+        let arrtype = fst obj in
+        Format.sprintf "((struct %s*)(%s))[INTEGER_OF((%s))]" arrtype (expr_to_cstr obj) (expr_to_cstr index) in
 
     let generate_field obj field =
         let exptype = fst obj in
@@ -288,8 +289,8 @@ let cast_to_c_proto cfunc =
 
 let cast_to_c_proto_dispatch_arr (arrtype, fname, args) =
     let types = List.map fst args in
-    let ptrs = List.map (Format.sprintf "%s*") types in
-    Format.sprintf "%s%s(%s);" arrtype fname (String.concat ", " ptrs)
+    let ptrs = List.map (Format.sprintf "struct %s*") types in
+    Format.sprintf "struct %s%s(%s);" arrtype fname (String.concat ", " ptrs)
 
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
     Format.sprintf "t_Boolean *%s(%s *);" uid klass
