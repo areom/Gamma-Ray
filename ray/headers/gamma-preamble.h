@@ -35,6 +35,8 @@
 #define INTEGER_OF(i) VAL_OF(Integer, i)
 #define STRING_OF(s)  VAL_OF(String, s)
 
+#define NEG_INTEGER(i)          PROMOTE_INTEGER(-INTEGER_OF(i))
+
 #define NTEST_EQ_INT_INT(l, r)   PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value == ((struct t_Integer *)(r))->Integer.value)
 #define NTEST_NEQ_INT_INT(l, r)  PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value != ((struct t_Integer *)(r))->Integer.value)
 #define NTEST_LESS_INT_INT(l, r) PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value < ((struct t_Integer *)(r))->Integer.value)
