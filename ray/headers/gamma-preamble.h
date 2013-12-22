@@ -28,7 +28,7 @@
 #define MAKE_NEW2(type, meta) ((struct type *)(allocate_for(sizeof(struct type), &meta)))
 #define MAKE_NEW(t_name) MAKE_NEW2(t_##t_name, M_##t_name)
 
-#define VAL_OF(type, v) ( ((t_#type *)(v))->type.value )
+#define VAL_OF(type, v) ( ((struct t_##type *)(v))->type.value )
 #define BOOL_OF(b)    VAL_OF(Boolean, b)
 #define FLOAT_OF(f)   VAL_OF(Float, f)
 #define INTEGER_OF(i) VAL_OF(Integer, i)
