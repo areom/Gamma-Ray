@@ -94,7 +94,7 @@ and exprdetail_to_cstr castexpr_detail =
 
     let generate_allocation klass fname args =
         let vals = List.map expr_to_cstr args in
-        Format.sprintf "%s(MakeNew(%s))" fname (String.concat ", " (klass::vals)) in
+        Format.sprintf "%s(MAKE_NEW(%s))" fname (String.concat ", " (klass::vals)) in
 
     let generate_array_alloc _ fname args =
         let vals = List.map expr_to_cstr args in
