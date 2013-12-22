@@ -60,6 +60,18 @@ t_Object *object_init(t_Object *this){
 /* t_System *system_init(t_System *this) */
 
 
+t_Float *scanner_scan_float(t_Scanner *this)
+{
+	
+}
+t_Integer *scanner_scan_integer(t_Scanner *this)
+{
+}
+t_String *scanner_scan_string(t_Scanner *this)
+{
+	
+	fscanf(this->Scanner.source, "%s", 
+}
 void printer_print_float(t_Printer *this, t_Float *v_arg)
 {
 	fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);	
