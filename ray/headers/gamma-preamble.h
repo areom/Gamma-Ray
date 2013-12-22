@@ -44,7 +44,8 @@ if (!argc) { \
     fprintf(stderr, "Please select a main to use.  Available options: " options "\n"); \
     exit(1); \
 }\
-gmain = *argv;
+gmain = *argv;\
+system_init(&global_system);
 
 #define FAIL_MAIN(options) \
 fprintf(stderr, "None of the available options were selected. Options were: " options "\n"); \
