@@ -1,0 +1,22 @@
+\subsection*{Ocaml Style Guide for the Development of the Ray Compiler}
+
+Expert Ocaml technique is not expected for the development of ray, however there are some basic stylistic tendencies that are preferred at all times.
+
+When constructing a \verb|let...in| statement, the associated in must not be alone on the final line:
+\begin{lstlisting}
+    let your_functor =
+    	    ...
+    	    ... in
+\end{lstlisting}
+
+For a large \verb|let| statement that defines a variable, store the final operational call in a dummy variable and return that dummy:
+\begin{lstlisting}
+    let get_x =
+    	    ...
+    	    let x =
+    	        x_functor1 (x_functor2 y z) n in
+    	    x
+\end{lstlisting}
+
+2) for the most part, try to have | (bars from match, etc) indented
+I guess 3) keep records looking the way they do (fields lined up, braces not necessarily by themselves)
