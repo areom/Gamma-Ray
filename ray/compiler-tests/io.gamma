@@ -1,20 +1,29 @@
 class IOTest:
   public:
-    Integer a
-    Integer b
     init():
       super()
-      a := 1
-      b := 2
-    Integer overview():
-      Printer p := new Printer(true)
-      p.printInteger(a)
-      p.printInteger(b)
-      return 0
-    Integer incre_ab():
-      Scanner s := new Scanner()
-      Integer delta
-      delta := s.scanInteger()
-      a := a + delta
-      b := b + delta
-      return 0
+
+    void interact():
+      Printer p := system.out
+      Integer i := promptInteger("Please enter an integer")
+      Float f := promptFloat("Please enter a float")
+      p.printString("Sum of integer + float = ")
+      p.printFloat(i.toF() + f)
+      p.printString("\n")
+
+  private:
+    void prompt(String msg):
+      system.out.printString(msg)
+      system.out.printString(": ")
+
+    Integer promptInteger(String msg):
+      prompt(msg)
+      return system.in.scanInteger()
+
+    Float promptFloat(String msg):
+      prompt(msg)
+      return system.in.scanFloat()
+
+  main(System system, String[] args):
+    IOTest test := new IOTest()
+    test.interact()
