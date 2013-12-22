@@ -189,7 +189,7 @@ let generate_testsw (klass, klasses, fuid) =
                 let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
-    Format.sprintf "t_Boolean *%s (%s*this)\n{\n%s\n}\n\n" fuid klass body
+    Format.sprintf "struct t_Boolean *%s (%s*this)\n{\n%s\n}\n\n" fuid klass body
 
 (**
      Takes a dispatch element of the global dispatches list
@@ -293,11 +293,11 @@ let cast_to_c_proto_dispatch_arr (arrtype, fname, args) =
     Format.sprintf "struct %s%s(%s);" arrtype fname (String.concat ", " ptrs)
 
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
-    Format.sprintf "t_Boolean *%s(%s *);" uid klass
+    Format.sprintf "struct t_Boolean *%s(%s *);" uid klass
 
 let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
     let types = List.map (fun t -> t ^ "*") (klass::args) in
-    let proto rtype = Format.sprintf "%s*%s(%s);" rtype uid (String.concat ", " types) in
+    let proto rtype = Format.sprintf "struct %s*%s(%s);" rtype uid (String.concat ", " types) in
     match ret with
         | None -> proto "void"
         | Some(t) -> proto t
