@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define PROMOTE_INTEGER(ival)   integer_value((ival))
 #define PROMOTE_FLOAT(fval)     float_value((fval))
@@ -24,8 +25,8 @@
 #define POW_FLOAT_FLOAT(l, r)   PROMOTE_FLOAT( pow(FLOAT_OF(l), FLOAT_OF(r)) )
 
 
-#define MAKE_NEW2(type, meta) ((type *)(allocate_for(sizeof(type), &meta)))
-#define MAKE_NEW(t_name) MAKE_NEW2(T_#t_name, M_#t_name)
+#define MAKE_NEW2(type, meta) ((struct type *)(allocate_for(sizeof(struct type), &meta)))
+#define MAKE_NEW(t_name) MAKE_NEW2(t_##t_name, M_##t_name)
 
 #define VAL_OF(type, v) ( ((t_#type *)(v))->type.value )
 #define BOOL_OF(b)    VAL_OF(Boolean, b)
@@ -38,7 +39,7 @@
 #define INIT_MAIN(options) \
 t_String **str_args = NULL; \
 char *main = NULL; \
---argc; ++argv;
+--argc; ++argv; \
 if (!argc) { \
     fprintf(stderr, "Please select a main to use.  Available options: " options); \
     exit(1); \
