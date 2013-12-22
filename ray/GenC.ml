@@ -216,7 +216,10 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let generated = List.map unroll_case cases in
     Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated)
 
-let generate_arrayalloc (klass, ret, args) = "/* WILL DO SOON */"
+let generate_arrayalloc (arrtype, fname, args) =
+    let params = List.mapi (fun i _ -> Format.sprintf "struct %s*v_dim%d" (GenCast.get_tname "Integer") i) args in
+    Format.sprintf "struct %s*%s(%s) {\n\treturn NULL;\n}\n" arrtype fname (String.concat ", " params)
+
 
 (**
     Take a list of cast_stmts and return a body of c statements
@@ -288,9 +291,9 @@ let cast_to_c_proto cfunc =
     if cfunc.builtin then Format.sprintf "" else signature
 
 let cast_to_c_proto_dispatch_arr (arrtype, fname, args) =
-    let types = List.map fst args in
-    let ptrs = List.map (Format.sprintf "struct %s*") types in
-    Format.sprintf "struct %s%s(%s);" arrtype fname (String.concat ", " ptrs)
+    let int = Format.sprintf "struct %s*" (GenCast.get_tname "Integer") in
+    let params = List.map (fun _ -> int) args in
+    Format.sprintf "struct %s*%s(%s);" arrtype fname (String.concat ", " params)
 
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
     Format.sprintf "struct t_Boolean *%s(struct %s *);" uid klass
