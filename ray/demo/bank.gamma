@@ -1,10 +1,23 @@
+class Bank:
+  public:
+    init():
+      super()
+
+    Integer transfer(Integer from_id, Integer to_id, Float amount):
+      return 0
+
+  protected:
+    Account[] accounts
+
+
+
 class Account:
   public:
     init(Integer new_id, String name):
       super()
       id := new_id
       customer := name
-      balance := 0
+      balance := 0.0
       /*transactions := new Integer[](100)*/
       trans_len := 0
     
@@ -14,19 +27,19 @@ class Account:
     String get_customer_name():
       return customer
 
-    Integer get_balance():
+    Float get_balance():
       return balance
 
-    Integer deposit(Integer amount):
-      if(amount < 0):
+    Integer deposit(Float amount):
+      if(amount < 0.0):
         return 1
       balance += amount
      /* transactions[trans_len] := amount*/
       trans_len += 1
       return 0
 
-    Integer withdraw(Integer amount):
-      if(amount < 0):
+    Integer withdraw(Float amount):
+      if(amount < 0.0):
         return 1
       if(balance < amount):
         return 1
@@ -36,9 +49,10 @@ class Account:
   private:
     Integer id
     String customer
-    Integer balance
+    Float balance
     /*Integer[] transactions*/
     Integer trans_len
+
 
 class Main:
   public:
@@ -47,10 +61,34 @@ class Main:
   
   main(System system, String[] args):
     Account test_account := new Account(0, "Bender")
+    system.out.printString("Hello ")
+    system.out.printString(test_account.get_customer_name())
+    system.out.printString(":\n")
+
+    while(true):
+      Integer selection := new Integer()
+      Float amount := new Float()
+
+      system.out.printString("Please select:\n 1. Deposit\n 2. Withdraw\n:")
+      selection := system.in.scanInteger()
+      if(selecton = 1):
+        system.out.printString("Please enter amount:")
+
     system.out.printString("Current Balance:")
-    system.out.printInteger(test_account.get_balance()) 
+    system.out.printFloat(test_account.get_balance()) 
     system.out.printString("\n")
-    test_account.deposit(-100)
+
+    test_account.deposit(100.0)
     system.out.printString("Current Balance:")
-    system.out.printInteger(test_account.get_balance()) 
+    system.out.printFloat(test_account.get_balance()) 
+    system.out.printString("\n")
+
+    test_account.withdraw(40.0)
+    system.out.printString("Current Balance:")
+    system.out.printFloat(test_account.get_balance()) 
+    system.out.printString("\n")
+
+    test_account.withdraw(80.0)
+    system.out.printString("Current Balance:")
+    system.out.printFloat(test_account.get_balance()) 
     system.out.printString("\n")
