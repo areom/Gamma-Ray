@@ -37,6 +37,8 @@
 #define STRING_OF(s)  VAL_OF(String, s)
 
 #define NEG_INTEGER(i)            PROMOTE_INTEGER(-INTEGER_OF(i))
+#define NEG_FLOAT(f)              PROMOTE_FLOAT(-FLOAT_OF(f))
+#define NOT_BOOLEAN(b)            PROMOTE_BOOL(!BOOL_OF(b))
 
 #define BINOP(type, op, l, r)     PROMOTE_BOOL( VAL_OF(type, l) op VAL_OF(type, r) )
 #define IBINOP(op, l, r)          BINOP(Integer, op, l, r)

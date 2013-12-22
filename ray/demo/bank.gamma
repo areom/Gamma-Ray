@@ -50,7 +50,7 @@ class Main:
     system.out.printString("Current Balance:")
     system.out.printInteger(test_account.get_balance()) 
     system.out.printString("\n")
-    test_account.deposit(100)
+    test_account.deposit(-100)
     system.out.printString("Current Balance:")
     system.out.printInteger(test_account.get_balance()) 
     system.out.printString("\n")
