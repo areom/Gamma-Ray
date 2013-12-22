@@ -13,6 +13,40 @@ t_Object *allocate_for(size_t s, ClassInfo *meta) {
     return this;
 }
 
+/* Make basic objects with the given values. */
+t_Integer *integer_value(int in_i) {
+    t_Integer *i = MAKE_NEW(Integer);
+    i->Integer.value = in_i;
+    return i;
+}
+
+t_Float *float_value(double in_f) {
+    t_Float *f = MAKE_NEW(Float);
+    f->Float.value = in_f;
+    return f;
+}
+
+t_Boolean *bool_value(unsigned char in_b) {
+    t_Boolean *b = MAKE_NEW(Boolean);
+    b->Boolean.value = in_b;
+    return b;
+}
+
+t_String *string_value(char *s_in) {
+    size_t length = 0;
+    char *dup = NULL;
+    length = strlen(s) + 1;
+
+    t_String *s = MAKE_NEW(String);
+    dup = malloc(sizeof(char) * length);
+    if (!dup) {
+        fprintf(stderr, "Out of memory in string_value.\n");
+        exit(1);
+    }
+    s->String.value = strcpy(dup, s);
+    return s;
+}
+
 /* t_Boolean *boolean_init(t_Boolean *this) */
 /* t_Float *float_init(t_Float *this) */
 /* t_Integer *float_to_i(t_Float *this) */
@@ -62,7 +96,15 @@ t_Object *object_init(t_Object *this){
     this->Object.v_system = system_init(this->Object.v_system);
     return this;
 }
-/* t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout) */
+t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
+{
+    this->Object = *object_init(&this->Object);
+    if(*v_stdout)
+        this->Printer.target = stdout;
+    else
+        this->Printer.target = stderr;
+    return this;
+}
 /* t_Scanner *scanner_init(t_Scanner *this) */
 /* t_String *string_init(t_String *this) */
 /* void system_exit(t_System *this, t_Integer *v_code) */
