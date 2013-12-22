@@ -14,5 +14,5 @@ test -f "$file" || errwith "File $file is not a file."
 
 args=()
 test -n "$main" && args+=( "$main" )
-./bin/ray "$file" > ctest/test.c && cd ctest && gcc test.c && ./a.out "${args[@]}"
+./bin/ray "$file" > ctest/test.c && gcc -I headers -o ctest/a.out ctest/test.c && ./ctest/a.out "${args[@]}"
 
