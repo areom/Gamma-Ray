@@ -57,10 +57,42 @@ t_Boolean *boolean_init(t_Boolean *this){
     return this;
 }
 
+t_Integer *integer_init(t_Integer *this){
+    this->Object = *object_init(&this->Object);
+    this->Intger.value = 0;
+    return this;
+}
+
 t_Float *float_init(t_Float *this){
     this->Object = *object_init(&this->Object);
     this->Float.value = 0.0;
     return this;
+}
+
+t_Object *object_init(t_Object *this){
+    this->Object = *object_init(&this->Object);
+    this->Object.v_system = system_init(this->Object.v_system);
+    return this;
+}
+
+t_String *string_init(t_String *this)
+{
+    this->Object = *object_init(&this->Object);
+    this->String.value = NULL;
+    return this;
+}
+
+t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
+{
+    this->Object = *object_init(&this->Object);
+    this->Printer.target = BOOL_OF(v_stdout) ? stdout : stderr;
+    return this;
+}
+
+t_Scanner *scanner_init(t_Scanner *this)
+{
+    this->Object = *object_init(&this->Object);
+    this->Printer.source = stdin;
 }
 
 t_Integer *float_to_i(t_Float *this){
@@ -77,49 +109,18 @@ t_Float *integer_to_f(t_Integer *this){
     return new_float
 }
 
-t_Integer *integer_init(t_Integer *this){
-    this->Object = *object_init(&this->Object);
-    this->Intger.value = 0;
-    return this;
-}
-
 t_String *object_get_id(t_Object *this){
     return this->Object.v_obj_id;
 }
 
-t_Object *object_init(t_Object *this){
-    this->Object = *object_init(&this->Object);
-    this->Object.v_system = system_init(this->Object.v_system);
-    return this;
-}
-t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
-{
-    this->Object = *object_init(&this->Object);
-    if(*v_stdout)
-        this->Printer.target = stdout;
-    else
-        this->Printer.target = stderr;
-    return this;
-}
-t_String *string_init(t_String *this)
-{
-    this->Object = *object_init(&this->Object);
-    this->String.value = NULL;
-    return this;
-}
 /* void system_exit(t_System *this, t_Integer *v_code) */
 /* t_System *system_init(t_System *this) */
 
-t_Scanner *scanner_init(t_Scanner *this)
-{
-    this->Object = *object_init(&this->Object);
-    this->Printer.source = stdin;
-}
 
 t_Float *scanner_scan_float(t_Scanner *this)
 {
     double dval;
-    fscanf(this->Scanner.source, "%ld", &dval);	
+    fscanf(this->Scanner.source, "%ld", &dval);
 
     t_Float *new_float = MAKE_NEW(Float);
     new_float = float_init(new_float);
