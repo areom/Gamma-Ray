@@ -177,17 +177,17 @@ struct t_String *scanner_scan_string(struct t_Scanner *this)
 
 void printer_print_float(struct t_Printer *this, struct t_Float *v_arg)
 {
-    fprintf(this->Printer.target, "%lf\n", v_arg->Float.value);
+    fprintf(this->Printer.target, "%lf", v_arg->Float.value);
 }
 
 void printer_print_integer(struct t_Printer *this, struct t_Integer *v_arg)
 {
-    fprintf(this->Printer.target, "%d\n", v_arg->Integer.value);
+    fprintf(this->Printer.target, "%d", v_arg->Integer.value);
 }
 
 void printer_print_string(struct t_Printer *this, struct t_String *v_arg)
 {
-    fprintf(this->Printer.target, "%s\n", v_arg->String.value);
+    fprintf(this->Printer.target, "%s", v_arg->String.value);
 }
 
 void system_exit(struct t_System *this, struct t_Integer *v_code) {
