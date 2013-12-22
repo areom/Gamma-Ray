@@ -19,3 +19,5 @@
 #define MakeNew(t_name)
 
 #define BOOL_OF(boolean)
+
+#define IS_CLASS(obj, kname) strcmp(obj->meta->ancestors[obj->meta->generation], kname) == 0
