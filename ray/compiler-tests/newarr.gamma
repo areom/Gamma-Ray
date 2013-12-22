@@ -1,0 +1,10 @@
+class NewArr:
+  public:
+    Integer[] a
+    init():
+      super()
+      a := new Integer[](4)
+  main(String[] args):
+    NewArr f
+    f := new NewArr()
+
