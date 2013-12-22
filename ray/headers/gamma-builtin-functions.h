@@ -16,18 +16,21 @@ t_Object *allocate_for(size_t s, ClassInfo *meta) {
 /* Make basic objects with the given values. */
 t_Integer *integer_value(int in_i) {
     t_Integer *i = MAKE_NEW(Integer);
+    i = integer_init(i);
     i->Integer.value = in_i;
     return i;
 }
 
 t_Float *float_value(double in_f) {
     t_Float *f = MAKE_NEW(Float);
+    f = float_init(f);
     f->Float.value = in_f;
     return f;
 }
 
 t_Boolean *bool_value(unsigned char in_b) {
     t_Boolean *b = MAKE_NEW(Boolean);
+    b = boolean_init(b);
     b->Boolean.value = in_b;
     return b;
 }
@@ -38,6 +41,7 @@ t_String *string_value(char *s_in) {
     length = strlen(s) + 1;
 
     t_String *s = MAKE_NEW(String);
+    s = string_init(s);
     dup = malloc(sizeof(char) * length);
     if (!dup) {
         fprintf(stderr, "Out of memory in string_value.\n");
