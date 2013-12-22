@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function errWith {
+function errwith {
   echo "$1" >&2
   exit 1
 }
@@ -14,5 +14,5 @@ test -f "$file" || errwith "File $file is not a file."
 
 args=()
 test -n "$main" && args+=( "$main" )
-./bin/ray "$file" > ctest/test.c && gcc -I headers -o ctest/a.out ctest/test.c && ./ctest/a.out "${args[@]}"
+./bin/ray "$file" > ctest/test.c && cd ctest && ./compile && ./a.out "${args[@]}"
 
