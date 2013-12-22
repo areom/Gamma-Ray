@@ -154,6 +154,7 @@ and collect_dispatches_stmt = function
     | While(pred, body, _) -> collect_dispatches_expr pred; collect_dispatches_stmts body
     | Expr(expr, _) -> collect_dispatches_expr expr
     | Return(Some(expr), _) -> collect_dispatches_expr expr
+    | Super(_, _, args) -> collect_dispatches_exprs args
     | Return(None, _) -> ()
 and collect_dispatches_clauses pieces =
     let (preds, bodies) = List.split pieces in
@@ -233,7 +234,9 @@ let rec cast_to_c_stmt indent cast =
         | While(pred, body, env) -> Format.sprintf "while ( BOOL_OF( %s ) ) {\n%s\n%s}" (expr_to_cstr pred) (stmts body) indents
         | Expr(expr, env) -> Format.sprintf "( %s );" (expr_to_cstr expr)
         | Return(Some(expr), env) -> Format.sprintf "return ( %s );" (expr_to_cstr expr)
-        | Return(_, env) -> "return;" in
+        | Return(_, env) -> "return;"
+        | Super(klass, fuid, []) -> Format.sprintf "%s((struct %s*)(this))" fuid (GenCast.get_tname klass)
+        | Super(klass, fuid, args) -> Format.sprintf "%s((struct %s*)(this), %s)" fuid (GenCast.get_tname klass) (String.concat ", " (List.map expr_to_cstr args)) in
     indents ^ cstmt
 
 and cast_to_c_stmtlist indent stmts =
