@@ -110,7 +110,9 @@ let sast_to_cast_func (func : Sast.func_def) : cfunc =
         formals = List.map get_vdef func.formals;
         body = cstmtlist func.name func.body;
         builtin = func.builtin;
-        inklass = func.inklass; }
+        inklass = func.inklass;
+        static  = func.static;
+    }
 
 let build_class_struct_map klass_data (sast_classes : Sast.class_def list) =
     (* Extract the ancestry and variables from a class into a cdef *)

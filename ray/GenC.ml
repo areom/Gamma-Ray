@@ -267,7 +267,9 @@ let cast_to_c_func cfunc =
     let body = match cfunc.body with
         | [] -> " { }"
         | body -> Format.sprintf "\n{\n%s\n}" (cast_to_c_stmtlist 1 body) in
-    let params = (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals in
+    let params = if cfunc.static = false then (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals
+                 else cfunc.formals
+    in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ "*" ^ v) params) in
     if cfunc.builtin then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
     else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
