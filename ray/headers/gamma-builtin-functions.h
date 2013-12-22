@@ -1,3 +1,18 @@
+
+/* Magic allocator. DO NOT INVOKE THIS, USE MAKE_NEW(TYPE)
+ * where type is not prefixed (i.e. MAKE_NEW(Integer) not
+ * MAKE_NEW(t_Integer))
+ */
+t_Object *allocate_for(size_t s, ClassInfo *meta) {
+    t_Object *this = (t_Object *)(malloc(s));
+    if (!this) {
+        fprintf(stderr, "Could not even allocate memory. Exiting.\n");
+        exit(1);
+    }
+    this->meta = meta;
+    return this;
+}
+
 /* t_Boolean *boolean_init(t_Boolean *this) */
 /* t_Float *float_init(t_Float *this) */
 /* t_Integer *float_to_i(t_Float *this) */
@@ -70,6 +85,19 @@ t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
 /* t_System *system_init(t_System *this) */
 
 
+t_Float *scanner_scan_float(t_Scanner *this)
+{
+	double dval;
+	fscanf(this->Scanner.source, "%ld", &dval);	
+}
+t_Integer *scanner_scan_integer(t_Scanner *this)
+{
+	int ival;
+	fscanf(this->Scanner.source, "%d", &val);
+}
+t_String *scanner_scan_string(t_Scanner *this)
+{
+}
 void printer_print_float(t_Printer *this, t_Float *v_arg)
 {
 	fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);	

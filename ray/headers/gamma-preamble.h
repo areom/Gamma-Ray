@@ -16,8 +16,13 @@
 #define POW_FLOAT_FLOAT(l, r)
 
 
-#define MakeNew(t_name)
+#define MAKE_NEW2(type, meta) ((type *)(allocate_for(sizeof(type), &meta)))
+#define MAKE_NEW(t_name) MAKE_NEW2(T_#t_name, M_#t_name)
 
-#define BOOL_OF(boolean)
+#define VAL_OF(type, v) ( ((t_#type *)(v))->type.value )
+#define BOOL_OF(b)    VAL_OF(Boolean, b)
+#define FLOAT_OF(f)   VAL_OF(Float, f)
+#define INTEGER_OF(i) VAL_OF(Integer, i)
+#define STRING_OF(s)  VAL_OF(String, s)
 
-#define IS_CLASS(obj, kname) strcmp(obj->meta->ancestors[obj->meta->generation], kname) == 0
+#define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
