@@ -152,9 +152,9 @@ let rec deanon_stmt input_state stmt =
             let (deets, state) = deanon_expr init_state env expr in
             (Sast.Return(Some(deets), env), state) in
 
-    let deanon_super init_state env args init_id =
+    let deanon_super init_state env args built_in init_id =
         let (deets, state) = deanon_exprs init_state env args in
-        (Sast.Super(deets, init_id, env), state) in
+        (Sast.Super(deets, init_id, built_in, env), state) in
 
     let deanon_while init_state env (expr, stmts) =
         let (test, state) = deanon_expr init_state env expr in
@@ -181,7 +181,7 @@ let rec deanon_stmt input_state stmt =
         | Sast.While(test, body, env) -> deanon_while input_state env (test, body)
         | Sast.Expr(expr, env) -> deanon_exprstmt input_state env expr
         | Sast.Return(opt_expr, env) -> deanon_return input_state env opt_expr
-        | Sast.Super(args, init_id, env) -> deanon_super input_state env args init_id
+        | Sast.Super(args, init_id, built_in, env) -> deanon_super input_state env args built_in init_id
 
 (**
     Update an entire list of statements to be deanonymized.

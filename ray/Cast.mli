@@ -26,6 +26,7 @@ and cstmt =
     | If of (cexpr option * cstmt list) list * Sast.environment
     | While of cexpr * cstmt list * Sast.environment
     | Expr of cexpr * Sast.environment
+    | Super of string * string * cexpr list (* class, fuid, args *)
     | Return of cexpr option * Sast.environment
 
 (* A c func is a simplified function (no host, etc) *)

@@ -221,7 +221,7 @@ let rec attach_bindings klass_data kname mname meth_ret isstatic stmts initial_e
         let argtypes = List.map fst arglist in
         match best_method klass_data parent "init" argtypes [Ast.Publics; Ast.Protects] with
             | None       -> raise(Failure "Cannot find super init")
-            | Some(fdef) -> fdef.uid in
+            | Some(fdef) -> fdef in
 
     (* Helper function for building a predicate expression *)
     let build_predicate pred_env exp = match eval' pred_env exp with
@@ -265,8 +265,11 @@ let rec attach_bindings klass_data kname mname meth_ret isstatic stmts initial_e
     let build_exprstmt expr expr_env = Sast.Expr(eval' expr_env expr, expr_env) in
     let build_superstmt expr_list super_env =
         let arglist = eval_exprlist super_env expr_list in
-        Sast.Super(arglist, get_superinit kname arglist, super_env)
-    in
+        let init = get_superinit kname arglist in
+        match map_lookup kname klass_data.parents with
+            | None -> raise(Failure("Error -- getting parent for object without parent: " ^ kname))
+            | Some(parent) -> Sast.Super(arglist, init.uid, parent, super_env) in
+
     (* Ast statement -> (Sast.Statement, Environment Update Option) *)
     let updater in_env = function
         | Ast.While(expr, slist)   -> (build_whilestmt expr slist in_env, None)
@@ -366,7 +369,7 @@ let ast_mem_to_sast_mem klass_data (mem : Ast.member_def) initial_env =
 let init_calls_super (aklass : Sast.class_def) =
     let validate_init func_def = match func_def.builtin, func_def.body with
         | true, _ -> true
-        | _, (Super(_,_,_)::_) -> true
+        | _, (Super(_,_,_,_)::_) -> true
         | _, _ -> false in
     let grab_init = function
         | InitMem(m) -> Some(m)

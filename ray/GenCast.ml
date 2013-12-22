@@ -81,19 +81,18 @@ and cstmt mname sstmt =
         | [(optexpr, slist)]   -> [(getoptexpr env optexpr, cstmtlist mname slist)]
         | (optexpr, slist)::tl -> (getoptexpr env optexpr, cstmtlist mname slist)::(getiflist env tl) in
 
-    let getsuper args fuid env =
-        let recvr = (get_tname "Object", Cast.This) in
-        let init = to_fname fuid "init" in
+    let getsuper args fuid parent env =
+        let init = if BuiltIns.is_built_in parent then fuid else to_fname fuid "init" in
         let cargs = sast_to_castexprlist mname env args in
-        Cast.Invoc((recvr, init, cargs)) in
+        Cast.Super(parent, init, cargs) in
 
     match sstmt with
-        | Sast.Decl(var_def, optexpr, env) -> Cast.Decl(cdef var_def, getoptexpr env optexpr, env)
-        | Sast.If(iflist, env)             -> Cast.If(getiflist env iflist, env)
-        | Sast.While(expr, sstmtlist, env) -> Cast.While(sast_to_castexpr mname env expr, cstmtlist mname sstmtlist, env)
-        | Sast.Expr(exp, env)              -> Cast.Expr(sast_to_castexpr mname env exp, env)
-        | Sast.Return(optexpr, env)        -> Cast.Return(getoptexpr env optexpr, env)
-        | Sast.Super(args, fuid, env)      -> Cast.Expr((get_tname "Void", getsuper args fuid env), env)
+        | Sast.Decl(var_def, optexpr, env)      -> Cast.Decl(cdef var_def, getoptexpr env optexpr, env)
+        | Sast.If(iflist, env)                  -> Cast.If(getiflist env iflist, env)
+        | Sast.While(expr, sstmtlist, env)      -> Cast.While(sast_to_castexpr mname env expr, cstmtlist mname sstmtlist, env)
+        | Sast.Expr(exp, env)                   -> Cast.Expr(sast_to_castexpr mname env exp, env)
+        | Sast.Return(optexpr, env)             -> Cast.Return(getoptexpr env optexpr, env)
+        | Sast.Super(args, fuid, parent, env)   -> getsuper args fuid parent env
 
 (**
     Trim up the sast func_def to the cast cfunc_def
