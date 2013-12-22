@@ -1,0 +1,111 @@
+class IOTest:
+  public:
+    Integer a
+    Integer b
+    Integer c
+
+    init():
+      super()
+      a := 1
+      b := 2
+      c := 0
+
+    Integer overview():
+      Integer success := refine toExtra(a,b) to Integer
+      Printer p := new Printer(true)
+      p.printInteger(a)
+      p.printInteger(b)
+      p.printInteger(c)
+      return 0
+
+    Integer incre_ab():
+      Scanner s := new Scanner()
+      Integer delta
+      delta := s.scanInteger()
+      a := a + delta
+      b := b + delta
+      if (refinable(toAddon)) {
+          a := 0;
+          Integer delta2 := refine toAddon(delta) to Integer;
+      }
+      return a+b
+
+    Integer arith():
+      c := -(a + b)
+      return c
+
+class DIOTest extends IOTest:
+  refinement:
+    Integer overview.toExtra(Integer a, Integer b):
+      Integer success :=  a + b
+      Printer p := new Printer(true)
+      p.printInteger(a)
+      p.printInteger(b)
+      p.printInteger(c)
+      return success 
+
+    Integer incre_ab.toAddon(Integer d):
+      Scanner s := new Scanner()
+      Integer delta
+      delta := s.scanInteger()
+      a := a + delta
+      b := b + delta
+      d := a + b
+      return d
+  public:
+    Integer a1
+    Integer b1
+    Integer c1
+
+    init():
+      super()
+      a1 := 1
+      b1 := 2
+      c1 := 0
+
+    Integer arithc():
+      c := -(a + b)
+      return c
+
+class DIOTest2 extends IOTest:
+  refinement:
+    Integer overview.toExtra(Integer a, Integer b):
+      Integer success :=  a * b
+      Printer p := new Printer(true)
+      p.printInteger(a)
+      p.printInteger(b)
+      p.printInteger(c)
+      return success 
+
+  public:
+    Integer a2
+    Integer b2
+    Integer c2
+
+    init():
+      super()
+      a2 := 1
+      b2 := 2
+      c2 := 0
+
+    Integer incre_acd():
+      Scanner s := new Scanner()
+      Integer delta
+      delta := s.scanInteger()
+      a := a2 + delta
+      b := b2 + delta
+      return a-b
+
+    Integer arithd():
+      c := -(a + b)
+      return c
+
+class Main:
+  public:
+    init():
+      super()
+
+  main(System system, String[] args):
+    IOTest ab := new IOTest()
+    ab.overview()
+    ab.overview()
