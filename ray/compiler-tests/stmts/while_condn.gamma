@@ -4,7 +4,7 @@ class WhileLoopTest:
     init():
       super()
       Integer a := 0
-      while((a>0) && (a<10)):
+      while((a>=0) and (a<10)):
         system.out.printInteger(a)
         system.out.printString("\n")
         a := a + 1
