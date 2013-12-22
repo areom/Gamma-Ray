@@ -264,7 +264,8 @@ let is_type data atype =
     Note that this is true when the two are equal (trivial ancestor).
   *)
 let is_subtype data subtype supertype =
-    match get_distance data subtype supertype with
+    let basetype s = try let n = String.index s '[' in String.sub s 0 n with Not_found -> s in
+    match get_distance data (basetype subtype) (basetype supertype) with
         | Some(n) when n >= 0 -> true
         | _ -> false
 
