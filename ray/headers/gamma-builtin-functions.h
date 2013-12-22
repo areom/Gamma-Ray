@@ -5,6 +5,7 @@ int object_counter;
 
 /* Prototypes */
 struct t_Object *allocate_for(size_t, ClassInfo *);
+void *array_allocator(size_t, int);
 struct t_Integer *integer_value(int);
 struct t_Float *float_value(double);
 struct t_Boolean *bool_value(unsigned char);
@@ -39,6 +40,15 @@ struct t_Object *allocate_for(size_t s, ClassInfo *meta) {
     }
     this->meta = meta;
     return this;
+}
+
+void *array_allocator(size_t size, int n) {
+    void *mem = malloc(size * n);
+    if (!mem) {
+        fprintf(stderr, "Failure allocating for array.  Exiting.\n");
+        exit(1);
+    }
+    return mem;
 }
 
 /* Make basic objects with the given values. */

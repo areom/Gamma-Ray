@@ -80,3 +80,6 @@ exit(1);
 #define REFINE_FAIL(parent) \
     fprintf(stderr, "Refinement fail: " parent "\n"); \
     exit(1);
+
+
+#define ONE_DIM_ALLOC(type, len) ((type *) array_allocator(sizeof(type), (len)))
