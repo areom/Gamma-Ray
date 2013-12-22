@@ -377,8 +377,8 @@ let init_calls_super (aklass : Sast.class_def) =
     List.for_all validate_init inits
 
 let check_main (func : Ast.func_def) = match func.formals with
-    | [("String[]", _)] -> func
-    | _ -> raise(Failure(Format.sprintf "Main in %s does not have String[] arguments" func.inklass))
+    | [("System", _); ("String[]", _)] -> func
+    | _ -> raise(Failure(Format.sprintf "Main functions can only have two arguments: A system (first) and an array of strings (second). -- error in %s" func.inklass))
 
 (**
     Given a class_data object and an Ast.class_def, return a Sast.class_def
