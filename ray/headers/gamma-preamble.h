@@ -68,6 +68,7 @@ if (!argc) { \
     exit(1); \
 }\
 gmain = *argv;\
+init_class_infos();\
 system_init(&global_system);
 
 #define FAIL_MAIN(options) \
