@@ -1,9 +1,12 @@
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 typedef struct {
         int generation;
         char* class;
         char** ancestors;
 } ClassInfo;
-
 
 
 ClassInfo M_BOOLEAN = {
@@ -70,4 +73,26 @@ ClassInfo M_SYSTEM = {
 	.class = m_classes[T_SYSTEM ]
 };
 
+/* 
+        Initializes the given ClassInfo
+*/
+void class_info_init(ClassInfo* meta, int num_args, ...) {
 
+        int i;
+        va_list objtypes;
+        va_start(objtypes, num_args);
+
+        meta->ancestors = malloc(sizeof(char *) * num_args);
+
+        if (meta->ancestors == NULL) {
+                printf("\nMemory error - class_info_init failed\n");
+                exit(0);
+        }
+
+        for(i = 0; i < num_args; i++) {
+                meta->ancestors[i] = va_arg(objtypes, char * );
+        }
+        meta->generation = num_args - 1;
+        meta->class = meta->ancestors[meta->generation];
+        va_end(objtypes);
+}

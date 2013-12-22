@@ -1,23 +1,3 @@
-/* 
-	Initializes the given ClassInfo
-*/
-int class_info_init(ClassInfo* meta, int num_args, char* objtypes[]) {
-
-	int i;
-	meta->ancestors = malloc(sizeof(char *) * num_args);
-
-	if (meta->ancestors == NULL) {
-		return -1;
-	}
-	
-	for(i = 0; i < num_args; i++) {
-		meta->ancestors[i] = objtypes[i];
-	}
-
-	meta->generation = num_args - 1;	
-	meta->class = meta->ancestors[meta->generation];
-	return 0;
-}
 /* t_Boolean *boolean_init(t_Boolean *this) */
 /* t_Float *float_init(t_Float *this) */
 /* t_Integer *float_to_i(t_Float *this) */
@@ -36,3 +16,18 @@ int class_info_init(ClassInfo* meta, int num_args, char* objtypes[]) {
 /* t_String *string_init(t_String *this) */
 /* void system_exit(t_System *this, t_Integer *v_code) */
 /* t_System *system_init(t_System *this) */
+
+
+
+void printer_print_float(t_Printer *this, t_Float *v_arg)
+{
+	fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);	
+}
+void printer_print_integer(t_Printer *this, t_Integer *v_arg)
+{
+	fprintf(this->Printer.target, "%d\n", v_arg->Integer.value);	
+}
+void printer_print_string(t_Printer *this, t_String *v_arg)
+{
+	fprintf(this->Printer.target, "%s\n", varg->String.value);
+}
