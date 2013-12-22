@@ -118,7 +118,7 @@ and exprdetail_to_cstr castexpr_detail =
     | NewObj(classname, fname, args) -> generate_allocation classname fname args
     | NewArr(arrtype, fname, args)   -> generate_array_alloc arrtype fname args
     | Literal(lit)                   -> lit_to_str lit
-    | Assign(memory, data)           -> (expr_to_cstr memory)^" = "^(expr_to_cstr data)
+    | Assign((vtype, _) as memory, data) -> Format.sprintf "%s = ((struct %s*)(%s))" (expr_to_cstr memory) vtype (expr_to_cstr data)
     | Deref(carray, index)           -> generate_deref carray index
     | Field(obj, fieldname)          -> generate_field obj fieldname
     | Invoc(recvr, fname, args)      -> generate_invocation recvr fname args
@@ -227,7 +227,7 @@ let rec cast_to_c_stmt indent cast =
     let stmts = cast_to_c_stmtlist (indent+1) in
 
     let cstmt = match cast with
-        | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
+        | Decl((vtype, _) as vdecl, Some(expr), env) -> Format.sprintf "%s = ((struct %s*)(%s));" (vdecl_to_cstr vdecl) vtype (expr_to_cstr expr)
         | Decl(vdecl, None, env) -> Format.sprintf "%s;" (vdecl_to_cstr vdecl)
         | If(iflist, env) -> cast_to_c_if_chain indent iflist
         | While(pred, [], env) -> Format.sprintf "while ( BOOL_OF( %s ) ) { }" (expr_to_cstr pred)
