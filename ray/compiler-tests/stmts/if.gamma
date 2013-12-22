@@ -1,0 +1,31 @@
+class IfTest:
+  private:
+    void out(String msg):
+      system.out.printString(msg)
+      system.out.printString("\n")
+
+    void yes():
+      out("This should print.")
+    void no():
+      out("This should not print.")
+
+  public:
+    init():
+      super()
+
+      out("Basic (2/2)")
+      if (true)  { yes(); } else { no(); }
+      if (false) { no(); }  else { yes(); }
+
+      out("Multiple (3/3)")
+      if (true)  { yes(); } elsif (false) { no();  } else { no ();  }
+      if (false) { no();  } elsif (true)  { yes(); } else { no ();  }
+      if (false) { no();  } elsif (false) { no();  } else { yes (); }
+
+      out("Non-exhaustive (2/3)")
+      if (true)  { yes(); } elsif (false) { no();  }
+      if (false) { no();  } elsif (true)  { yes(); }
+      if (false) { no();  } elsif (false) { no();  }
+
+  main(System system, String[] args):
+    IfTest theif := new IfTest()
