@@ -1,0 +1,5 @@
+class BadDecl:
+  public:
+    init():
+      Integer a := 3.4
+
