@@ -1,8 +1,8 @@
-Int
-Float
+Int   addInt.gamma
+Float addFloat.gamma
 Bool
 String
-Add
+Add   addInt.gamma addFloat.gamma addMix.gamma addMix.gamma_err
 Sub
 Prod
 Div
