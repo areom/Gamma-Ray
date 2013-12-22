@@ -148,3 +148,8 @@ let class_system : Ast.class_def =
 (** The list of built in classes and their methods *)
 let built_in_classes =
   [ class_object; class_string; class_boolean; class_integer; class_float; class_printer; class_scanner; class_system ]
+
+(** Return whether a class is built in or not *)
+let is_built_in name =
+  List.exists (fun klass -> klass.klass = name) built_in_classes
+
