@@ -18,7 +18,6 @@ struct t_Printer *printer_init(struct t_Printer *, struct t_Boolean *);
 struct t_Scanner *scanner_init(struct t_Scanner *);
 struct t_Integer *float_to_i(struct t_Float *);
 struct t_Float *integer_to_f(struct t_Integer *);
-struct t_Integer *object_get_id(struct t_Object *);
 struct t_Float *scanner_scan_float(struct t_Scanner *);
 struct t_Integer *scanner_scan_integer(struct t_Scanner *);
 struct t_String *scanner_scan_string(struct t_Scanner *);
@@ -100,7 +99,6 @@ struct t_Float *float_init(struct t_Float *this){
 
 struct t_Object *object_init(struct t_Object *this){
     this->Object.v_system = &global_system;
-    this->Object.v_obj_id = integer_value(++object_counter);
     return this;
 }
 
@@ -110,6 +108,22 @@ struct t_String *string_init(struct t_String *this)
     this->String.value = NULL;
     return this;
 }
+
+struct t_System *system_init(struct t_System *this)
+{
+    this->System.v_err = MAKE_NEW(Printer);
+    this->System.v_in = MAKE_NEW(Scanner);
+    this->System.v_out = MAKE_NEW(Printer);
+
+    this->System.v_err->Printer.target = stderr;
+    this->System.v_in->Scanner.source = stdin;
+    this->System.v_out->Printer.target = stdout;
+    this->Object.v_system =
+        this->System.v_err->Object.v_system =
+        this->System.v_in->Object.v_system =
+        this->System.v_out->Object.v_system = this;
+    return this;
+};
 
 struct t_Printer *printer_init(struct t_Printer *this, struct t_Boolean *v_stdout)
 {
@@ -130,10 +144,6 @@ struct t_Integer *float_to_i(struct t_Float *this){
 
 struct t_Float *integer_to_f(struct t_Integer *this){
     return float_value((double)(this->Integer.value));
-}
-
-struct t_Integer *object_get_id(struct t_Object *this){
-    return this->Object.v_obj_id;
 }
 
 struct t_Float *scanner_scan_float(struct t_Scanner *this)
@@ -180,7 +190,6 @@ void printer_print_string(struct t_Printer *this, struct t_String *v_arg)
     fprintf(this->Printer.target, "%s\n", v_arg->String.value);
 }
 
-
-/* void system_exit(t_System *this, t_Integer *v_code) */
-/* t_System *system_init(t_System *this) */
-
+void system_exit(struct t_System *this, struct t_Integer *v_code) {
+    exit(INTEGER_OF(v_code));
+}
