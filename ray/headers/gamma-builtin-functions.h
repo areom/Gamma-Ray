@@ -77,15 +77,16 @@ t_Object *object_init(t_Object *this){
 
 t_Float *scanner_scan_float(t_Scanner *this)
 {
-	
+	double dval;
+	fscanf(this->Scanner.source, "%ld", &dval);	
 }
 t_Integer *scanner_scan_integer(t_Scanner *this)
 {
+	int ival;
+	fscanf(this->Scanner.source, "%d", &val);
 }
 t_String *scanner_scan_string(t_Scanner *this)
 {
-	
-	fscanf(this->Scanner.source, "%s", 
 }
 void printer_print_float(t_Printer *this, t_Float *v_arg)
 {
