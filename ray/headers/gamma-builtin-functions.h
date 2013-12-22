@@ -63,13 +63,7 @@ t_Object *object_init(t_Object *this){
     return this;
 }
 /* t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout) */
-/* void printer_print_float(t_Printer *this, t_Float *v_arg) */
-/* void printer_print_integer(t_Printer *this, t_Integer *v_arg) */
-/* void printer_print_string(t_Printer *this, t_String *v_arg) */
 /* t_Scanner *scanner_init(t_Scanner *this) */
-/* t_Float *scanner_scan_float(t_Scanner *this) */
-/* t_Integer *scanner_scan_integer(t_Scanner *this) */
-/* t_String *scanner_scan_string(t_Scanner *this) */
 /* t_String *string_init(t_String *this) */
 /* void system_exit(t_System *this, t_Integer *v_code) */
 /* t_System *system_init(t_System *this) */
@@ -77,28 +71,49 @@ t_Object *object_init(t_Object *this){
 
 t_Float *scanner_scan_float(t_Scanner *this)
 {
-	double dval;
-	fscanf(this->Scanner.source, "%ld", &dval);	
+    double dval;
+    fscanf(this->Scanner.source, "%ld", &dval);	
+
+    t_Float *new_float = MAKE_NEW(Float);
+    new_float = float_init(new_float);
+    new_float->Float.value = dval;
 }
+
 t_Integer *scanner_scan_integer(t_Scanner *this)
 {
-	int ival;
-	fscanf(this->Scanner.source, "%d", &val);
+    int ival;
+    fscanf(this->Scanner.source, "%d", &val);
+
+    t_Integer *new_int = MAKE_NEW(Integer);
+    new_int = integer_init(new_int);
+    new_int->Integer.value = ival;
 }
+
 t_String *scanner_scan_string(t_Scanner *this)
 {
+    int ret;
+    char *inpstr;
+    ret = getline(&inpstr, 0, this->Scanner.source);
+    if(ret == -1) {
+        fprintf(stderr, "Error in string input\n");
+        exit(0);
+    }
+    t_String *new_str = MAKE_NEW(String);
+    new_str = string_init(new_str);
+    new_str->String.value = inpstr;
 }
+
 void printer_print_float(t_Printer *this, t_Float *v_arg)
 {
-	fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);	
+    fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);
 }
 void printer_print_integer(t_Printer *this, t_Integer *v_arg)
 {
-	fprintf(this->Printer.target, "%d\n", v_arg->Integer.value);	
+    fprintf(this->Printer.target, "%d\n", v_arg->Integer.value);
 }
 void printer_print_string(t_Printer *this, t_String *v_arg)
 {
-	fprintf(this->Printer.target, "%s\n", varg->String.value);
+    fprintf(this->Printer.target, "%s\n", varg->String.value);
 }
 t_System global_system;
 int obj_counter;
