@@ -77,7 +77,8 @@ let rec expr_to_cstr (exptype, expr_detail) = exprdetail_to_cstr expr_detail
 
 and exprdetail_to_cstr castexpr_detail =
     let generate_deref obj index =
-        Format.sprintf "((%s*)(%s))[(%s)]" (GenCast.get_tname "Object") (expr_to_cstr obj) (expr_to_cstr index) in
+        let arrtype = fst obj in
+        Format.sprintf "((struct %s*)(%s))[INTEGER_OF((%s))]" arrtype (expr_to_cstr obj) (expr_to_cstr index) in
 
     let generate_field obj field =
         let exptype = fst obj in
@@ -185,10 +186,10 @@ let generate_testsw (klass, klasses, fuid) =
         match klasses with
           [] -> "\treturn LIT_BOOL(0);"
         | _  ->
-                let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
+                let predlist = List.map (fun kname -> "IS_CLASS(this, \""^kname^"\")") klasses in
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
-    Format.sprintf "t_Boolean *%s (%s*this)\n{\n%s\n}\n\n" fuid klass body
+    Format.sprintf "struct t_Boolean *%s (struct %s*this)\n{\n%s\n}\n\n" fuid klass body
 
 (**
      Takes a dispatch element of the global dispatches list
@@ -203,19 +204,22 @@ let generate_testsw (klass, klasses, fuid) =
 let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let rettype = match ret with
         | None -> "void "
-        | Some(atype) -> Format.sprintf "%s*" atype in
-    let this = (Format.sprintf "%s*" klass, "this") in
-    let formals = List.mapi (fun i t -> (Format.sprintf "%s*" t, Format.sprintf "varg_%d" i)) args in
+        | Some(atype) -> Format.sprintf "struct %s*" atype in
+    let this = (Format.sprintf "struct %s*" klass, "this") in
+    let formals = List.mapi (fun i t -> (Format.sprintf "struct %s*" t, Format.sprintf "varg_%d" i)) args in
     let signature = String.concat ", " (List.map (fun (t, v) -> t ^ v) (this::formals)) in
     let actuals = List.map snd formals in
-    let withthis kname = String.concat ", " ((Format.sprintf "(%s*) this" kname)::actuals) in
+    let withthis kname = String.concat ", " ((Format.sprintf "(struct %s*) this" kname)::actuals) in
     let invoc fuid kname = Format.sprintf "%s(%s)" fuid (withthis kname) in
     let unroll_case (kname, fuid) =
-        Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\t%s;\n" kname (invoc fuid kname) in
+        Format.sprintf "\tif( IS_CLASS( this, \"%s\") )\n\t\t%s;\n" kname (invoc fuid kname) in
     let generated = List.map unroll_case cases in
     Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated)
 
-let generate_arrayalloc (klass, ret, args) = "/* WILL DO SOON */"
+let generate_arrayalloc (arrtype, fname, args) =
+    let params = List.mapi (fun i _ -> Format.sprintf "struct %s*v_dim%d" (GenCast.get_tname "Integer") i) args in
+    Format.sprintf "struct %s*%s(%s) {\n\treturn NULL;\n}\n" arrtype fname (String.concat ", " params)
+
 
 (**
     Take a list of cast_stmts and return a body of c statements
@@ -287,16 +291,16 @@ let cast_to_c_proto cfunc =
     if cfunc.builtin then Format.sprintf "" else signature
 
 let cast_to_c_proto_dispatch_arr (arrtype, fname, args) =
-    let types = List.map fst args in
-    let ptrs = List.map (Format.sprintf "%s*") types in
-    Format.sprintf "%s%s(%s);" arrtype fname (String.concat ", " ptrs)
+    let int = Format.sprintf "struct %s*" (GenCast.get_tname "Integer") in
+    let params = List.map (fun _ -> int) args in
+    Format.sprintf "struct %s*%s(%s);" arrtype fname (String.concat ", " params)
 
 let cast_to_c_proto_dispatch_on (klass, _, uid) =
-    Format.sprintf "t_Boolean *%s(%s *);" uid klass
+    Format.sprintf "struct t_Boolean *%s(struct %s *);" uid klass
 
 let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
-    let types = List.map (fun t -> t ^ "*") (klass::args) in
-    let proto rtype = Format.sprintf "%s*%s(%s);" rtype uid (String.concat ", " types) in
+    let types = List.map (fun t -> "struct " ^ t ^ "*") (klass::args) in
+    let proto rtype = Format.sprintf "struct %s*%s(%s);" rtype uid (String.concat ", " types) in
     match ret with
         | None -> proto "void"
         | Some(t) -> proto t

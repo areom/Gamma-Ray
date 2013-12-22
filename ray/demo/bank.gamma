@@ -5,7 +5,7 @@ class Account:
       id := new_id
       customer := name
       balance := 0
-      transactions := new Integer[](100)
+      /*transactions := new Integer[](100)*/
       trans_len := 0
     
     Integer get_id():
@@ -18,8 +18,10 @@ class Account:
       return balance
 
     Integer deposit(Integer amount):
+      if(amount < 0):
+        return 1
       balance += amount
-      transactions[trans_len] := amount
+     /* transactions[trans_len] := amount*/
       trans_len += 1
       return 0
 
@@ -27,7 +29,7 @@ class Account:
     Integer id
     String customer
     Integer balance
-    Integer[] transactions
+    /*Integer[] transactions*/
     Integer trans_len
 
 class Main:
@@ -39,3 +41,8 @@ class Main:
     Account test_account := new Account(0, "Bender")
     system.out.printString("Current Balance:")
     system.out.printInteger(test_account.get_balance()) 
+    system.out.printString("\n")
+    test_account.deposit(100)
+    system.out.printString("Current Balance:")
+    system.out.printInteger(test_account.get_balance()) 
+    system.out.printString("\n")
