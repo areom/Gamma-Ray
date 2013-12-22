@@ -1,15 +1,18 @@
 
 
-
+/*
+ * Structures for each of the objects.
+ */
 typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
 
-	struct { BYTE empty_vars; } Boolean;
+	struct { unsigned char value; } Boolean;
 } t_Boolean ;
 
 
@@ -17,11 +20,12 @@ typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
 
-	struct { BYTE empty_vars; } Float;
+	struct { double value; } Float;
 } t_Float ;
 
 
@@ -29,18 +33,21 @@ typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
 
-	struct { BYTE empty_vars; } Integer;
+	struct { int value; } Integer;
 } t_Integer ;
+
 
 
 typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
@@ -51,11 +58,12 @@ typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
 
-	struct { BYTE empty_vars; } Printer;
+	struct { FILE *target; } Printer;
 } t_Printer ;
 
 
@@ -63,11 +71,12 @@ typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
 
-	struct { BYTE empty_vars; } Scanner;
+	struct { FILE *source; } Scanner;
 } t_Scanner ;
 
 
@@ -75,11 +84,12 @@ typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
 
-	struct { BYTE empty_vars; } String;
+	struct { char *value; } String;
 } t_String ;
 
 
@@ -87,6 +97,7 @@ typedef struct {
 	ClassInfo *meta;
 
 	struct {
+		t_Integer *v_obj_id;
 		t_System *v_system;
 	} Object;
 
