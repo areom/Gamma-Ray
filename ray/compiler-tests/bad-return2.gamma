@@ -1,8 +1,0 @@
-class BadReturn:
-  public:
-    init():
-      super()
-
-    Integer badReturn():
-      return
-
