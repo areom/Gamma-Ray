@@ -2,7 +2,7 @@ class MainTest:
   public:
     init():
       super()
-  main(String[] args):
+  main(System system, String[] args):
     Integer a
     a := 0
     a += 1
