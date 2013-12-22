@@ -186,7 +186,7 @@ let generate_testsw (klass, klasses, fuid) =
         match klasses with
           [] -> "\treturn LIT_BOOL(0);"
         | _  ->
-                let predlist = List.map (fun kname -> "(this, "^kname^")") klasses in
+                let predlist = List.map (fun kname -> "IS_CLASS(this, \""^kname^"\")") klasses in
                 let ifpred  = String.concat " || " predlist in
                 Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
     Format.sprintf "struct t_Boolean *%s (struct %s*this)\n{\n%s\n}\n\n" fuid klass body
@@ -212,7 +212,7 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let withthis kname = String.concat ", " ((Format.sprintf "(struct %s*) this" kname)::actuals) in
     let invoc fuid kname = Format.sprintf "%s(%s)" fuid (withthis kname) in
     let unroll_case (kname, fuid) =
-        Format.sprintf "\tif( IS_CLASS( this, %s) )\n\t\t%s;\n" kname (invoc fuid kname) in
+        Format.sprintf "\tif( IS_CLASS( this, \"%s\") )\n\t\t%s;\n" kname (invoc fuid kname) in
     let generated = List.map unroll_case cases in
     Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated)
 
