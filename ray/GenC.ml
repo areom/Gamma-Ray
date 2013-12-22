@@ -7,7 +7,7 @@ let dispatches = ref []
 let dispatchon = ref []
 let dispatcharr = ref []
 
-let matches type1 type2 = (GenCast.get_tname type1) = type2
+let matches type1 type2 = String.trim (GenCast.get_tname type1) = String.trim type2
 
 let lit_to_str lit = match lit with
     | Ast.Int(i) -> "LIT_INT("^(string_of_int i)^")"
@@ -267,8 +267,7 @@ let cast_to_c_func cfunc =
         | [] -> " { }"
         | body -> Format.sprintf "\n{\n%s\n}" (cast_to_c_stmtlist 1 body) in
     let params = if cfunc.static = false then (GenCast.get_tname cfunc.inklass, "this")::cfunc.formals
-                 else cfunc.formals
-    in
+                 else cfunc.formals in
     let signature = String.concat ", " (List.map (fun (t,v) -> t ^ "*" ^ v) params) in
     if cfunc.builtin then Format.sprintf "/* Place-holder for %s%s(%s) */" ret_type cfunc.name signature
     else Format.sprintf "\n%s%s(%s)%s\n" ret_type cfunc.name signature body
@@ -331,7 +330,7 @@ let setup_meta klass =
     Format.sprintf "ClassInfo M_%s;" (String.uppercase klass)
 
 let meta_init bindings =
-    let to_ptr klass = Format.sprintf "m_classes[%s]" (String.uppercase (GenCast.get_tname klass)) in
+    let to_ptr klass = Format.sprintf "m_classes[%s]" (String.trim (String.uppercase (GenCast.get_tname klass))) in
     let init (klass, ancestors) =
         let ancestors_strings = String.concat ", " (List.map to_ptr ancestors) in
         Format.sprintf "class_info_init(&M_%s, %d, %s)" (String.uppercase klass) (List.length ancestors) ancestors_strings in
@@ -365,7 +364,7 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
     incl "gamma-preamble";
 
     comment "Ancestry meta-info to link to later.";
-    let classes = List.map (fun (kls, _) -> GenCast.get_tname kls) (StringMap.bindings ancestry) in
+    let classes = List.map (fun (kls, _) -> String.trim (GenCast.get_tname kls)) (StringMap.bindings ancestry) in
     let class_strs = List.map (Format.sprintf "\t%s") (print_class_strings classes) in
     out (Format.sprintf "char *m_classes[] = {\n%s\n};" (String.concat "\n" class_strs));
 
