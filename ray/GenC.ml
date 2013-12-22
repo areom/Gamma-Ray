@@ -112,22 +112,22 @@ and exprdetail_to_cstr castexpr_detail =
         | _ -> raise(Failure("Wrong switch applied to refinable -- compiler error.")) in
 
     match castexpr_detail with
-    | This                           -> "this" (* There is no way this is right with implicit object passing *)
-    | Null                           -> "NULL"
-    | Id(vname, varkind)             -> generate_vreference vname varkind
-    | NewObj(classname, fname, args) -> generate_allocation classname fname args
-    | NewArr(arrtype, fname, args)   -> generate_array_alloc arrtype fname args
-    | Literal(lit)                   -> lit_to_str lit
-    | Assign(memory, data)           -> (expr_to_cstr memory)^" = "^(expr_to_cstr data)
-    | Deref(carray, index)           -> generate_deref carray index
-    | Field(obj, fieldname)          -> generate_field obj fieldname
-    | Invoc(recvr, fname, args)      -> generate_invocation recvr fname args
-    | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr) (fst expr)
-    | Binop(lop, op, rop)            -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop) ((fst lop), (fst rop))
-    | Refine(args, ret, switch)      -> generate_refine args ret switch
-    | Refinable(switch)              -> generate_refinable switch
+    | This                               -> "this" (* There is no way this is right with implicit object passing *)
+    | Null                               -> "NULL"
+    | Id(vname, varkind)                 -> generate_vreference vname varkind
+    | NewObj(classname, fname, args)     -> generate_allocation classname fname args
+    | NewArr(arrtype, fname, args)       -> generate_array_alloc arrtype fname args
+    | Literal(lit)                       -> lit_to_str lit
+    | Assign((vtype, _) as memory, data) -> Format.sprintf "%s = ((struct %s*)(%s))" (expr_to_cstr memory) vtype (expr_to_cstr data)
+    | Deref(carray, index)               -> generate_deref carray index
+    | Field(obj, fieldname)              -> generate_field obj fieldname
+    | Invoc(recvr, fname, args)          -> generate_invocation recvr fname args
+    | Unop(op, expr)                     -> stringify_unop op (expr_to_cstr expr) (fst expr)
+    | Binop(lop, op, rop)                -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop) ((fst lop), (fst rop))
+    | Refine(args, ret, switch)          -> generate_refine args ret switch
+    | Refinable(switch)                  -> generate_refinable switch
 
-and vdecl_to_cstr (vtype, vname) = "struct " ^ vtype ^ " *" ^ vname
+and vdecl_to_cstr (vtype, vname) = Format.sprintf "struct %s*%s" vtype vname
 
 
 let rec collect_dispatches_exprs exprs = List.iter collect_dispatches_expr exprs
@@ -227,7 +227,7 @@ let rec cast_to_c_stmt indent cast =
     let stmts = cast_to_c_stmtlist (indent+1) in
 
     let cstmt = match cast with
-        | Decl(vdecl, Some(expr), env) -> Format.sprintf "%s = (%s);" (vdecl_to_cstr vdecl) (expr_to_cstr expr)
+        | Decl((vtype, _) as vdecl, Some(expr), env) -> Format.sprintf "%s = ((struct %s*)(%s));" (vdecl_to_cstr vdecl) vtype (expr_to_cstr expr)
         | Decl(vdecl, None, env) -> Format.sprintf "%s;" (vdecl_to_cstr vdecl)
         | If(iflist, env) -> cast_to_c_if_chain indent iflist
         | While(pred, [], env) -> Format.sprintf "while ( BOOL_OF( %s ) ) { }" (expr_to_cstr pred)
@@ -311,7 +311,7 @@ let cast_to_c_main mains =
 let commalines input n =
     let newline string = String.length string >= n in
     let rec line_builder line rlines = function
-        | [] -> List.rev (line::rlines)
+        | [] -> List.map String.trim (List.rev (line::rlines))
         | str::rest ->
             let comma = match rest with [] -> false | _ -> true in
             let str = if comma then str ^ ", " else str in

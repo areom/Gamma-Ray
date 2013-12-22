@@ -8,4 +8,4 @@ class HelloWorld:
   main(System system, String[] args):
     HelloWorld hw := new HelloWorld()
     system.out.printString(hw.greeting)
-    
+    system.out.printString("\n")
