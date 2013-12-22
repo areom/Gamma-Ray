@@ -235,8 +235,8 @@ let rec cast_to_c_stmt indent cast =
         | Expr(expr, env) -> Format.sprintf "( %s );" (expr_to_cstr expr)
         | Return(Some(expr), env) -> Format.sprintf "return ( %s );" (expr_to_cstr expr)
         | Return(_, env) -> "return;"
-        | Super(klass, fuid, []) -> Format.sprintf "%s((struct %s*)(this))" fuid (GenCast.get_tname klass)
-        | Super(klass, fuid, args) -> Format.sprintf "%s((struct %s*)(this), %s)" fuid (GenCast.get_tname klass) (String.concat ", " (List.map expr_to_cstr args)) in
+        | Super(klass, fuid, []) -> Format.sprintf "%s((struct %s*)(this));" fuid (GenCast.get_tname klass)
+        | Super(klass, fuid, args) -> Format.sprintf "%s((struct %s*)(this), %s);" fuid (GenCast.get_tname klass) (String.concat ", " (List.map expr_to_cstr args)) in
     indents ^ cstmt
 
 and cast_to_c_stmtlist indent stmts =
