@@ -3,108 +3,116 @@
 /*
  * Structures for each of the objects.
  */
-typedef struct {
+struct t_Boolean;
+struct t_Float;
+struct t_Integer;
+struct t_Object;
+struct t_Printer;
+struct t_Scanner;
+struct t_String;
+struct t_System;
+
+
+struct t_Boolean {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct { unsigned char value; } Boolean;
-} t_Boolean;
+};
 
 
-typedef struct {
+struct t_Float {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct { double value; } Float;
-} t_Float;
+};
 
 
-typedef struct {
+struct t_Integer {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct { int value; } Integer;
-} t_Integer;
+};
 
 
-
-typedef struct {
+struct t_Object {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
+};
 
-} t_Object;
 
-
-typedef struct {
+struct t_Printer {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct { FILE *target; } Printer;
-} t_Printer;
+};
 
 
-typedef struct {
+struct t_Scanner {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct { FILE *source; } Scanner;
-} t_Scanner;
+};
 
 
-typedef struct {
+struct t_String {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct { char *value; } String;
-} t_String;
+};
 
 
-typedef struct {
+struct t_System {
 	ClassInfo *meta;
 
 	struct {
-		t_Integer *v_obj_id;
-		t_System *v_system;
+		struct t_Integer *v_obj_id;
+		struct t_System *v_system;
 	} Object;
 
 
 	struct {
-		t_Printer *v_err;
-		t_Scanner *v_in;
-		t_Printer *v_out;
+		struct t_Printer *v_err;
+		struct t_Scanner *v_in;
+		struct t_Printer *v_out;
 	} System;
-} t_System;
+};
