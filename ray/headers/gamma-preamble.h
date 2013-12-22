@@ -34,3 +34,16 @@
 #define STRING_OF(s)  VAL_OF(String, s)
 
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
+
+#define INIT_MAIN(options) \
+t_String **str_args = NULL; \
+char *main = NULL; \
+--argc; ++argv;
+if (!argc) { \
+    fprintf(stderr, "Please select a main to use.  Available options: " options); \
+    exit(1); \
+}
+
+#define FAIL_MAIN(options) \
+fprintf(stderr, "None of the available options were selected. Options were: " options); \
+exit(1);
