@@ -70,7 +70,7 @@ let token_to_string = function
     | BLIT(bool) -> Printf.sprintf "BLIT(%B)" bool
     | ILIT(inum) -> Printf.sprintf "ILIT(%d)" inum
     | FLIT(fnum) -> Printf.sprintf "FLIT(%f)" fnum
-    | SLIT(str) -> Printf.sprintf "SLIT(%s)" (String.escaped str)
+    | SLIT(str) -> Printf.sprintf "SLIT(\"%s\")" (str)
     | EOF -> "EOF"
 
 (** Convert token to its (assumed) lexographical source *)
@@ -139,7 +139,7 @@ let descan = function
     | BLIT(b) -> if b then "true" else "false"
     | ILIT(i) -> string_of_int(i)
     | FLIT(f) -> string_of_float(f)
-    | SLIT(s) -> s
+    | SLIT(s) -> Format.sprintf "\"%s\"" s
     | EOF -> "eof"
 
 (**
@@ -218,7 +218,7 @@ let inspect_opt stringer = function
 let inspect_ast_lit (lit : Ast.lit) = match lit with
     | Int(i)    -> Printf.sprintf "Int(%d)" i
     | Float(f)  -> Printf.sprintf "Float(%f)" f
-    | String(s) -> Printf.sprintf "String(%s)" s
+    | String(s) -> Printf.sprintf "String(\"%s\")" s
     | Bool(b)   -> Printf.sprintf "Bool(%B)" b
 
 let inspect_ast_arith (op : Ast.arith) = match op with
