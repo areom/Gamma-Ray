@@ -1,4 +1,4 @@
-class IOTest:
+class Test:
   public:
     init():
       super()
@@ -12,5 +12,5 @@ class IOTest:
       p.printString("\n")
 
   main(System system, String[] args):
-    IOTest test := new IOTest()
+    Test test := new Test()
     test.interact()
