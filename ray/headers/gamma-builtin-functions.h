@@ -1,3 +1,18 @@
+
+/* Magic allocator. DO NOT INVOKE THIS, USE MAKE_NEW(TYPE)
+ * where type is not prefixed (i.e. MAKE_NEW(Integer) not
+ * MAKE_NEW(t_Integer))
+ */
+t_Object *allocate_for(size_t s, ClassInfo *meta) {
+    t_Object *this = (t_Object *)(malloc(s));
+    if (!this) {
+        fprintf(stderr, "Could not even allocate memory. Exiting.\n");
+        exit(1);
+    }
+    this->meta = meta;
+    return this;
+}
+
 /* t_Boolean *boolean_init(t_Boolean *this) */
 /* t_Float *float_init(t_Float *this) */
 /* t_Integer *float_to_i(t_Float *this) */
