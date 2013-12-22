@@ -90,6 +90,8 @@ let rec eval klass_data kname mname isstatic env exp =
             | Right(false) -> raise(Failure("Unknown field " ^ mbr ^ " in the ancestry of " ^ recvr_type ^ ".")) in
         (field_type, Sast.Field(recvr, mbr)) in
 
+    let cast_to klass (_, v) = (klass, v) in
+
     let get_invoc expr methd elist =
         let (recvr_type, _) as recvr = eval' expr in
         let arglist = eval_exprlist elist in
@@ -104,7 +106,7 @@ let rec eval klass_data kname mname isstatic env exp =
             | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
             | Some(fdef) -> fdef in
         let mfid = if mfdef.builtin then BuiltIn mfdef.uid else FuncId mfdef.uid in
-        (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfid)) in
+        (getRetType mfdef.returns, Sast.Invoc(cast_to (mfdef.inklass) recvr, methd, arglist, mfid)) in
 
     let get_init class_name exprlist =
         let arglist = eval_exprlist exprlist in

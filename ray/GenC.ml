@@ -85,7 +85,7 @@ and exprdetail_to_cstr castexpr_detail =
         Format.sprintf "(%s)->%s.%s" (expr_to_cstr obj) (GenCast.from_tname exptype) field in
 
     let generate_invocation recvr fname args =
-        let this = expr_to_cstr recvr in
+        let this = Format.sprintf "((struct %s*)(%s))" (fst recvr) (expr_to_cstr recvr) in
         let vals = List.map expr_to_cstr args in
         Format.sprintf "%s(%s)" fname (String.concat ", " (this::vals)) in
 
