@@ -1,22 +1,57 @@
+\lstset{language=caml,frame=single,
+  xleftmargin=\parindent}
 \subsection*{Ocaml Style Guide for the Development of the Ray Compiler}
 
 Expert Ocaml technique is not expected for the development of ray, however there are some basic stylistic tendencies that are preferred at all times.
 
-When constructing a \verb|let...in| statement, the associated in must not be alone on the final line:
+
+
+All indentation should be increments of four spaces. Tabs and two space increment indentation are not acceptable.
+
 \begin{lstlisting}
-    let your_functor =
-    	    ...
-    	    ... in
+let x = 2
+let z =
+    let add5 a =
+        + a 5 in
+    add5 x
 \end{lstlisting}
 
-For a large \verb|let| statement that defines a variable, store the final operational call in a dummy variable and return that dummy:
+
+
+When constructing a \verb|let...in| statement, the associated in must not be alone on the final line. For a large \verb|let| statement that defines a variable, store the final operational call in a dummy variable and return that dummy. For all but the shortest right-hand sides of \verb|let| statements, the right-hand side should be placed at increased indentation on the next line.
+
 \begin{lstlisting}
-    let get_x =
-    	    ...
-    	    let x =
-    	        x_functor1 (x_functor2 y z) n in
-    	    x
+let get_x =
+    ...
+    let n = 2 in
+    let x =
+        x_functor1 (x_functor2 y z) n in
+    x
 \end{lstlisting}
 
-2) for the most part, try to have | (bars from match, etc) indented
-I guess 3) keep records looking the way they do (fields lined up, braces not necessarily by themselves)
+
+
+\verb|match| statements should always include a \verb[|[ for the first item. The \verb[|[ operators that are used should have aligned indentation, as should \verb|->| operators, functors that follow such operators and comments. Exceedingly long functors should be placed at increased indentaiton on the next line. (These rules also apply to \verb|type| definitions.)
+
+\begin{lstlisting}
+let unify_it var =
+    match var with
+    | X(y)      ->   y                       (* pop out *)
+    | Y(y) :: _ ->   to_X y                  (* convert *)
+    | Z(y)      ->
+        to_X (to_Y (List.hd (List.rest y))   (* mangle *)
+\end{lstlisting}
+
+
+
+All records should maintain a basic standard of alignement and indentation for readibility. (Field names, colons, and type specs should all be aligned to like.)
+
+\begin{lstlisting}
+type person = {
+    names  : string list;
+    job    : string option;  (* Not everybody has one *)
+    family : person list;
+    female : bool;
+    age    : int;
+}
+\end{lstlisting}
