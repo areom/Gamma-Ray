@@ -39,7 +39,7 @@ class Main:
       super()
 
   main(System system, String[] args):
-    IOTest ab := new DIOTest()
+    IOTest ab := new IOTest()
     Printer p := system.out
     p.printString("Sum of integer = ")
     p.printInteger(ab.overview())

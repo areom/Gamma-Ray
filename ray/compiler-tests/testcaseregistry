@@ -2,13 +2,15 @@ Int   addInt.gamma
 Float addFloat.gamma
 Bool
 String
+
+Binop
 Add   addInt.gamma addFloat.gamma addMix.gamma addMix.gamma_err
-Sub
-Prod
-Div
+Sub   subMix.gamma
+Prod  prodMix.gamma
+Div   divMix.gamma
 Mod
 Neg
-Pow
+Pow  powMix.gamma
 Eq
 Neq
 Less
@@ -21,20 +23,20 @@ Nand
 Nor
 Xor
 Not
-This
+This         ANY
 Null
-Id
-NewObj
+Id           ANY
+NewObj       MANY
 Anonymous
 Literal
-Assign
+Assign       ANY
 Deref
-Field
-Invoc
+Field        ANY
+Invoc        ANY
 Unop
-Binop
-Refine
-Refinable
+
+Refine        refine_refinable.gamma  refine_unrefinable.gamma
+Refinable     refinable.gamma
 Decl
 If
 While
