@@ -1,0 +1,18 @@
+class Parent:
+  public:
+    init():
+      super()
+
+class Child extends Parent:
+  public:
+    init():
+      super()
+
+class Test:
+  public:
+    init():
+      super()
+
+  main(System system, String[] args):
+    Parent child := new Child()
+
