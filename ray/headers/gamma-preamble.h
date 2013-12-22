@@ -29,11 +29,33 @@
 #define MAKE_NEW2(type, meta) ((struct type *)(allocate_for(sizeof(struct type), &meta)))
 #define MAKE_NEW(t_name) MAKE_NEW2(t_##t_name, M_##t_name)
 
-#define VAL_OF(type, v) ( ((struct t_##type *)(v))->type.value )
+#define CAST(type, v) ( (struct t_##type *)(v) )
+#define VAL_OF(type, v) ( CAST(type, v)->type.value )
 #define BOOL_OF(b)    VAL_OF(Boolean, b)
 #define FLOAT_OF(f)   VAL_OF(Float, f)
 #define INTEGER_OF(i) VAL_OF(Integer, i)
 #define STRING_OF(s)  VAL_OF(String, s)
+
+#define NEG_INTEGER(i)            PROMOTE_INTEGER(-INTEGER_OF(i))
+
+#define BINOP(type, op, l, r)     PROMOTE_BOOL( VAL_OF(type, l) op VAL_OF(type, r) )
+#define IBINOP(op, l, r)          BINOP(Integer, op, l, r)
+#define FBINOP(op, l, r)          BINOP(Float, op, l, r)
+#define BBINOP(op, l, r)          BINOP(Boolean, op, l, r)
+
+#define NTEST_EQ_INT_INT(l, r)    IBINOP(==, l, r)
+#define NTEST_NEQ_INT_INT(l, r)   IBINOP(!=, l, r)
+#define NTEST_LESS_INT_INT(l, r)  IBINOP(<, l, r)
+#define NTEST_GRTR_INT_INT(l, r)  IBINOP(>, l, r)
+#define NTEST_LEQ_INT_INT(l, r)   IBINOP(<=, l, r)
+#define NTEST_GEQ_INT_INT(l, r)   IBINOP(>=, l, r)
+
+#define NTEST_EQ_FLOAT_FLOAT(l, r)    FBINOP(==, l, r)
+#define NTEST_NEQ_FLOAT_FLOAT(l, r)   FBINOP(!=, l, r)
+#define NTEST_LESS_FLOAT_FLOAT(l, r)  FBINOP(<, l, r)
+#define NTEST_GRTR_FLOAT_FLOAT(l, r)  FBINOP(>, l, r)
+#define NTEST_LEQ_FLOAT_FLOAT(l, r)   FBINOP(<=, l, r)
+#define NTEST_GEQ_FLOAT_FLOAT(l, r)   FBINOP(>=, l, r)
 
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
 
