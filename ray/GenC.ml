@@ -302,7 +302,7 @@ let cast_to_c_proto_dispatch (klass, ret, args, uid, _) =
         | Some(t) -> proto t
 
 let cast_to_c_main mains =
-    let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(&global_system, str_args); return 0; }" in
+    let main_fmt = ""^^"\tif (!strncmp(gmain, \"%s\", %d)) { %s(&global_system, str_args); return 0; }" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
     let cases = Format.sprintf "\"%s\"" (String.concat ", " (List.map fst mains)) in
