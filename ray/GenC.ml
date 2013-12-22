@@ -328,13 +328,13 @@ let print_class_enums = function
         commalines (List.map String.uppercase (first::rest)) 75
 
 let setup_meta klass =
-    Format.sprintf "ClassInfo M_%s;" (String.uppercase klass)
+    Format.sprintf "ClassInfo M_%s;" klass
 
 let meta_init bindings =
     let to_ptr klass = Format.sprintf "m_classes[%s]" (String.trim (String.uppercase (GenCast.get_tname klass))) in
     let init (klass, ancestors) =
         let ancestors_strings = String.concat ", " (List.map to_ptr ancestors) in
-        Format.sprintf "class_info_init(&M_%s, %d, %s)" (String.uppercase klass) (List.length ancestors) ancestors_strings in
+        Format.sprintf "class_info_init(&M_%s, %d, %s)" klass (List.length ancestors) ancestors_strings in
     let bindings = List.filter (fun (k, _) -> not (StringSet.mem (GenCast.get_tname k) GenCast.built_in_names)) bindings in
     let inits = List.map init bindings in
     let inits = List.map (Format.sprintf "\t%s") inits in
@@ -381,6 +381,7 @@ let cast_to_c ((cdefs, funcs, mains, ancestry) : Cast.program) channel =
         if StringSet.mem (GenCast.get_tname klass) GenCast.built_in_names then ()
         else out (setup_meta klass) in
     List.iter print_meta (StringMap.bindings ancestry);
+    out "";
     out (meta_init (StringMap.bindings ancestry));
 
     comment "Header file containing structure information for built in classes.";
