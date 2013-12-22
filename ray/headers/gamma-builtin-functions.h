@@ -1,15 +1,39 @@
 
 /* GLOBAL DATA */
-t_System global_system;
-int obj_counter;
+struct t_System global_system;
+int object_counter;
 
+/* Prototypes */
+struct t_Object *allocate_for(size_t, ClassInfo *);
+struct t_Integer *integer_value(int);
+struct t_Float *float_value(double);
+struct t_Boolean *bool_value(unsigned char);
+struct t_String *string_value(char *);
+struct t_Boolean *boolean_init(struct t_Boolean *);
+struct t_Integer *integer_init(struct t_Integer *);
+struct t_Float *float_init(struct t_Float *);
+struct t_Object *object_init(struct t_Object *);
+struct t_String *string_init(struct t_String *);
+struct t_Printer *printer_init(struct t_Printer *, struct t_Boolean *);
+struct t_Scanner *scanner_init(struct t_Scanner *);
+struct t_Integer *float_to_i(struct t_Float *);
+struct t_Float *integer_to_f(struct t_Integer *);
+struct t_Integer *object_get_id(struct t_Object *);
+struct t_Float *scanner_scan_float(struct t_Scanner *);
+struct t_Integer *scanner_scan_integer(struct t_Scanner *);
+struct t_String *scanner_scan_string(struct t_Scanner *);
+void printer_print_float(struct t_Printer *, struct t_Float *);
+void printer_print_integer(struct t_Printer *, struct t_Integer *);
+void printer_print_string(struct t_Printer *, struct t_String *);
+
+/* Functions! */
 
 /* Magic allocator. DO NOT INVOKE THIS, USE MAKE_NEW(TYPE)
  * where type is not prefixed (i.e. MAKE_NEW(Integer) not
  * MAKE_NEW(t_Integer))
  */
-t_Object *allocate_for(size_t s, ClassInfo *meta) {
-    t_Object *this = (t_Object *)(malloc(s));
+struct t_Object *allocate_for(size_t s, ClassInfo *meta) {
+    struct t_Object *this = (struct t_Object *)(malloc(s));
     if (!this) {
         fprintf(stderr, "Could not even allocate memory. Exiting.\n");
         exit(1);
@@ -19,141 +43,141 @@ t_Object *allocate_for(size_t s, ClassInfo *meta) {
 }
 
 /* Make basic objects with the given values. */
-t_Integer *integer_value(int in_i) {
-    t_Integer *i = MAKE_NEW(Integer);
+struct t_Integer *integer_value(int in_i) {
+    struct t_Integer *i = MAKE_NEW(Integer);
     i = integer_init(i);
     i->Integer.value = in_i;
     return i;
 }
 
-t_Float *float_value(double in_f) {
-    t_Float *f = MAKE_NEW(Float);
+struct t_Float *float_value(double in_f) {
+    struct t_Float *f = MAKE_NEW(Float);
     f = float_init(f);
     f->Float.value = in_f;
     return f;
 }
 
-t_Boolean *bool_value(unsigned char in_b) {
-    t_Boolean *b = MAKE_NEW(Boolean);
+struct t_Boolean *bool_value(unsigned char in_b) {
+    struct t_Boolean *b = MAKE_NEW(Boolean);
     b = boolean_init(b);
     b->Boolean.value = in_b;
     return b;
 }
 
-t_String *string_value(char *s_in) {
+struct t_String *string_value(char *s_in) {
     size_t length = 0;
     char *dup = NULL;
-    length = strlen(s) + 1;
+    length = strlen(s_in) + 1;
 
-    t_String *s = MAKE_NEW(String);
+    struct t_String *s = MAKE_NEW(String);
     s = string_init(s);
     dup = malloc(sizeof(char) * length);
     if (!dup) {
         fprintf(stderr, "Out of memory in string_value.\n");
         exit(1);
     }
-    s->String.value = strcpy(dup, s);
+    s->String.value = strcpy(dup, s_in);
     return s;
 }
 
-t_Boolean *boolean_init(t_Boolean *this){
-    this->Object = *object_init(&this->Object);
-    this->Boolen.value = false;
+struct t_Boolean *boolean_init(struct t_Boolean *this){
+    object_init((struct t_Object *)(this));
+    this->Boolean.value = 0;
     return this;
 }
 
-t_Integer *integer_init(t_Integer *this){
-    this->Object = *object_init(&this->Object);
-    this->Intger.value = 0;
+struct t_Integer *integer_init(struct t_Integer *this){
+    object_init((struct t_Object *)(this));
+    this->Integer.value = 0;
     return this;
 }
 
-t_Float *float_init(t_Float *this){
-    this->Object = *object_init(&this->Object);
+struct t_Float *float_init(struct t_Float *this){
+    object_init((struct t_Object *)(this));
     this->Float.value = 0.0;
     return this;
 }
 
-t_Object *object_init(t_Object *this){
+struct t_Object *object_init(struct t_Object *this){
     this->Object.v_system = &global_system;
-    this->Object.v_obj_id = ++object_counter;
+    this->Object.v_obj_id = integer_value(++object_counter);
     return this;
 }
 
-t_String *string_init(t_String *this)
+struct t_String *string_init(struct t_String *this)
 {
-    this->Object = *object_init(&this->Object);
+    object_init((struct t_Object *)(this));
     this->String.value = NULL;
     return this;
 }
 
-t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
+struct t_Printer *printer_init(struct t_Printer *this, struct t_Boolean *v_stdout)
 {
-    this->Object = *object_init(&this->Object);
+    object_init((struct t_Object *)(this));
     this->Printer.target = v_stdout->Boolean.value ? stdout : stderr;
     return this;
 }
 
-t_Scanner *scanner_init(t_Scanner *this)
+struct t_Scanner *scanner_init(struct t_Scanner *this)
 {
-    this->Object = *object_init(&this->Object);
-    this->Printer.source = stdin;
+    object_init((struct t_Object *)(this));
+    this->Scanner.source = stdin;
 }
 
-t_Integer *float_to_i(t_Float *this){
+struct t_Integer *float_to_i(struct t_Float *this){
     return integer_value((int)(this->Float.value));
 }
 
-t_Float *integer_to_f(t_Integer *this){
+struct t_Float *integer_to_f(struct t_Integer *this){
     return float_value((double)(this->Integer.value));
 }
 
-t_Integer *object_get_id(t_Object *this){
+struct t_Integer *object_get_id(struct t_Object *this){
     return this->Object.v_obj_id;
 }
 
-t_Float *scanner_scan_float(t_Scanner *this)
+struct t_Float *scanner_scan_float(struct t_Scanner *this)
 {
     double dval;
-    fscanf(this->Scanner.source, "%ld", &dval);
+    fscanf(this->Scanner.source, "%lf", &dval);
     return float_value(dval);
 }
 
-t_Integer *scanner_scan_integer(t_Scanner *this)
+struct t_Integer *scanner_scan_integer(struct t_Scanner *this)
 {
     int ival;
-    fscanf(this->Scanner.source, "%d", &val);
+    fscanf(this->Scanner.source, "%d", &ival);
     return integer_value(ival);
 }
 
-t_String *scanner_scan_string(t_Scanner *this)
+struct t_String *scanner_scan_string(struct t_Scanner *this)
 {
     int ret = -1;
     char *inpstr = NULL;
-    t_String *astring = NULL;
+    struct t_String *astring = NULL;
     ret = getline(&inpstr, 0, this->Scanner.source);
     if(ret == -1) {
         fprintf(stderr, "Error in string input\n");
         exit(0);
     }
-    astring = string_value(insptr);
+    astring = string_value(inpstr);
     free(astring);
     return astring;
 }
 
-void printer_print_float(t_Printer *this, t_Float *v_arg)
+void printer_print_float(struct t_Printer *this, struct t_Float *v_arg)
 {
-    fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);
+    fprintf(this->Printer.target, "%lf\n", v_arg->Float.value);
 }
 
-void printer_print_integer(t_Printer *this, t_Integer *v_arg)
+void printer_print_integer(struct t_Printer *this, struct t_Integer *v_arg)
 {
     fprintf(this->Printer.target, "%d\n", v_arg->Integer.value);
 }
 
-void printer_print_string(t_Printer *this, t_String *v_arg)
+void printer_print_string(struct t_Printer *this, struct t_String *v_arg)
 {
-    fprintf(this->Printer.target, "%s\n", varg->String.value);
+    fprintf(this->Printer.target, "%s\n", v_arg->String.value);
 }
 
 
