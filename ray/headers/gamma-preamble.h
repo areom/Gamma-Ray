@@ -35,19 +35,19 @@
 #define INTEGER_OF(i) VAL_OF(Integer, i)
 #define STRING_OF(s)  VAL_OF(String, s)
 
-#define NTEST_EQ_INT_INT(l, r)   ((struct t_Integer *)(l))->Integer.value == ((struct t_Integer *)(r))->Integer.value
-#define NTEST_NEQ_INT_INT(l, r)  ((struct t_Integer *)(l))->Integer.value != ((struct t_Integer *)(r))->Integer.value
-#define NTEST_LESS_INT_INT(l, r) ((struct t_Integer *)(l))->Integer.value < ((struct t_Integer *)(r))->Integer.value
-#define NTEST_GRTR_INT_INT(l, r) ((struct t_Integer *)(l))->Integer.value > ((struct t_Integer *)(r))->Integer.value
-#define NTEST_LEQ_INT_INT(l, r)  ((struct t_Integer *)(l))->Integer.value <= ((struct t_Integer *)(r))->Integer.value
-#define NTEST_GEQ_INT_INT(l, r)  ((struct t_Integer *)(l))->Integer.value >= ((struct t_Integer *)(r))->Integer.value
+#define NTEST_EQ_INT_INT(l, r)   PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value == ((struct t_Integer *)(r))->Integer.value)
+#define NTEST_NEQ_INT_INT(l, r)  PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value != ((struct t_Integer *)(r))->Integer.value)
+#define NTEST_LESS_INT_INT(l, r) PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value < ((struct t_Integer *)(r))->Integer.value)
+#define NTEST_GRTR_INT_INT(l, r) PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value > ((struct t_Integer *)(r))->Integer.value)
+#define NTEST_LEQ_INT_INT(l, r)  PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value <= ((struct t_Integer *)(r))->Integer.value)
+#define NTEST_GEQ_INT_INT(l, r)  PROMOTE_BOOL(((struct t_Integer *)(l))->Integer.value >= ((struct t_Integer *)(r))->Integer.value)
 
-#define NTEST_EQ_FLOAT_FLOAT(l, r)   ((struct t_Float *)(l))->Float.value == ((struct t_Float *)(r))->Float.value
-#define NTEST_NEQ_FLOAT_FLOAT(l, r)  ((struct t_Float *)(l))->Float.value != ((struct t_Float *)(r))->Float.value
-#define NTEST_LESS_FLOAT_FLOAT(l, r) ((struct t_Float *)(l))->Float.value < ((struct t_Float *)(r))->Float.value
-#define NTEST_GRTR_FLOAT_FLOAT(l, r) ((struct t_Float *)(l))->Float.value > ((struct t_Float *)(r))->Float.value
-#define NTEST_LEQ_FLOAT_FLOAT(l, r)  ((struct t_Float *)(l))->Float.value <= ((struct t_Float *)(r))->Float.value
-#define NTEST_GEQ_FLOAT_FLOAT(l, r)  ((struct t_Float *)(l))->Float.value >= ((struct t_Float *)(r))->Float.value
+#define NTEST_EQ_FLOAT_FLOAT(l, r)   PROMOTE_BOOL(((struct t_Float *)(l))->Float.value == ((struct t_Float *)(r))->Float.value)
+#define NTEST_NEQ_FLOAT_FLOAT(l, r)  PROMOTE_BOOL(((struct t_Float *)(l))->Float.value != ((struct t_Float *)(r))->Float.value)
+#define NTEST_LESS_FLOAT_FLOAT(l, r) PROMOTE_BOOL(((struct t_Float *)(l))->Float.value < ((struct t_Float *)(r))->Float.value)
+#define NTEST_GRTR_FLOAT_FLOAT(l, r) PROMOTE_BOOL(((struct t_Float *)(l))->Float.value > ((struct t_Float *)(r))->Float.value)
+#define NTEST_LEQ_FLOAT_FLOAT(l, r)  PROMOTE_BOOL(((struct t_Float *)(l))->Float.value <= ((struct t_Float *)(r))->Float.value)
+#define NTEST_GEQ_FLOAT_FLOAT(l, r)  PROMOTE_BOOL(((struct t_Float *)(l))->Float.value >= ((struct t_Float *)(r))->Float.value)
 
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
 
