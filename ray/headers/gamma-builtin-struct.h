@@ -13,7 +13,7 @@ typedef struct {
 
 
 	struct { unsigned char value; } Boolean;
-} t_Boolean ;
+} t_Boolean;
 
 
 typedef struct {
@@ -26,7 +26,7 @@ typedef struct {
 
 
 	struct { double value; } Float;
-} t_Float ;
+} t_Float;
 
 
 typedef struct {
@@ -39,7 +39,7 @@ typedef struct {
 
 
 	struct { int value; } Integer;
-} t_Integer ;
+} t_Integer;
 
 
 
@@ -51,7 +51,7 @@ typedef struct {
 		t_System *v_system;
 	} Object;
 
-} t_Object ;
+} t_Object;
 
 
 typedef struct {
@@ -64,7 +64,7 @@ typedef struct {
 
 
 	struct { FILE *target; } Printer;
-} t_Printer ;
+} t_Printer;
 
 
 typedef struct {
@@ -77,7 +77,7 @@ typedef struct {
 
 
 	struct { FILE *source; } Scanner;
-} t_Scanner ;
+} t_Scanner;
 
 
 typedef struct {
@@ -90,7 +90,7 @@ typedef struct {
 
 
 	struct { char *value; } String;
-} t_String ;
+} t_String;
 
 
 typedef struct {
@@ -107,5 +107,4 @@ typedef struct {
 		t_Scanner *v_in;
 		t_Printer *v_out;
 	} System;
-
-} t_System ;
+} t_System;
