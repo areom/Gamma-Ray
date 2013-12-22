@@ -39,7 +39,7 @@ let members f v = (functions f) @ (variables v)
 let class_object : Ast.class_def =
     let name = "Object" in
 
-    let get_id : Ast.func_def = breturns "object_get_id" "String" in
+    let get_id : Ast.func_def = breturns "object_get_id" "Integer" in
     let id = ("Integer", "obj_id") in
     let init_obj : Ast.func_def = { (built_in "object_init") with section = Protects } in
     let system = ("System", "system") in
