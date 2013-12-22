@@ -40,3 +40,4 @@ expect-*
 ray/doc/*
 ray/bin/*
 ray/ctest/*.c
+*.dSYM
