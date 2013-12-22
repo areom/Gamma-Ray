@@ -248,8 +248,12 @@ let rec attach_bindings klass_data kname mname meth_ret isstatic stmts initial_e
         Sast.While(exprtyp, stmts, while_env) in
 
     let build_declstmt ((vtype, vname) as vdef) opt_expr decl_env =
-        if Klass.is_type klass_data vtype then Sast.Decl(vdef, opt_eval opt_expr decl_env, decl_env)
-        else raise(Failure("Variable " ^ vname ^ " in the method " ^ mname ^ " in the class " ^ kname ^ " has unknown type " ^ vtype ^ ".")) in
+        if not (Klass.is_type klass_data vtype) then raise(Failure(Format.sprintf "%s in %s.%s has unknown type %s." vname kname mname vtype))
+        else match opt_eval opt_expr decl_env with
+            | Some((atype, _)) as evaled -> if not (Klass.is_subtype klass_data atype vtype)
+                then raise(Failure(Format.sprintf "%s in %s.%s is type %s but is assigned a value of type %s." vname kname mname vtype atype))
+                else Sast.Decl(vdef, evaled, decl_env)
+            | None -> Sast.Decl(vdef, None, decl_env) in
 
     let check_ret_type ret_type = match ret_type, meth_ret with
         | None, Some(_) -> raise(Failure("Void return from non-void function " ^ mname ^ " in klass " ^ kname ^ "."))
