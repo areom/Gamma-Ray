@@ -17,7 +17,6 @@ struct t_Boolean {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
@@ -30,7 +29,6 @@ struct t_Float {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
@@ -43,7 +41,6 @@ struct t_Integer {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
@@ -56,7 +53,6 @@ struct t_Object {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 };
@@ -66,7 +62,6 @@ struct t_Printer {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
@@ -79,7 +74,6 @@ struct t_Scanner {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
@@ -92,7 +86,6 @@ struct t_String {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
@@ -105,7 +98,6 @@ struct t_System {
 	ClassInfo *meta;
 
 	struct {
-		struct t_Integer *v_obj_id;
 		struct t_System *v_system;
 	} Object;
 
