@@ -36,6 +36,7 @@ and cfunc = {
     body    : cstmt list;
     builtin : bool;
     inklass : string; (* needed for THIS *)
+    static  : bool;
 }
 
 (* The bare minimum for a struct represention *)
