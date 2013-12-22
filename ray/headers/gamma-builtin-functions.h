@@ -97,6 +97,16 @@ t_Object *object_init(t_Object *this){
     return this;
 }
 /* t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout) */
+t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout)
+{
+    this->Object = *object_init(&this->Object);
+    if(*v_stdout)
+        this->Printer.target = stdout;
+    else
+        this->Printer.target = stderr;
+    return this;
+}
+/* t_Printer *printer_init(t_Printer *this, t_Boolean *v_stdout) */
 /* void printer_print_float(t_Printer *this, t_Float *v_arg) */
 /* void printer_print_integer(t_Printer *this, t_Integer *v_arg) */
 /* void printer_print_string(t_Printer *this, t_String *v_arg) */
@@ -109,6 +119,19 @@ t_Object *object_init(t_Object *this){
 /* t_System *system_init(t_System *this) */
 
 
+t_Float *scanner_scan_float(t_Scanner *this)
+{
+	double dval;
+	fscanf(this->Scanner.source, "%ld", &dval);	
+}
+t_Integer *scanner_scan_integer(t_Scanner *this)
+{
+	int ival;
+	fscanf(this->Scanner.source, "%d", &val);
+}
+t_String *scanner_scan_string(t_Scanner *this)
+{
+}
 void printer_print_float(t_Printer *this, t_Float *v_arg)
 {
 	fprintf(this->Printer.target, "%ld\n", v_arg->Float.value);	
