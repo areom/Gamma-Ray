@@ -207,8 +207,11 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let actuals = List.map snd formals in
     let withthis kname = String.concat ", " ((Format.sprintf "(struct %s*) this" kname)::actuals) in
     let invoc fuid kname = Format.sprintf "%s(%s)" fuid (withthis kname) in
+    let execute fuid kname = match ret with
+        | None -> Format.sprintf "%s; return;" (invoc fuid kname)
+        | Some(atype) -> Format.sprintf "return ((struct %s*)(%s));" (String.trim atype) (invoc fuid kname) in
     let unroll_case (kname, fuid) =
-        Format.sprintf "\tif( IS_CLASS( this, \"%s\") )\n\t\t%s;\n" (String.trim kname) (invoc fuid kname) in
+        Format.sprintf "\tif( IS_CLASS( this, \"%s\") )\n\t\t{ %s }\n" (String.trim kname) (execute fuid kname) in
     let generated = List.map unroll_case cases in
     let fail = Format.sprintf "REFINE_FAIL(\"%s\")" (String.trim klass) in
     Format.sprintf "%s%s(%s)\n{\n%s\n\t%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated) fail

@@ -1,0 +1,22 @@
+class IOTest:
+  public:
+    Float a
+    Float b
+    Integer c
+
+    init():
+      super()
+      a := 1.5
+      b := 2.2
+      c := 3
+
+    Float overview():
+      Float success := a+b+c
+      return success 
+
+  main(System system, String[] args):
+    IOTest ab := new IOTest()
+    Printer p := system.out
+    p.printString("Sum of integer = ")
+    p.printFloat(ab.overview())
+    p.printString("\n")
