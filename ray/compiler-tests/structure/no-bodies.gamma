@@ -8,7 +8,7 @@ class Math:
       return 6
     Integer sub(Integer a, Integer c):
       return 4
-  main(String[] args):
+  main(System sys, String[] args):
 
 class NonMath:
   private:
@@ -18,4 +18,4 @@ class NonMath:
       super()
     String recite():
       return "hey"
-  main(String[] hey):
+  main(System sys, String[] hey):
