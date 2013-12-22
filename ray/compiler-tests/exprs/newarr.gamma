@@ -4,7 +4,7 @@ class NewArr:
     init():
       super()
       a := new Integer[](4)
-  main(String[] args):
+  main(System system, String[] args):
     NewArr f
     f := new NewArr()
 

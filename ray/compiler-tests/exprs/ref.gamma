@@ -105,7 +105,7 @@ class Main:
     init():
       super()
 
-  main(String[] args):
+  main(System system, String[] args):
     IOTest ab := new IOTest()
     ab.overview()
     ab.overview()

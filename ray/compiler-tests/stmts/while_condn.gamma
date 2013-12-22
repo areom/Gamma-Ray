@@ -1,0 +1,14 @@
+
+class WhileLoopTest:
+  public:
+    init():
+      super()
+      Integer a := 0
+      while((a>0) && (a<10)):
+        system.out.printInteger(a)
+        system.out.printString("\n")
+        a := a + 1
+
+  main(System system, String[] args):
+    new WhileLoopTest()
+
