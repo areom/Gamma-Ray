@@ -1,3 +1,11 @@
+typedef struct {
+        int generation;
+        char* class;
+        char** ancestors;
+} ClassInfo;
+
+
+
 ClassInfo M_BOOLEAN = {
 	.ancestors = {
 		m_classes[T_OBJECT ], m_classes[T_BOOLEAN ]
