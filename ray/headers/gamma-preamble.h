@@ -37,14 +37,14 @@
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
 
 #define INIT_MAIN(options) \
-t_String **str_args = NULL; \
+struct t_String **str_args = NULL; \
 char *main = NULL; \
 --argc; ++argv; \
 if (!argc) { \
-    fprintf(stderr, "Please select a main to use.  Available options: " options); \
+    fprintf(stderr, "Please select a main to use.  Available options: " options "\n"); \
     exit(1); \
 }
 
 #define FAIL_MAIN(options) \
-fprintf(stderr, "None of the available options were selected. Options were: " options); \
+fprintf(stderr, "None of the available options were selected. Options were: " options "\n"); \
 exit(1);
