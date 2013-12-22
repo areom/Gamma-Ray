@@ -112,20 +112,20 @@ and exprdetail_to_cstr castexpr_detail =
         | _ -> raise(Failure("Wrong switch applied to refinable -- compiler error.")) in
 
     match castexpr_detail with
-    | This                           -> "this" (* There is no way this is right with implicit object passing *)
-    | Null                           -> "NULL"
-    | Id(vname, varkind)             -> generate_vreference vname varkind
-    | NewObj(classname, fname, args) -> generate_allocation classname fname args
-    | NewArr(arrtype, fname, args)   -> generate_array_alloc arrtype fname args
-    | Literal(lit)                   -> lit_to_str lit
+    | This                               -> "this" (* There is no way this is right with implicit object passing *)
+    | Null                               -> "NULL"
+    | Id(vname, varkind)                 -> generate_vreference vname varkind
+    | NewObj(classname, fname, args)     -> generate_allocation classname fname args
+    | NewArr(arrtype, fname, args)       -> generate_array_alloc arrtype fname args
+    | Literal(lit)                       -> lit_to_str lit
     | Assign((vtype, _) as memory, data) -> Format.sprintf "%s = ((struct %s*)(%s))" (expr_to_cstr memory) vtype (expr_to_cstr data)
-    | Deref(carray, index)           -> generate_deref carray index
-    | Field(obj, fieldname)          -> generate_field obj fieldname
-    | Invoc(recvr, fname, args)      -> generate_invocation recvr fname args
-    | Unop(op, expr)                 -> stringify_unop op (expr_to_cstr expr) (fst expr)
-    | Binop(lop, op, rop)            -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop) ((fst lop), (fst rop))
-    | Refine(args, ret, switch)      -> generate_refine args ret switch
-    | Refinable(switch)              -> generate_refinable switch
+    | Deref(carray, index)               -> generate_deref carray index
+    | Field(obj, fieldname)              -> generate_field obj fieldname
+    | Invoc(recvr, fname, args)          -> generate_invocation recvr fname args
+    | Unop(op, expr)                     -> stringify_unop op (expr_to_cstr expr) (fst expr)
+    | Binop(lop, op, rop)                -> stringify_binop op (expr_to_cstr lop) (expr_to_cstr rop) ((fst lop), (fst rop))
+    | Refine(args, ret, switch)          -> generate_refine args ret switch
+    | Refinable(switch)                  -> generate_refinable switch
 
 and vdecl_to_cstr (vtype, vname) = "struct " ^ vtype ^ " *" ^ vname
 
