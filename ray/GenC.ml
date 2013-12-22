@@ -301,7 +301,8 @@ let cast_to_c_main mains =
     let main_fmt = ""^^"\tif (!strncmp(main, \"%s\", %d)) { %s(str_args); return 0; }" in
     let for_main (klass, uid) = Format.sprintf main_fmt klass (String.length klass + 1) uid in
     let switch = String.concat "\n" (List.map for_main mains) in
-    Format.sprintf "int main(int argc, char **argv) {\n\tINIT_MAIN\n%s\n\tFAIL_MAIN\n\treturn 1;\n}" switch
+    let cases = Format.sprintf "\"%s\"" (String.concat ", " (List.map fst mains)) in
+    Format.sprintf "#define CASES %s\n\nint main(int argc, char **argv) {\n\tINIT_MAIN(CASES)\n%s\n\tFAIL_MAIN(CASES)\n\treturn 1;\n}" cases switch
 
 let commalines input n =
     let newline string = String.length string >= n in
