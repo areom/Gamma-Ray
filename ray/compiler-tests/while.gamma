@@ -3,6 +3,12 @@ class WhileLoopTest:
   public:
     init():
       super()
-      Integer a
+      Integer a := 0
       while(true):
-        a := 4
+        system.out.printInteger(a)
+        system.out.printString("\n")
+        a := a + 1
+
+  main(System system, String[] args):
+    new WhileLoopTest()
+
