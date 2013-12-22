@@ -39,3 +39,5 @@ expect-*
 *.cmo
 ray/doc/*
 ray/bin/*
+ray/ctest/test.c
+

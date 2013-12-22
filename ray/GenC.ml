@@ -243,7 +243,7 @@ and cast_to_c_stmtlist indent stmts =
     String.concat "\n" (List.map (cast_to_c_stmt indent) stmts)
 
 and cast_to_c_if_pred = function
-    | None -> "else"
+    | None -> ""
     | Some(ifpred) -> Format.sprintf "if ( BOOL_OF( %s ) )" (expr_to_cstr ifpred)
 
 and cast_to_c_if_chain indent pieces =
