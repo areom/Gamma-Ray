@@ -47,13 +47,6 @@ t_String *string_value(char *s_in) {
     return s;
 }
 
-/* t_Boolean *boolean_init(t_Boolean *this) */
-/* t_Float *float_init(t_Float *this) */
-/* t_Integer *float_to_i(t_Float *this) */
-/* t_Integer *integer_init(t_Integer *this) */
-/* t_Float *integer_to_f(t_Integer *this) */
-/* t_String *object_get_id(t_Object *this) */
-/* t_Object *object_init(t_Object *this) */
 t_Boolean *boolean_init(t_Boolean *this){
     this->Object = *object_init(&this->Object);
     this->Boolen.value = false;
@@ -87,8 +80,7 @@ t_Integer *integer_init(t_Integer *this){
 }
 
 t_String *object_get_id(t_Object *this){
-Add a comment to this line
-    return :wthis->Object.v_obj_id;
+    return this->Object.v_obj_id;
 }
 
 t_Object *object_init(t_Object *this){
