@@ -135,10 +135,11 @@ let class_system : Ast.class_def =
     let system_out = ("Printer", "out") in
     let system_err = ("Printer", "err") in
     let system_in = ("Scanner", "in") in
+    let system_argc = ("Integer", "argc") in
 
     let sections : Ast.class_sections_def =
         { sections with
-          publics = members [system_init; system_exit] [system_out; system_err; system_in]; } in
+          publics = members [system_init; system_exit] [system_out; system_err; system_in; system_argc]; } in
 
     { klass = name; parent = None; sections = sections }
 

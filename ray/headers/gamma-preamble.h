@@ -63,11 +63,13 @@
 
 #define CTEST_AND_BOOL_BOOL(l, r)   BBINOP(&&, l, r)
 #define CTEST_OR_BOOL_BOOL(l, r)    BBINOP(||, l, r)
-#define CTEST_NAND_BOOL_BOOL(l, r)  PROMOTE_BOOL((!CTEST_AND_BOOL_BOOL(l,r)))
-#define CTEST_NOR_BOOL_BOOL(l, r)   PROMOTE_BOOL((!CTEST_OR_BOOL_BOOL(l,r)))
+#define CTEST_NAND_BOOL_BOOL(l, r)  PROMOTE_BOOL(( !(BOOL_OF(l) && BOOL_OF(r)) ))
+#define CTEST_NOR_BOOL_BOOL(l, r)   PROMOTE_BOOL(( !(BOOL_OF(l) || BOOL_OF(r)) ))
 #define CTEST_XOR_BOOL_BOOL(l, r)   PROMOTE_BOOL((!BOOL_OF(l) != !BOOL_OF(r)))
 
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
+
+#define ONE_DIM_ALLOC(type, len) ((type *) array_allocator(sizeof(type), (len)))
 
 #define INIT_MAIN(options) \
 struct t_String **str_args = NULL; \
@@ -76,10 +78,13 @@ char *gmain = NULL; \
 if (!argc) { \
     fprintf(stderr, "Please select a main to use.  Available options: " options "\n"); \
     exit(1); \
-}\
-gmain = *argv;\
-init_class_infos();\
-system_init(&global_system);
+} \
+gmain = *argv; ++argv; --argc; \
+init_class_infos(); \
+global_argc = argc; \
+system_init(&global_system); \
+str_args = get_gamma_args(argv, argc);
+
 
 #define FAIL_MAIN(options) \
 fprintf(stderr, "None of the available options were selected. Options were: " options "\n"); \
@@ -88,6 +93,3 @@ exit(1);
 #define REFINE_FAIL(parent) \
     fprintf(stderr, "Refinement fail: " parent "\n"); \
     exit(1);
-
-
-#define ONE_DIM_ALLOC(type, len) ((type *) array_allocator(sizeof(type), (len)))
