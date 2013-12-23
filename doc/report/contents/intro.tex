@@ -1,4 +1,5 @@
-\section*{Why \Lang{}? -- The Core Concept}
+\section{Introduction}
+\subsection{Why \Lang{}? -- The Core Concept}
 We propose to implement an elegant yet secure general purpose object-oriented programming language. Interesting features have been selected from the history of object-oriented programming and will be combined with the familiar ideas and style of modern languages.
 
 \Lang{} combines three disparate but equally important tenants:
@@ -22,11 +23,10 @@ We propose to implement an elegant yet secure general purpose object-oriented pr
     \Lang{} allows programmers to place "refinement methods" inside their code.
     Alone these methods do nothing, but may be defined by subclasses so as to extend
     functionality at certain important positions. Anonymous instantiation allows for
-    extension of your classes in a quick easy fashion. Generic typing on method
-    parameters allows for the same method to cover a variety of input types.}
+    extension of your classes in a quick easy fashion.}
 \end{enumerate}
 
-\section*{ The Motivation Behind \Lang{}}
+\subsection{ The Motivation Behind \Lang{}}
 \Lang{} is a reaction to the object-oriented languages before it.
 Obtuse syntax, flaws in security, and awkward implementations plague
 the average object-oriented language. \Lang{} is intended as a step
@@ -46,7 +46,7 @@ higher may procede. Unexpected runtime behavior should be reduced through
 firmness of semantic structure and debugging should be a straight-forward
 process due to pure object and method nature of \Lang{}.
 
-\section*{\Lang{} Feature Set}
+\subsection{\Lang{} Feature Set}
 
 \Lang{} will provide the following features:
 
@@ -58,77 +58,10 @@ process due to pure object and method nature of \Lang{}.
 \item Access specifiers that respect object boundaries, not class boundaries
 \end{itemize}
 
-\section*{\Compiler{}: The \Lang{} Compiler}
+\subsection{\Compiler{}: The \Lang{} Compiler}
 
 The compiler will proceed in two steps. First, the compiler will interpret
 the source containing possible syntactic shorthand into a file
 consisting only of the most concise and structurally sound GAMMA core. After this the compiler will transform
 general patterns into (hopefully portable) C code, and compile this to
 machine code with whatever compiler the user specifies.
-
-\section*{Code Example}
-
-\begin{lstlisting}[numbers=left,label=Personhood,caption=Personhood]
-Class Person:
-  Protected:
-    ## instance variables have a type an access class
-    String first_name
-    String last_name
-
-    ## constructors take arguments, initialize state
-    init(String first_name, String last_name):
-      this.first_name = first_name
-      this.last_name = last_name
-
-  Public:
-    ## methods can return values and can be specialized
-    ## via refinement
-    String toString:
-      String result = this.first_name + " " + this.last_name + " is being stringified"
-      
-      ## Only use this line if we have a defined
-      ## refining method
-      if refinable(extra):
-        result = result + " into a " + refine extra()
-      
-      result = result + "!"
-      
-      return result
-
-Class Student extends Person:
-  ## subclasses have their own data
-  Private:
-    String level # Freshman, etc...
-
-  Protected:
-    ## Subclasses have to invoke their superclass,
-    ## just like in common OOP languages (java/etc)
-    init(string first, string last, string grade):
-      super(first, last)
-      this.level = grade
-
-  Public:
-    ## Now we can refine!
-    String toString.extra:
-      String level_result = this.last_name + ", " + this.first_name + " is a " + this.level
-      println(level_result)
-      return level_result
-
-## Call our class
-Person average = new Person("John", "Smith")
-println(average.toString)
-
-println("")
-
-Student very_smart = new Student("Roger", "Penrose", "Graduate Student")
-println(very_smart.toString)
-  
-\end{lstlisting}
-
-\begin{verbatim}
-The above program should print:
-    John Smith is being stringified!
-
-    Penrose, Roger is a Graduate Student
-    Roger Penrose is being stringified into Penrose, Roger is a Graduate Student!
-\end{verbatim}

@@ -1,0 +1,45 @@
+\subsection{Semantics}
+
+\subsubsection{Types and Variables}
+Every \textit{variable} in Gamma is declared with a \textit{type} and an \textit{identifier}. The typing is static and will always be known at compile time for every variable. The variable itself holds a reference to an instance of that type. At compile time, each variable reserves space for one reference to an instance of that type; during run time, each instantiation reserves space for one instance of that type (i.e. \emph{not} a reference but the actual object). To be an instance of a type, an instance must be an instance of the class of the same name as that type or an instance of one of the set of descendants (i.e. a subclass defined via \verb!extends! or within the transitive closure therein) of that class. For the purposes of method and refinement return types there is a special keyword, \verb!void!, that allows a method or refinement to use the \verb!return! keyword without an expression and thus not produce a value.
+
+\paragraph{Array Types}
+When specifying the type of a variable, the type identifier may be followed by one or more \verb![]! lexemes. The lexeme implies that the type is an \textit{array type} of the \textit{element type} that precedes it in the identifier. So if \verb!BankAccount! is the name of a class (which is associated with a type), then \verb!BankAccount! is the type of a zero dimensional array -- i.e. the type of \verb!BankAccount!. The type associated with \verb!BankAccount[]! is the that of an one-dimensional array of elements of class \verb!BankAccount!. \verb!BankAccount[][][][]! can be considered the type of an array of four dimension and element class \verb!BankAccount!. It is in fact an array of one dimension which has elements of type \verb!BankAccount[][][]!. Elements of an array are accessed via an expression resulting in an array followed by a left bracket \verb![!, an expression producing an offset index of zero or greater, and a right bracket \verb!]!. Elements are of one dimension less and so are themselves either arrays or are individual instances of the overall class/type involved (i.e. \verb!BankAccount!).
+
+\subsubsection{Classes, Subclasses, and Their Members}
+\Lang{} is a pure object-oriented language, which means every value is an object -- with the exception that \verb!this! is a special reference for the object of the current context; the use of \verb!this! is only useful inside the context of a method, \verb!init!, or refinement and so cannot be used in a \verb!main!. \verb!init! and \verb!main! are defined later.
+
+A class always extends another class; a class inherits all of its superclass's methods and may refine the methods of its superclass. A class must contain a constructor routine named \textit{init} and it must invoke its superclass's constructor via the super keyword -- either directly or transitively by referring to other constructors within the class. In the scope of every class, the keyword \verb!this! explicitly refers to the instance itself. Additionally, a class contains three sets of \textit{members} organized in \textit{private}, \textit{protected}, and \textit{public} sections. Members may be either variables or methods. Members in the public section may be accessed (see syntax) by any other object. Members of the protected section may be accessed only by an object of that type or a descendant (i.e. a subtype defined transitively via the \verb!extends! relation). Private members are only accessible by the members defined in that class (and are not accessible to descendants). Note that access is enforced at object boundaries, not class boundaries -- two \verb!BankAccount! objects of the same exact type cannot access each other's balance, which is in fact possible in both Java \& C++, among others. Likewise if \verb!SavingsAccount! extends \verb!BankAccount!, an object of savings account can access the protected instance members of \verb!SavingsAccount! related to its own data, but \emph{cannot} access those of another object of similar type (\verb!BankAccount! or a type derived from it).
+
+\paragraph{The Object Class}
+The Object class is the superclass of the entire class hierarchy in \Lang{}. All objects directly or indirectly inherit from it and share its methods. By default, class declarations without extending explicitly are subclasses of Object.
+
+\paragraph{The Literal Classes}
+There are several \textit{literal classes} that contain uniquely identified members (via their literal representation). These classes come with methods developed for most operators. They are also all subclasses of Object.
+
+\paragraph{Anonymous Classes}
+A class can be anonymously subclassed (such must happen in the context of instantiation) via refinements. They are a subclass of the class they refine, and the objects are a subtype of that type. Note that references are copied at anonymous instantiation, not values.
+
+\subsubsection{Methods}
+A method is a reusable subdivision of code that takes multiple (possibly zero) values as arguments and can either return a value of the type specified for the method, or not return any value in the case that the return type is \verb!void!.
+
+It is a semantic error for two methods of a class to have the same signature -- which is the return type, the name, and the type sequence for the arguments. It is also a semantic error for two method signatures to only differ in return type in a given class.
+
+\paragraph{Operators}
+Since all variables are objects, every operator is in truth a method called from one of its operands with the other operands as arguments -- with the notable exception of the assignment operators which operate at the language level as they deal not with operations but with the maintenance of references (but even then they use methods as \verb!+=! uses the method for \verb!+! -- but the assignment part itself does not use any methods). If an operator is not usable with a certain literal class, then it will not have the method implemented as a member.
+
+\subsubsection{Refinements}
+Methods and constructors of a class can have \textit{refine} statements placed in their bodies. Subclasses must implement \textit{refinements}, special methods that are called in place of their superclass' refine statements, unless the refinements are guarded with a boolean check via the \verb!refinable! operator for their existence -- in which case their implementation is optional.
+
+It is a semantic error for two refinements of a method to have the same signature -- which is the return type, the method they refine, the refinement name, and the type sequence for the arguments. It is also a semantic error for two method signatures to only differ in return type in a given class.
+
+A refinement cannot be implemented in a class derived by a subclass, it must be provided if at all in the subclass. If it is desired that further subclassing should handle refinement, then these further refinements can be invoked inside the refinements themselves (syntactic sugar will make this easier in future releases). Note that refining within a refinement results in a refinement of the same method. That is, using \verb!refine extra(someArg) to String! inside the refinement \verb!String toString.extra(someType someArg)! will (possibly, if not guarded) require the next level of subclassing to implement the extra refinement for toString.
+
+\subsubsection{Constructors (init)}
+Constructors are invoked to arrange the state of an object during instantiation and accept the arguments used for such. It is a semantic error for two constructors to have the same signature -- that is the same type sequence.
+
+\subsubsection{Main}
+Each class can define at most one \verb!main! method to be executed when that class will `start the program execution' so to speak. Main methods are not instance methods and cannot refer to instance data. These are the only `static' methods allowed in the Java sense of the word. It is a semantic error for the main to have a set of arguments other than a system object and a String array.
+
+\subsubsection{Expressions and Statements}
+The fundamental nature of an expression is that it generates a value. A statement can be a call to an expression, thus a method or a variable. Not every statement is an expression, however.
