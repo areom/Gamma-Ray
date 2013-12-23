@@ -1,0 +1,46 @@
+class Test:
+  private:
+    void line():
+      system.out.printString("\n")
+
+    void out(String msg):
+      system.out.printString(msg)
+      line()
+
+  public:
+    init():
+      super()
+      Integer a:=2
+      Integer b:=3
+
+      /* less and less and equal*/
+      if (a<2)  { system.out.printString("1. a=2 a<2 shouldnot print\n"); }
+      elsif (a<=2)  { system.out.printString("1. a=2 a<=2 success\n"); }
+      else { system.out.printString("1. should never hit here\n"); }
+
+
+      /* greater and greater than equal */
+      if (b>3)  { system.out.printString("2. b=3 b>3 shouldnot print\n"); }
+      else  { system.out.printString("2. b=3 b>=3 success\n"); }
+      
+      /*Equal and not equal*/ 
+      if (a <> b)  { system.out.printString("3. a!=b success \n"); }
+      a:=b
+      if (a=b)  { system.out.printString("4. a=b success\n"); }
+
+      /*And or */
+      if(a=3 and b=3) {  system.out.printString("5. a=3 and b=3 success\n"); }
+
+      b:=5
+      if(b=3 or a=3) {  system.out.printString("6. b=3 or a=3  success\n"); }
+/*
+      /*nand and nor and not*/
+
+      if(b=3 nor a=5) {  system.out.printString("7. b=3 nor a=5 success\n"); }
+      if(b=3 nand a=5) {  system.out.printString("8. b=3 nand a=5 success\n"); }
+      if(b=3 xor a=3) {  system.out.printString("9. b=3 xor a=3 success\n"); }
+*/
+      line()
+
+  main(System system, String[] args):
+    Test theif := new Test()
