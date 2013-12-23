@@ -1,0 +1,56 @@
+\section{Language Tutorial}
+
+The structure of the example below should be intimately familiar to any student of Object-Oriented Programming. 
+\lstinputlisting[caption="A simple I/O example"]{../../ray/compiler-tests/programs/io.gamma}
+
+We start with a definition of our class.
+
+\begin{lstlisting}
+class IOTest:
+\end{lstlisting}
+
+We follow by starting a \verb!public! access level, defining an \verb!init! method for our class, and calling the \verb!super! method inside the init method. (Since we have not indicated a superclass for \verb!IOTest!, this \verb!super! method is for \verb!Object!.)
+
+\begin{lstlisting}
+    public:
+        init():
+            super()
+\end{lstlisting}
+
+We also define the \verb!private! access level with three methods: a generic method that prints a prompt message and two prompts for \verb!Integers! and \verb!Floats! respectively. These prompts call the generic message and then read from \verb!system.in!.
+
+\begin{lstlisting}
+  private:
+    void prompt(String msg):
+      system.out.printString(msg)
+      system.out.printString(": ")
+
+    Integer promptInteger(String msg):
+      prompt(msg)
+      return system.in.scanInteger()
+
+    Float promptFloat(String msg):
+      prompt(msg)
+      return system.in.scanFloat()
+\end{lstlisting}
+
+We then write a method under the \verb!public! access level. This calls our \verb!private! level methods, convert our \verb!Integer! to a \verb!Float! and print our operation.
+
+\begin{lstlisting}
+    void interact():
+      Printer p := system.out
+      Integer i := promptInteger("Please enter an integer")
+      Float f := promptFloat("Please enter a float")
+      p.printString("Sum of integer + float = ")
+      p.printFloat(i.toF() + f)
+      p.printString("\n")
+\end{lstlisting}
+
+Finally, we define the \verb!main! method for our class. We just make a new object of our class in that method and call our sole public method on it.
+
+
+\begin{lstlisting}
+  main(System system, String[] args):
+    IOTest test := new IOTest()
+    test.interact()
+\end{lstlisting}
