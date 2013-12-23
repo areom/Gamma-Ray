@@ -62,7 +62,7 @@ let rec deanon_expr_detail init_state env expr_deets =
             {   privates = vars;
                 protects = [];
                 publics = [InitMem(init)];
-                refines = refines;
+                refines = List.map (fun r -> { r with inklass=klass }) refines;
                 mains = []; } in
         let theklass =
             {   klass = klass;

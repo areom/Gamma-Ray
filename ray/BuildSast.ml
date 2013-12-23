@@ -68,6 +68,92 @@ let getRetType ret_type = match ret_type with
     | None -> "Void"
 
 (**
+    Update a refinement switch based on updated data.
+  *)
+let rec update_refinements_stmts klass_data kname mname = List.map (update_refinements_stmt klass_data kname mname)
+and update_refinements_exprs klass_data kname mname = List.map (update_refinements_expr klass_data kname mname)
+and update_refinements_expr klass_data kname mname (atype, expr) =
+    let doexp = update_refinements_expr klass_data kname mname in
+    let doexps = update_refinements_exprs klass_data kname mname in
+
+    let get_refine rname arglist desired uid =
+        let argtypes = List.map fst arglist in
+        let refines = Klass.refine_on klass_data kname mname rname argtypes desired in
+        let switch = List.map (fun (f : Ast.func_def) -> (f.inklass, f.uid)) refines in
+        (getRetType desired, Sast.Refine(rname, arglist, desired, Switch(kname, switch, uid))) in
+
+    let get_refinable rname uid =
+        let refines = Klass.refinable_lookup klass_data kname mname rname in
+        let klasses = List.map (fun (f : Ast.func_def) -> f.inklass) refines in
+        ("Boolean", Sast.Refinable(rname, Test(kname, klasses, uid))) in
+
+    match expr with
+        | Sast.Refine(rname, args, desired, Switch(_, _, uid)) -> get_refine rname args desired uid
+        | Sast.Refine(_, _, _, _) -> raise(Failure("Test in switch."))
+        | Sast.Refinable(rname, Test(_, _, uid)) -> get_refinable rname uid
+        | Sast.Refinable(_, _) -> raise(Failure("Switch in test."))
+
+        | Sast.Anonymous(_, _, _) -> raise(Failure("Anonymous detected during reswitching."))
+
+        | Sast.This -> (atype, Sast.This)
+        | Sast.Null -> (atype, Sast.Null)
+        | Sast.Id(id) -> (atype, Sast.Id(id))
+        | Sast.NewObj(klass, args, uid) -> (atype, Sast.NewObj(klass, doexps args, uid))
+        | Sast.Literal(lit) -> (atype, Sast.Literal(lit))
+        | Sast.Assign(l, r) -> (atype, Sast.Assign(doexp l, doexp r))
+        | Sast.Deref(l, r) -> (atype, Sast.Deref(doexp l, doexp r))
+        | Sast.Field(e, m) -> (atype, Sast.Field(doexp e, m))
+        | Sast.Invoc(r, m, args, uid) -> (atype, Sast.Invoc(doexp r, m, doexps args, uid))
+        | Sast.Unop(op, e) -> (atype, Sast.Unop(op, doexp e))
+        | Sast.Binop(l, op, r) -> (atype, Sast.Binop(doexp l, op, doexp r))
+and update_refinements_stmt klass_data kname mname stmt =
+    let doexp = update_refinements_expr klass_data kname mname in
+    let doexps = update_refinements_exprs klass_data kname mname in
+    let dostmts = update_refinements_stmts klass_data kname mname in
+    let docls = update_refinements_clauses klass_data kname mname in
+
+    match stmt with
+        | Sast.Decl(_, None, _) as d -> d
+        | Sast.Decl(vdef, Some(e), env) -> Sast.Decl(vdef, Some(doexp e), env)
+        | Sast.If(pieces, env) -> Sast.If(docls pieces, env)
+        | Sast.While(pred, body, env) -> Sast.While(doexp pred, dostmts body, env)
+        | Sast.Expr(expr, env) -> Sast.Expr(doexp expr, env)
+        | Sast.Return(None, _) as r -> r
+        | Sast.Return(Some(e), env) -> Sast.Return(Some(doexp e), env)
+        | Sast.Super(args, uid, super, env) -> Sast.Super(doexps args, uid, super, env)
+and update_refinements_clauses (klass_data : class_data) (kname : string) (mname : string) (pieces : (Sast.expr option * Sast.sstmt list) list) : (Sast.expr option * Sast.sstmt list) list =
+    let dobody = update_refinements_stmts klass_data kname mname in
+    let dopred = update_refinements_expr klass_data kname mname in
+
+    let mapping = function
+        | (None, body) -> (None, dobody body)
+        | (Some(e), body) -> (Some(dopred e), dobody body) in
+    List.map mapping pieces
+
+let update_refinements_func klass_data (func : Sast.func_def) =
+    { func with body = update_refinements_stmts klass_data func.inklass func.name func.body }
+
+let update_refinements_member klass_data = function
+    | Sast.InitMem(i) -> Sast.InitMem(update_refinements_func klass_data i)
+    | Sast.MethodMem(m) -> Sast.MethodMem(update_refinements_func klass_data m)
+    | v -> v
+
+let update_refinements_klass klass_data (klass : Sast.class_def) =
+    let mems = List.map (update_refinements_member klass_data) in
+    let funs = List.map (update_refinements_func klass_data) in
+    let s = klass.sections in
+    let sects = 
+        { publics = mems s.publics;
+          protects = mems s.protects;
+          privates = mems s.privates;
+          mains = funs s.mains;
+          refines = funs s.refines } in
+    { klass with sections = sects }
+
+let update_refinements klass_data (klasses : Sast.class_def list) =
+    List.map (update_refinements_klass klass_data) klasses
+
+(**
     Given a class_data record, a class name, an environment, and an Ast.expr expression,
     return a Sast.expr expression.
     @param klass_data A class_data record
