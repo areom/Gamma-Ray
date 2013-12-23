@@ -23,10 +23,10 @@ Leq    pass
 Geq    pass
 And    pass
 Or     pass
-Nand   fail
-Nor    fail
-Xor    fail
-Not    not tested
+Nand   pass
+Nor    pass
+Xor    pass
+Not    pass
 nested conditions  not tested
 
 This         ANY
@@ -34,7 +34,7 @@ Null
 Id           ANY
 NewObj       MANY
 Anonymous
-Literal
+Literal      ANY
 Assign       ANY
 Deref
 Field        ANY
