@@ -1,0 +1,52 @@
+
+class Person:
+  protected:
+    String name
+
+  public:
+    init(String name):
+      super()
+      this.name := name
+
+    void introduce():
+      Printer p := system.out
+      p.printString("Hello, my name is ")
+      p.printString(name)
+      p.printString(", and I am from ")
+      p.printString(refine origin() to String)
+      p.printString(". I am ")
+      p.printInteger(refine age() to Integer)
+      p.printString(" years old. My occupation is ")
+      p.printString(refine work() to String)
+      p.printString(". It was nice meeting you.\n")
+
+class Test:
+  protected:
+    init():
+      super()
+
+  main(System sys, String[] args):
+    (new Person("Matthew") {
+      String introduce.origin() { return "New Jersey"; }
+      Integer introduce.age() { return 33; }
+      String introduce.work() { return "Student"; }
+    }).introduce()
+
+    (new Person("Arthy") {
+      String introduce.origin() { return "India"; }
+      Integer introduce.age() { return 57; }
+      String introduce.work() { return "Student"; }
+    }).introduce()
+
+    (new Person("Weiyuan") {
+      String introduce.origin() { return "China"; }
+      Integer introduce.age() { return 24; }
+      String introduce.work() { return "Student"; }
+    }).introduce()
+
+    (new Person("Ben") {
+      String introduce.origin() { return "New York"; }
+      Integer introduce.age() { return 24; }
+      String introduce.work() { return "Student"; }
+    }).introduce()
+
