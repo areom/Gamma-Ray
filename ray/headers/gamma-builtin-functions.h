@@ -181,7 +181,9 @@ struct t_String *scanner_scan_string(struct t_Scanner *this)
     int ret = -1;
     char *inpstr = NULL;
     struct t_String *astring = NULL;
-    ret = getline(&inpstr, 0, this->Scanner.source);
+    size_t linecap = 0;
+
+    ret = getline(&inpstr, &linecap, this->Scanner.source);
     if(ret == -1) {
         fprintf(stderr, "Error in string input\n");
         exit(0);
