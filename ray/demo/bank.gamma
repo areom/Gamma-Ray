@@ -134,8 +134,10 @@ class Account:
 
     Integer withdraw(Float amount):
       if(amount < 0.0):
+        system.out.printString("Invalid number entered.\n")
         return 1
       if(balance < amount):
+        system.out.printString("Insufficient funds.\n")
         return 1
       balance -= amount 
       return 0
@@ -162,7 +164,7 @@ class Main:
 
     while(true):
       if(menu_lvl = 0):
-        system.out.printString("Please Select:\n1.Open New Account\n2.Manage Existing Account\n3.I'm the president!\n-> ")
+        system.out.printString("Please Select:\n1.Open New Account\n2.Manage Existing Account\n3.I'm the President!\n-> ")
         selection := system.in.scanInteger()
         account_id := -1
         menu_lvl := 1
