@@ -1,0 +1,37 @@
+\section{Archetectural Design}
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\sffamily,
+  every matrix/.style={ampersand replacement=\&,column sep=2cm,row sep=2cm},
+  source/.style={draw,thick,rounded corners,fill=yellow!20,inner sep=.3cm},
+  process/.style={draw,thick,rounded corners,fill=blue!20},
+  sink/.style={source,fill=green!20},
+  dots/.style={gray,scale=2},
+  to/.style={->,>=stealth',shorten >=1pt,semithick,font=\sffamily\footnotesize},
+  every node/.style={align=center}]
+
+  % Position the nodes using a matrix layout
+  \matrix{
+    \node[source] (source_code) {Gamma Source Code};\& \node[process] (inspect) {Inspector.from\_channel}; \& \node[process] (parser) {Parser.cdecl}; \\
+     \& \node[process] (klass_data) {KlassData.build\_class\_data}; \& \\
+     \node[process] (build_sast) {BuildSast.ast\_to\_sast}; \& \node[process] (unam) {Unanonymous.deanonymize}; \& \node[process] (gen_cast) {GenCast.sast\_to\_cast};\\
+    \& \node[process] (build_sastr) {BuildSast.update\_refinements}; \& \node[process] (gen_c) {GenC.cast\_to\_c}; \\
+    \& \node[source] (csource) {Gamma Bytecode}; \& \node[process] (gcc) {GCC}; \\
+  };
+
+  % Draw the arrows between the nodes and label them.
+  \draw[to] (source_code) -- node[midway,above] {a sequence\\of characters} (inspect);
+  \draw[to] (inspect) -- node[midway,above] {a list of tokens} (parser);
+  \draw[to] (parser) -- node[midway,right] {an AST} (klass_data);
+  \draw[to] (klass_data) -- node[midway,left] {a class\_data\\object} (build_sast);
+  \draw[to] (klass_data) -- node[midway,left] {a class\_data\\object} (unam);
+  \draw[to] (klass_data) -- node[midway,left] {a class\_data\\object} (gen_cast);
+  \draw[to] (build_sast) -- node[midway,below] {a S-AST} (unam);
+  \draw[to] (unam) -- node[midway,left] {a S-AST} (build_sastr);
+  \draw[to] (build_sastr) -- node[midway,right] {a S-AST} (gen_cast);
+  \draw[to] (gen_cast) -- node[midway,left] {a C-AST} (gen_c);
+  \draw[to] (gen_c) -- node[midway,left] {a C\\program} (gcc);
+  \draw[to] (gcc) -- (csource);
+\end{tikzpicture}
+\end{center}
