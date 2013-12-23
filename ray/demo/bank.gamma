@@ -5,6 +5,15 @@ class Bank:
       id_counter := 0
 
     Integer transfer(Integer from_id, Integer to_id, Float amount):
+      if(from_id > id_counter):
+        system.out.printString("Invalid account number.\n")
+        return 1
+      if(accounts[from_id].get_balance() < amount):
+        system.out.printString("Insufficient funds.\n")
+        return 1
+
+      accounts[from_id].withdraw(amount)
+      accounts[to_id].deposit(amount)
       return 0
 
     Integer open_account(String client_name):
