@@ -1,4 +1,4 @@
-class AddTest:
+class Test:
   public:
     Integer a
     Float   b
@@ -11,3 +11,14 @@ class AddTest:
       b := (10.0 / 5.0) / -2.0
       return 0
 
+  main(System sys, String[] args):
+    Test t := new Test()
+    Printer p := sys.out
+
+    t.add()
+    p.printString("A is ")
+    p.printInteger(t.a)
+    p.printString(", B is ")
+    p.printFloat(t.b)
+    p.printString("\n")
+    

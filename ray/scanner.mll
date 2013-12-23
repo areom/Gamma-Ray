@@ -186,8 +186,8 @@ and comment level = parse
   | "/*"          { comment (level+1) lexbuf }
   | "*/"          { if level = 0 then token lexbuf else comment (level-1) lexbuf }
   | eof           { lexfail("File ended inside comment.") }
-  | vspace+ as v  { count_lines v; comment(0) lexbuf }
-  | _             { comment (0) lexbuf }
+  | vspace+ as v  { count_lines v; comment level lexbuf }
+  | _             { comment level lexbuf }
 
 and stringlit chars = parse
   (* Accept valid C string literals as that is what we will output directly *)

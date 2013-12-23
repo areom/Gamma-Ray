@@ -1,0 +1,73 @@
+class Parent:
+  protected:
+    Integer a
+    Integer b
+    String name
+
+  public:
+    init(String name):
+      super()
+
+      this.name := name
+      a := 1
+      b := 2
+
+    void print():
+      Printer p := system.out
+      p.printString(name)
+      p.printString(":  A is ")
+      p.printInteger(a)
+      p.printString(", B is ")
+      p.printInteger(b)
+      p.printString("\n")
+
+    void update():
+      if (refinable(setA)):
+        a := refine setA() to Integer
+      if (refinable(setB)):
+        b := refine setB() to Integer
+
+class Son extends Parent:
+  public:
+    init(String name):
+      super(name)
+
+  refinement:
+    Integer update.setA():
+      return -1
+    Integer update.setB():
+      return -2
+
+class Daughter extends Parent:
+  public:
+    init(String name):
+      super(name)
+
+  refinement:
+    Integer update.setA():
+      return 10
+    Integer update.setB():
+      return -5
+
+
+class Test:
+  protected:
+    init():
+      super()
+
+  main(System sys, String[] args):
+    Parent pop := new Parent("Father")
+    Son son := new Son("Son")
+    Daughter daughter := new Daughter("Daughter")
+
+    pop.print()
+    son.print()
+    daughter.print()
+    sys.out.printString("------------\n")    
+    pop.update()
+    son.update()
+    daughter.update()
+
+    pop.print()
+    son.print()
+    daughter.print()

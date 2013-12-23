@@ -1,22 +1,22 @@
 class Test:
   public:
-    Integer a
-    Integer b
+    Float a
+    Float b
     Integer c
 
     init():
       super()
-      a := 1
-      b := 2
-      c := 3
+      a := 1.5
+      b := 2.2
+      c := 0
 
-    Integer overview():
-      Integer success := a%b
+    Float overview():
+      Float success := a+b
       return success 
 
   main(System system, String[] args):
     Test ab := new Test()
     Printer p := system.out
-    p.printString(" 1 % 2 = ")
-    p.printInteger(ab.overview())
+    p.printString("Sum of integer = ")
+    p.printFloat(ab.overview())
     p.printString("\n")

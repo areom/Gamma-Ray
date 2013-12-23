@@ -11,7 +11,10 @@ class Parent:
       c := 0
 
     Integer overview():
-      Integer success := refine toExtra(a,b) to Integer
+      Integer success := -1
+      if (refinable(toExtra)) {
+          success := refine toExtra(a,b) to Integer;
+      }
       return success 
 
 class Child extends Parent:

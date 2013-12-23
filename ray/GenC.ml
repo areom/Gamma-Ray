@@ -85,7 +85,7 @@ and exprdetail_to_cstr castexpr_detail =
         Format.sprintf "(%s)->%s.%s" (expr_to_cstr obj) (GenCast.from_tname exptype) field in
 
     let generate_invocation recvr fname args =
-        let this = expr_to_cstr recvr in
+        let this = Format.sprintf "((struct %s*)(%s))" (fst recvr) (expr_to_cstr recvr) in
         let vals = List.map expr_to_cstr args in
         Format.sprintf "%s(%s)" fname (String.concat ", " (this::vals)) in
 
@@ -182,14 +182,10 @@ and collect_dispatch_arr arrtype fname args =
 
 
 let generate_testsw (klass, klasses, fuid) =
-    let body =
-        match klasses with
-          [] -> "\treturn LIT_BOOL(0);"
-        | _  ->
-                let predlist = List.map (fun kname -> "IS_CLASS(this, \""^kname^"\")") klasses in
-                let ifpred  = String.concat " || " predlist in
-                Format.sprintf "\tif ( %s )\n\t\treturn LIT_BOOL(1);\n\telse\n\t\treturn LIT_BOOL(0);\n" ifpred in
-    Format.sprintf "struct t_Boolean *%s (struct %s*this)\n{\n%s\n}\n\n" fuid klass body
+    let test klass = Format.sprintf "\tif ( IS_CLASS(this, \"%s\") ) return LIT_BOOL(1);" (String.trim klass) in
+    let cases = String.concat "\n" (List.map test klasses) in
+    let body = Format.sprintf "%s\n\treturn LIT_BOOL(0);" cases in
+    Format.sprintf "struct t_Boolean *%s( struct %s*this )\n{\n%s\n}\n\n" fuid klass body
 
 (**
      Takes a dispatch element of the global dispatches list
@@ -211,15 +207,20 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
     let actuals = List.map snd formals in
     let withthis kname = String.concat ", " ((Format.sprintf "(struct %s*) this" kname)::actuals) in
     let invoc fuid kname = Format.sprintf "%s(%s)" fuid (withthis kname) in
+    let execute fuid kname = match ret with
+        | None -> Format.sprintf "%s; return;" (invoc fuid kname)
+        | Some(atype) -> Format.sprintf "return ((struct %s*)(%s));" (String.trim atype) (invoc fuid kname) in
     let unroll_case (kname, fuid) =
-        Format.sprintf "\tif( IS_CLASS( this, \"%s\") )\n\t\t%s;\n" kname (invoc fuid kname) in
+        Format.sprintf "\tif( IS_CLASS( this, \"%s\") )\n\t\t{ %s }\n" (String.trim kname) (execute fuid kname) in
     let generated = List.map unroll_case cases in
-    Format.sprintf "%s%s(%s)\n{\n%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated)
+    let fail = Format.sprintf "REFINE_FAIL(\"%s\")" (String.trim klass) in
+    Format.sprintf "%s%s(%s)\n{\n%s\n\t%s\n}\n\n" rettype dispatchuid signature (String.concat "" generated) fail
 
 let generate_arrayalloc (arrtype, fname, args) =
     let params = List.mapi (fun i _ -> Format.sprintf "struct %s*v_dim%d" (GenCast.get_tname "Integer") i) args in
-    Format.sprintf "struct %s*%s(%s) {\n\treturn NULL;\n}\n" arrtype fname (String.concat ", " params)
-
+    match List.length params with
+        | 1 -> Format.sprintf "struct %s*%s(%s) {\n\treturn ONE_DIM_ALLOC(struct %s, INTEGER_OF(v_dim0));\n}\n" arrtype fname (String.concat ", " params) arrtype
+        | _ -> raise(Failure("Only one dimensional arrays currently supported."))
 
 (**
     Take a list of cast_stmts and return a body of c statements

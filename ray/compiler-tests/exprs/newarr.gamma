@@ -1,10 +1,31 @@
-class NewArr:
+class Test:
+  private:
+    void print(Integer i):
+      Printer p := system.out
+      p.printString("a[")
+      p.printInteger(i)
+      p.printString("] = ")
+      p.printInteger(a[i])
+      p.printString("\n")
+
   public:
     Integer[] a
     init():
       super()
       a := new Integer[](4)
+      a[0] := 3
+      a[1] := 2
+      a[2] := 1
+      a[3] := 0
+
+    void print():
+      Integer i := 0
+      while (i < 4):
+        print(i)
+        i += 1
+
   main(System system, String[] args):
-    NewArr f
-    f := new NewArr()
+    Test f
+    f := new Test()
+    f.print()
 

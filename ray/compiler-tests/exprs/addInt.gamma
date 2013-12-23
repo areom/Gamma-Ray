@@ -11,12 +11,12 @@ class Test:
       c := 3
 
     Integer overview():
-      Integer success := a%b
+      Integer success := a+b
       return success 
 
   main(System system, String[] args):
     Test ab := new Test()
     Printer p := system.out
-    p.printString(" 1 % 2 = ")
+    p.printString("Sum of integer = ")
     p.printInteger(ab.overview())
     p.printString("\n")

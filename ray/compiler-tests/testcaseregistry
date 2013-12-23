@@ -1,0 +1,59 @@
+Int   addInt.gamma
+Float addFloat.gamma
+Bool
+String
+
+Binop
+
+arith
+Add   addInt.gamma addFloat.gamma addMix.gamma addMix.gamma_err
+Sub   subMix.gamma
+Prod  prodMix.gamma
+Div   divMix.gamma
+Mod   mod.gamma
+Neg
+Pow  powMix.gamma
+
+numtest  ifeq.gamma ( will be renamed)
+Eq     pass
+Neq    pass
+Less   pass
+Grtr   pass
+Leq    pass
+Geq    pass
+And    pass
+Or     pass
+Nand   pass
+Nor    pass
+Xor    pass
+Not    pass
+nested conditions  not tested
+
+This         ANY
+Null
+Id           ANY
+NewObj       MANY
+Anonymous
+Literal      ANY
+Assign       ANY
+Deref
+Field        ANY
+Invoc        ANY
+Unop
+
+refinement
+Refine        refine_refinable.gamma  refine_unrefinable.gamma
+Refinable     refinable.gamma refinable.gamma_err
+
+Decl	      addInt.gamma
+If            ifeq.gamma   nested-if-tobetested
+While
+Expr
+Return       ANY
+Super
+
+private
+public
+protect
+main        
+extends     refinement testcase

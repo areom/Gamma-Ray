@@ -40,7 +40,7 @@ class Test:
       super()
 
   main(System system, String[] args):
-    Parent ab := new Child()
+    Parent ab := new Parent
     Printer p := system.out
     p.printString("Sum of integer = ")
     p.printInteger(ab.overview())

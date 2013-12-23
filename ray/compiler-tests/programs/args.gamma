@@ -1,0 +1,17 @@
+class Test:
+  public:
+    init():
+      super()
+
+  main(System sys, String[] args):
+    Integer i := 0
+    Printer p := sys.out
+
+    while (i < sys.argc):
+      p.printString("arg[")
+      p.printInteger(i)
+      p.printString("] = ")
+      p.printString(args[i])
+      p.printString("\n")
+      i += 1
+

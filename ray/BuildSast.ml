@@ -90,6 +90,8 @@ let rec eval klass_data kname mname isstatic env exp =
             | Right(false) -> raise(Failure("Unknown field " ^ mbr ^ " in the ancestry of " ^ recvr_type ^ ".")) in
         (field_type, Sast.Field(recvr, mbr)) in
 
+    let cast_to klass (_, v) = (klass, v) in
+
     let get_invoc expr methd elist =
         let (recvr_type, _) as recvr = eval' expr in
         let arglist = eval_exprlist elist in
@@ -104,7 +106,7 @@ let rec eval klass_data kname mname isstatic env exp =
             | None -> raise(Failure("Method " ^ methd ^ " not found (publically) in the ancestry of " ^ recvr_type ^ "."))
             | Some(fdef) -> fdef in
         let mfid = if mfdef.builtin then BuiltIn mfdef.uid else FuncId mfdef.uid in
-        (getRetType mfdef.returns, Sast.Invoc(recvr, methd, arglist, mfid)) in
+        (getRetType mfdef.returns, Sast.Invoc(cast_to (mfdef.inklass) recvr, methd, arglist, mfid)) in
 
     let get_init class_name exprlist =
         let arglist = eval_exprlist exprlist in
@@ -197,7 +199,7 @@ let rec eval klass_data kname mname isstatic env exp =
         | Ast.Deref(e1, e2) -> get_deref e1 e2
         | Ast.Refinable(s1) -> get_refinable s1
         | Ast.Unop(op, expr) -> get_unop op expr
-        | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
+        | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, eval_exprlist args, body)) (* Delay evaluation *)
 
 (**
     Given a class_data record, the name of the current class, a list of AST statements,
@@ -326,6 +328,41 @@ let init_returns (func : Sast.func_def) =
         returns = Some(func.inklass);
         body = List.map return_this body }
 
+let rec update_current_ref_stmts (kname : string) (stmts : Sast.sstmt list) : Sast.sstmt list = List.map (update_current_ref_stmt kname) stmts
+and update_current_ref_exprs (kname : string) (exprs : Sast.expr list) = List.map (update_current_ref_expr kname) exprs
+and update_current_ref_stmt (kname : string) (stmt : Sast.sstmt) = match stmt with
+    | Sast.Decl(vdef, None, env) -> Sast.Decl(vdef, None, env)
+    | Sast.Decl(vdef, Some(expr), env) -> Sast.Decl(vdef, Some(update_current_ref_expr kname expr), env)
+    | Sast.Expr(expr, env) -> Sast.Expr(update_current_ref_expr kname expr, env)
+    | Sast.If(pieces, env) -> Sast.If(update_current_ref_clauses kname pieces, env)
+    | Sast.While(expr, body, env) -> Sast.While(update_current_ref_expr kname expr, update_current_ref_stmts kname body, env)
+    | Sast.Return(None, env) -> Sast.Return(None, env)
+    | Sast.Return(Some(expr), env) -> Sast.Return(Some(update_current_ref_expr kname expr), env)
+    | Sast.Super(args, uid, parent, env) -> Sast.Super(update_current_ref_exprs kname args, uid, parent, env)
+and update_current_ref_expr (kname : string) ((atype, detail) : string * Sast.expr_detail) : string * Sast.expr_detail =
+    let cleaned = match detail with
+        | Sast.This -> Sast.This
+        | Sast.Null -> Sast.Null
+        | Sast.Id(i) -> Sast.Id(i)
+        | Sast.NewObj(klass, args, uid) -> Sast.NewObj(klass, update_current_ref_exprs kname args, uid)
+        | Sast.Anonymous(klass, args, refs) -> Sast.Anonymous(klass, args, refs)
+        | Sast.Literal(lit) -> Sast.Literal(lit)
+        | Sast.Assign(mem, data) -> Sast.Assign(update_current_ref_expr kname mem, update_current_ref_expr kname data)
+        | Sast.Deref(arr, idx) -> Sast.Deref(update_current_ref_expr kname arr, update_current_ref_expr kname idx)
+        | Sast.Field(expr, member) -> Sast.Field(update_current_ref_expr kname expr, member)
+        | Sast.Invoc(expr, meth, args, id) -> Sast.Invoc(update_current_ref_expr kname expr, meth, update_current_ref_exprs kname args, id)
+        | Sast.Unop(op, expr) -> Sast.Unop(op, update_current_ref_expr kname expr)
+        | Sast.Binop(l, op, r) -> Sast.Binop(update_current_ref_expr kname l, op, update_current_ref_expr kname r)
+        | Sast.Refine(refine, args, ret, switch) -> Sast.Refine(refine, update_current_ref_exprs kname args, ret, switch)
+       | Sast.Refinable(refine, switch) -> Sast.Refinable(refine, switch) in
+    let realtype : string = if current_class = atype then kname else atype in
+    (realtype, cleaned)
+and update_current_ref_clauses (kname : string) pieces =
+    let (preds, bodies) = List.split pieces in
+    let preds = List.map (function None -> None | Some(expr) -> Some(update_current_ref_expr kname expr)) preds in
+    let bodies = List.map (update_current_ref_stmts kname) bodies in
+    List.map2 (fun a b -> (a, b)) preds bodies
+
 (**
     Given a class_data record, an Ast.func_def, an an initial environment,
     convert the func_def to a Sast.func_def. Can raise failure when there
@@ -337,13 +374,15 @@ let init_returns (func : Sast.func_def) =
   *)
 let ast_func_to_sast_func klass_data (func : Ast.func_def) initial_env isinit =
     let with_params = List.fold_left (fun env vdef -> env_update Local vdef env) initial_env func.formals in
+    let checked : Sast.sstmt list = attach_bindings klass_data func.inklass func.name func.returns func.static func.body with_params in
+    let cleaned = update_current_ref_stmts func.inklass checked in
     let sast_func : Sast.func_def =
         {   returns = func.returns;
             host = func.host;
             name = func.name;
             formals = func.formals;
             static = func.static;
-            body = attach_bindings klass_data func.inklass func.name func.returns func.static func.body with_params;
+            body = cleaned;
             section = func.section;
             inklass = func.inklass;
             uid = func.uid;

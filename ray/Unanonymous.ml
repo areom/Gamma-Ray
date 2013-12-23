@@ -25,7 +25,7 @@ type anon_state = {
     @param expr_deets an expr_detail to transform
     @return (new expr detail, updated state)
   *)
-let deanon_expr_detail init_state env expr_deets =
+let rec deanon_expr_detail init_state env expr_deets =
     let get_label state klass =
         let (n, labeler) = match map_lookup klass state.labeler with
             | None -> (0, StringMap.add klass 0 state.labeler)
@@ -39,21 +39,24 @@ let deanon_expr_detail init_state env expr_deets =
                 | Some((_, vtype, _)) -> Some(vtype)
                 | _ -> None in
 
-    let deanon_init formals klass : Ast.func_def =
+    let deanon_init args formals klass : Ast.func_def =
+        let givens = List.map (fun (t, _) -> (t, "Anon_v_" ^ UID.uid_counter ())) args in
+        let all_formals = givens @ formals in
+        let super = Ast.Super(List.map (fun (_, v) -> Ast.Id(v)) givens) in
         let assigner (_, vname) = Ast.Expr(Ast.Assign(Ast.Field(Ast.This, vname), Ast.Id(vname))) in
         {   returns = None;
             host = None;
             name = "init";
             static = false;
-            formals = formals;
-            body = List.map assigner formals;
+            formals = all_formals;
+            body = super::(List.map assigner formals);
             section = Publics;
             inklass = klass;
             uid = UID.uid_counter ();
             builtin = false } in
 
-    let deanon_klass freedefs klass parent refines =
-        let init = deanon_init freedefs klass in
+    let deanon_klass args freedefs klass parent refines =
+        let init = deanon_init args freedefs klass in
         let vars = List.map (fun vdef -> Ast.VarMem(vdef)) freedefs in
         let sections =
             {   privates = vars;
@@ -91,12 +94,45 @@ let deanon_expr_detail init_state env expr_deets =
         | Sast.Anonymous(klass, args, refines) ->
             let (newklass, state) = get_label init_state klass in
             let freedefs = deanon_freedefs state env refines in
-            let (init_id, ast_class) = deanon_klass freedefs newklass klass refines in
-            let args = List.map (fun (t, v) -> (t, Sast.Id(v))) freedefs in
-            let instance = Sast.NewObj(newklass, args, Sast.FuncId init_id) in
+            let (init_id, ast_class) = deanon_klass args freedefs newklass klass refines in
+            let freeargs = List.map (fun (t, v) -> (t, Sast.Id(v))) freedefs in
+            let instance = Sast.NewObj(newklass, args @ freeargs, Sast.FuncId init_id) in
             let state = { state with deanon = ast_class::state.deanon } in
             (instance, state)
-        | _ -> (expr_deets, init_state)
+        | Sast.This -> (Sast.This, init_state)
+        | Sast.Null -> (Sast.Null, init_state)
+        | Sast.Id(id) -> (Sast.Id(id), init_state)
+        | Sast.NewObj(klass, args, funcid) ->
+            let (args, state) = deanon_exprs init_state env args in
+            (Sast.NewObj(klass, args, funcid), state)
+        | Sast.Literal(lit) -> (Sast.Literal(lit), init_state)
+        | Sast.Assign(mem, data) ->
+            let (mem, state) = deanon_expr init_state env mem in
+            let (data, state) = deanon_expr state env data in
+            (Sast.Assign(mem, data), state)
+        | Sast.Deref(arr, idx) ->
+            let (arr, state) = deanon_expr init_state env arr in
+            let (idx, state) = deanon_expr state env idx in
+            (Sast.Deref(arr, idx), state)
+        | Sast.Field(expr, mbr) ->
+            let (expr, state) = deanon_expr init_state env expr in
+            (Sast.Field(expr, mbr), state)
+        | Sast.Invoc(recvr, klass, args, funcid) ->
+            let (recvr, state) = deanon_expr init_state env recvr in
+            let (args, state) = deanon_exprs state env args in
+            (Sast.Invoc(recvr, klass, args, funcid), state)
+        | Sast.Unop(op, expr) ->
+            let (expr, state) = deanon_expr init_state env expr in
+            (Sast.Unop(op, expr), state)
+        | Sast.Binop(l, op, r) ->
+            let (l, state) = deanon_expr init_state env l in
+            let (r, state) = deanon_expr state env r in
+            (Sast.Binop(l, op, r), state)
+        | Sast.Refine(refine, args, ret, switch) ->
+            let (args, state) = deanon_exprs init_state env args in
+            (Sast.Refine(refine, args, ret, switch), state)
+        | Sast.Refinable(refine, switch) ->
+            (Sast.Refinable(refine, switch), init_state)
 
 (**
     Update an type-tagged sAST expression to be deanonymized.
@@ -108,7 +144,7 @@ let deanon_expr_detail init_state env expr_deets =
     @return ((t, exp'), state') where exp' is exp but deanonymized and
     state' is an updated version of init_state
   *)
-let deanon_expr init_state env (t, exp) =
+and deanon_expr init_state env (t, exp) =
     let (deets, state) = deanon_expr_detail init_state env exp in
     ((t, deets), state)
 
@@ -121,7 +157,7 @@ let deanon_expr init_state env (t, exp) =
     @return (list', state') where list' is the deanonymized list and
     state' is the updated state
   *)
-let deanon_exprs init_state env list =
+and deanon_exprs init_state env list =
     let folder (rexprs, state) expr =
         let (deets, state) = deanon_expr state env expr in
         (deets::rexprs, state) in
@@ -135,7 +171,7 @@ let deanon_exprs init_state env list =
     @param stmt a statement to deanonymize
     @return (stmt', state') the statement and state, updated.
   *)
-let rec deanon_stmt input_state stmt =
+and deanon_stmt input_state stmt =
     let deanon_decl init_state env = function
         | (vdef, Some(expr)) ->
             let (deets, state) = deanon_expr init_state env expr in
