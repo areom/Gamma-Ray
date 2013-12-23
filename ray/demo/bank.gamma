@@ -5,6 +5,30 @@ class Bank:
       id_counter := 0
       accounts := new Account[](100)
 
+    Integer open_account(String client_name):
+      Account new_account := new Account(id_counter, client_name)
+      accounts[id_counter] := new_account
+      id_counter += 1
+      return id_counter
+
+    Integer deposit(Integer id, Float amount):
+      if(id > id_counter):
+        system.out.printString("Invalid account number.\n")
+        return 1
+
+      accounts[id].deposit(amount)
+      return 0
+
+    Integer withdraw(Integer id, Float amount):
+      if(id > id_counter):
+        system.out.printString("Invalid account number.\n")
+        return 1
+      if(amount > accounts[id].get_balance()):
+        return 1
+
+      accounts[id].withdraw(amount)
+      return 0
+
     Integer transfer(Integer from_id, Integer to_id, Float amount):
       if(from_id > id_counter):
         system.out.printString("Invalid account number.\n")
@@ -16,11 +40,11 @@ class Bank:
       accounts[to_id].deposit(amount)
       return 0
 
-    Integer open_account(String client_name):
-      Account new_account := new Account(id_counter, client_name)
-      accounts[id_counter] := new_account
-      id_counter += 1
-      return id_counter
+    Float get_balance(Integer id, Float amount):
+      if(id > id_counter):
+        return -1.0
+      return accounts[id].get_balance()
+
 
   protected:
     Integer id_counter
@@ -76,36 +100,5 @@ class Main:
       super()
   
   main(System system, String[] args):
-    Account test_account := new Account(0, "Bender")
-    system.out.printString("****************************\n")
-    system.out.printString("Hello ")
-    system.out.printString(test_account.get_client_name())
-    system.out.printString("\n")
-    system.out.printString("****************************\n")
-
-    while(true):
-      Integer selection := new Integer()
-      Float amount := new Float()
-
-      system.out.printString("Please select:\n 1. Deposit\n 2. Withdraw\n 3. Transfer:\n")
-      selection := system.in.scanInteger()
-      if(selection = 1):
-        system.out.printString("Please enter amount:")
-        amount := system.in.scanFloat()
-        test_account.deposit(amount)
-        system.out.printString("Current Balance:")
-        system.out.printFloat(test_account.get_balance()) 
-        system.out.printString("\n")
-      else:
-        if(selection = 2):
-          system.out.printString("Please enter amount:")
-          amount := system.in.scanFloat()
-          test_account.withdraw(amount)
-          system.out.printString("Current Balance:")
-          system.out.printFloat(test_account.get_balance()) 
-          system.out.printString("\n")
-        else:
-          if(selection = 3):
-          
-          else:
-            return
+    Bank citibank := new Bank()
+    Integer id
