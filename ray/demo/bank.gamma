@@ -16,13 +16,19 @@ class Bank:
       Account new_account := new Checking(id_counter, client_name)
       accounts[id_counter] := new_account
       id_counter += 1
-      return id_counter
+      return id_counter-1
 
     Integer open_savings(String client_name):
       Account new_account := new Savings(id_counter, client_name)
       accounts[id_counter] := new_account
       id_counter += 1
-      return id_counter
+      return id_counter-1
+
+    Float get_balance(Integer id):
+      if(id > id_counter):
+        system.out.printString("Invalid account number.\n")
+        return -1.0
+      return accounts[id].get_balance()
 
     Integer deposit(Integer id, Float amount):
       if(id > id_counter):
@@ -143,4 +149,79 @@ class Main:
   
   main(System system, String[] args):
     Bank citibank := new Bank()
-    Integer id
+    Integer menu_lvl := 0
+    Integer menu_num := 0
+    Integer selection := new Integer()
+    Integer account_id := -1
+
+    while(true):
+      if(menu_lvl = 0):
+        system.out.printString("Please Select:\n1.Open New Account\n2.Manage Existing Account\n3.I'm the president!\n-> ")
+        selection := system.in.scanInteger()
+        account_id := -1
+        menu_lvl := 1
+      
+      if(menu_lvl = 1): 
+        if(selection = 1):
+          system.out.printString("Your Name Please:")
+          String name := new String()
+          /*
+          name := system.in.scanString()
+          */
+          Integer checking_id := citibank.open_checking(name)
+          Integer savings_id := citibank.open_savings(name)
+          system.out.printString("Dear ")
+          system.out.printString(name)
+          system.out.printString("\n")
+          system.out.printString("Your new checking account number: ")
+          system.out.printInteger(checking_id)
+          system.out.printString("\n")
+          system.out.printString("Your new savings account number: ")
+          system.out.printInteger(savings_id)
+          system.out.printString("\n")
+          selection := 0
+          menu_lvl := 0
+        else:  
+          if(selection = 2):
+            if(account_id < 0):
+              system.out.printString("Your Account Number Please: ")
+              account_id := system.in.scanInteger()
+            system.out.printString("Please Select:\n1.Check Balance\n2.Deposit\n3.Withdraw\n4.Transfer\n5.Exit\n-> ")
+            menu_lvl := 2
+            selection := system.in.scanInteger()
+            if(selection = 5):
+              selection := 0
+              menu_lvl := 0
+          else:
+            if(selection = 3):
+       
+       if(menu_lvl = 2):
+         if(selection = 1):
+           system.out.printString("Your current balance: ")
+           system.out.printFloat(citibank.get_balance(account_id))
+           system.out.printString("\n")
+           menu_lvl := 1
+           selection := 2
+         else:
+           if(selection = 2):
+             system.out.printString("Please enter the amount you want to deposit: ")
+             Float amount := system.in.scanFloat()
+             citibank.deposit(account_id, amount)
+             menu_lvl := 1
+             selection := 2
+           else:
+             if(selection = 3):
+               system.out.printString("Pleaser enter the amount you want to withdraw: ")
+               Float amount := system.in.scanFloat()
+               citibank.withdraw(account_id, amount)
+               menu_lvl := 1
+               selection := 2
+             else:  
+               if(selection = 4):
+                 system.out.printString("Please enter the account number you want to transfer to: ")
+                 Integer to_account := system.in.scanInteger()
+                 system.out.printString("Please enter the amount you want to transfer: ")
+                 Float amount := system.in.scanFloat()
+                 citibank.transfer(account_id, to_account, amount)
+                 menu_lvl := 1
+                 selection := 2
