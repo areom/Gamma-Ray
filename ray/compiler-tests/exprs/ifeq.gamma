@@ -12,6 +12,7 @@ class Test:
       super()
       Integer a:=2
       Integer b:=3
+      Integer c
 
       /* less and less and equal*/
       if (a<2)  { system.out.printString("1. a=2 a<2 shouldnot print\n"); }
@@ -33,13 +34,17 @@ class Test:
 
       b:=5
       if(b=3 or a=3) {  system.out.printString("6. b=3 or a=3  success\n"); }
-/*
-      /*nand and nor and not*/
 
-      if(b=3 nor a=5) {  system.out.printString("7. b=3 nor a=5 success\n"); }
-      if(b=3 nand a=5) {  system.out.printString("8. b=3 nand a=5 success\n"); }
-      if(b=3 xor a=3) {  system.out.printString("9. b=3 xor a=3 success\n"); }
-*/
+      /*nand and nor and not*/
+      b:=4
+      a:=4
+      if(b=3 nor a=3) {  system.out.printString("7. b=10 nor a=10 success\n"); }
+      if(not(b=4 nand a=4)) {  system.out.printString("8. not(b=4 nand a=4) success\n"); }
+      b:=3
+      if(b=4 nand a=4) {  system.out.printString("9. b=4 nand a=4 success\n"); }
+      if(b=3 xor a=3) {  system.out.printString("10. b=3 xor a=3 success\n"); }
+      c:=10
+      if((a<>b or b=c) and c=10)  {  system.out.printString("11. (a<>b or b=c) and c=10 success\n"); }
       line()
 
   main(System system, String[] args):
