@@ -14,19 +14,21 @@ Mod   mod.gamma
 Neg
 Pow  powMix.gamma
 
-numtest
-Eq
-Neq
-Less
-Grtr
-Leq
-Geq
-And
-Or
-Nand
-Nor
-Xor
-Not
+numtest  ifeq.gamma ( will be renamed)
+Eq     pass
+Neq    pass
+Less   pass
+Grtr   pass
+Leq    pass
+Geq    pass
+And    pass
+Or     pass
+Nand   fail
+Nor    fail
+Xor    fail
+Not    not tested
+nested conditions  not tested
+
 This         ANY
 Null
 Id           ANY
@@ -44,10 +46,10 @@ Refine        refine_refinable.gamma  refine_unrefinable.gamma
 Refinable     refinable.gamma refinable.gamma_err
 
 Decl	      addInt.gamma
-If
+If            ifeq.gamma   nested-if-tobetested
 While
 Expr
-Return
+Return       ANY
 Super
 
 private
