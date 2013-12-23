@@ -1,0 +1,45 @@
+\definecolor{tintedgray}{rgb}{0.96,0.96,0.96}
+\definecolor{tintedorange}{rgb}{1,0.96,0.9}
+
+\lstdefinestyle{example_style}{ %
+  aboveskip=8pt,
+  abovecaptionskip=8pt,
+  backgroundcolor=\color{tintedgray},
+  basicstyle=\footnotesize,
+  belowskip=0pt,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{orange},
+  frame=single,
+  framesep=8pt,
+  float,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  morekeywords={and,class,else,elsif,extends,false,
+  	if,init,main,nand,new,nor,not,null,or,private,
+  	protected,public,refinable,refine,refinement,
+  	return,super,this,to,true,void,while,xor},           
+  numbers=left,
+  numbersep=14pt,
+  numberstyle=\tiny\color{gray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  tabsize=4,
+  title=\lstname
+}
+\lstset{style=example_style}
+\section{LRM}
+\input{contents/LRM-contents/lexical}
+
+\input{contents/LRM-contents/semantics}
+
+\input{contents/LRM-contents/syntax}
+
+\input{contents/LRM-contents/operators}
+
+\input{contents/LRM-contents/grammar}
+

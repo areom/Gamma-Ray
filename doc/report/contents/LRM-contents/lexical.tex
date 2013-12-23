@@ -1,0 +1,107 @@
+\subsection{Lexical Elements}
+\subsubsection{Whitespace}
+The new line (line feed), form feed, carriage return, and vertical tab characters will all be treated equivalently as vertical whitespace. Tokens are separated by horizontal (space, tab) and vertical (see previous remark) whitespace of any length (including zero).
+
+\subsubsection{Identifiers}
+Identifiers are used for the identification of variables,  methods and types. An identifer is a sequence of alphanumeric characters, uppercase and lowercase, and underscores. A type identifier must start with an uppercase letter; all others must start with a lower case letter. Additionally, the lexeme of a left bracket followed immediately by a right bracket -- \verb![]! -- may appear at the end of a type identifier in certain contexts, and that there may be multiple present in this case (denoting arrays, arrays of arrays, etc, etc). The legal contexts for such will be described later.
+
+\subsubsection{Keywords}
+The following words are reserved keywords. They may not be used as identifiers:
+\begin{center}
+\begin{tabular}{cccccc}
+\verb!and! & \verb!class! & \verb!else! & \verb!elsif! & \verb!extends! & \verb!false!\\
+\verb!if! & \verb!init! & \verb!main! & \verb!nand! & \verb!new! & \verb!nor!\\
+\verb!not! & \verb!null! & \verb!or! & \verb!private! & \verb!protected! & \verb!public!\\
+\verb!refinable! & \verb!refine! & \verb!refinement! & \verb!return! & \verb!super! & \verb!this!\\
+\verb!to! & \verb!true! & \verb!void! & \verb!while! & \verb!xor!\\
+\end{tabular}
+\end{center}
+
+\subsubsection{Operators}
+There are a large number of (mostly binary) operators:
+\begin{center}
+\begin{tabular}{ccccccc}
+\verb!=! & \verb!=/=! & \verb|<>| & \verb!<! & \verb!<=! & \verb!>! & \verb!>=!\\
+\verb!+! & \verb!-! & \verb!*! & \verb!/! & \verb!%! & \verb!^! & \verb!:=!\\
+\verb!+=! & \verb!-=! & \verb!*=! & \verb!/=! & \verb!%=! & \verb!^=! \\
+\verb!and! & \verb!or! & \verb!not! & \verb!nand! & \verb!nor! & \verb!xor!&\verb!refinable!\\
+\end{tabular}
+\end{center}
+
+\subsubsection{Literal Classes}
+A literal class is a value that may be expressed in code without the use of the new keyword. These are the fundamental units of program.
+
+\paragraph{Integer Literals}
+An integer literal is a sequence of digits. It may be prefaced by a unary minus symbol. For example:
+\begin{itemize}
+\item \verb!777!
+\item \verb!42!
+\item \verb!2!
+\item \verb!-999!
+\item \verb!0001!
+\end{itemize}
+
+\paragraph{Float Literals}
+A float literal is a sequence of digits and exactly one decimal point/period. It must have at least one digit before the decimal point and at least one digit after the decimal point. It may also be prefaced by a unary minus symbol. For example:
+\begin{itemize}
+\item \verb!1.0!
+\item \verb!-0.567!
+\item \verb!10000.1!
+\item \verb!00004.70000!
+\item \verb!12345.6789!
+\end{itemize}
+
+\paragraph{Boolean Literals}
+A boolean literal is a single keyword, either \verb!true! or \verb!false!.
+
+\paragraph{String Literals}
+A string literal consists of a sequence of characters enclosed in double quotes. Note that a string literal can have the new line escape sequence within it (among others, see below), but cannot have a new line (line feed), form feed, carriage return, or vertical tab within it; nor can it have the end of file. Please note that the sequence may be of length zero. For example:
+\begin{itemize}
+\item \verb!"Yellow matter custard"!
+\item \verb!""!
+\item \verb!"Dripping\n   from a dead"!
+\item \verb!"'s 3y3"!
+\end{itemize}
+
+The following are the escape sequences available within a string literal; a backslash followed by a character outside of those below is an error.
+\begin{itemize}
+\item \verb!\a! - u0007/alert/BEL
+\item \verb!\b! - u0008/backspace/BB
+\item \verb!\f! - u000c/form feed/FF
+\item \verb!\n! - u000a/linefeed/LF
+\item \verb!\r! - u000d/carriage return/CR
+\item \verb!\t! - u0009/horizontal tab/HT
+\item \verb!\v! - u000b/vertical tab/VT
+\item \verb!\'! - u0027/single quote
+\item \verb!\"! - u0022/double quote
+\item \verb!\\! - u005c/backslash
+\item \verb!\0! - u0000/null character/NUL 
+\end{itemize}
+
+\subsubsection{Comments}
+Comments begin with the sequence \verb!/*! and end with \verb!*/!. Comments nest within each other.  Comments must be closed before the end of file is reached.
+
+\subsubsection{Separators}
+The following characters delineate various aspects of program organization (such as method arguments, array indexing, blocks, and expressions):
+\begin{center}
+\begin{tabular}{cccccccc}
+\verb![! & \verb|]| & \verb!(! & \verb!)! & \verb!{! & \verb!}! & \verb!,! & \verb!;!\\
+\end{tabular}
+\end{center}
+A notable exception is that \verb![]! itself is a lexeme related to array types and there can be no space between the two characters in this regard.
+
+\subsubsection{Whitespace and Noncanonical Gamma}
+Canonical Gamma, which is described by this document's syntax and grammar sections, ignores whitespace outside of string literals. Gamma code with rigid whitespace (pythonesque Gamma) -- a la python and without \verb!;!, \verb!{!, or \verb!}! -- can transformed to canonical Gamma easily. Such transformation respects the following rules:
+\begin{itemize}
+\item Tab characters are equivalent to eight spaces
+\item Wherever a \verb!{! could be used to start a scope, a \verb!:! can be used instead; in such case a closing \verb!}! is not necessary as it will be inferred by the indentation level
+\item After starting a scope with \verb!:! the next line with non-whitespace characters determines the indentation level of that scope.
+\begin{itemize}
+\item If there is no such line (end of file) then the scope is assumed to end and is equivalent to \verb!{}!.
+\item If the next such line is indented no more than the line introducing the scope, then the scope is again equivalent to \verb!{}!.
+\item If the next line is indented more than the line introducing the scope then this sets the indentation level of the scope -- all statements in this scope \emph{must} be at the same exact level of indentation. The scope continues until end of file or the indentation returns to the indentation level of an outer scope.
+\end{itemize}
+\item If the line after a statement \emph{not} ending in a colon is indented more than the given line, then it is considered a continuation of that statement.
+\item At the end of a statement (either the end of the line starting the statement, or subsequent lines that are indented more as per the rule above), a new line is equivalent to a semicolon \verb!;!.
+\item If a scope is explicitly marked with \verb!{! and \verb!}! then all further scoping within that scope must be handled in a whitespace insensitive manner via the use of \verb!{!, \verb!}!, \verb!;!. 
+\end{itemize}

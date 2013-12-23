@@ -1,0 +1,114 @@
+\newcommand{\comment}[1]{{\escapegrammar$\bullet$\it\ #1}\\}
+
+\subsection{Grammar}
+
+The following conventions are taken:
+
+\begin{itemize}
+\item Sequential semicolons (even separated by whitespace) are treated as one.
+\item the `digit' class of characters are the numerical digits zero through nine
+\item the `upper' class of characters are the upper case roman letters
+\item the `lower' class of characters are the lower case roman letters
+\item the `ualphanum' class of characters consists of the digit, upper, and lower classes together with the underscore
+\item a program is a collection of classes; this grammar describes solely classes
+\item the argument to main is semantically enforced after parsing; its presence here is meant to increase readability
+\end{itemize}
+
+The grammar follows:\\
+
+\noindent\hrule
+
+\begin{grammar}
+      [(colon){$\hskip 0.1cm \Rightarrow$\\$~\hskip 0.75cm$}]
+      [(semicolon){\\$~\hskip 0.45cm|\hskip 0.2cm$}]
+      [(comma){}]
+      [(period){\\}]
+      [(quote){\begin{bf}}{\end{bf}}]
+      [(nonterminal){$\langle$}{$\rangle$}]
+
+\comment{Classs may extend another class or default to extending Object}
+<class>:"class ",<class id>,<extend>," \{ ",<class section>,"{\small *} \}".
+<extend>:"$\epsilon$";"extends ",<class id>.
+
+\comment{Sections -- private protected public refinements and main}
+<class section>:<refinement>;<access group>;<main>.
+
+\comment{Refinements are named method dot refinement}
+<refinement>:"refinement \{ ",<refine>,"{\small *} \}".
+<refine>:<return type>,<var id>,".",<var id>,<params>," \{ ",<statement>,"{\small *} \}".
+
+\comment{Access groups contain all the members of a class}
+<access group>:<access type>," \{ ",<member>,"{\small *} \}".
+<access type>:"private";"protected";"public".
+<member>:<var decl>;<method>;<init>.
+<method>:<return type>,<var id>,<params>," \{ ",<statement>,"{\small *} \}".
+<init>:"init ",<params>," \{ ",<statement>,"{\small *} \}".
+
+\comment{Main is special -- not instance data, starts execution}
+<main>:"main ( String[] ",<var id>," ) \{ ",<statement>,"{\small *} \}".
+
+\comment{Finally, the meat and potatoes}
+<statement>:<var decl>," ;";<var decl>," := ",<expression>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
+
+\comment{Super invocation is so we can do constructor chaining}
+<super>:"super ",<args>.
+
+\comment{Methods yield values (or just exit for void/init/main)}
+<return>:"return";"return ",<expression>.
+
+\comment{Basic control structures}
+<conditional>:"if ( ",<expression>," ) \{ ",<statement>,"{\small *} \} ",<else>.
+<else>:"$\epsilon$";<elseif>," else \{ ",<statement>,"{\small *} \}".
+<elseif>:"$\epsilon$";<elseif>," elsif ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
+<loop>:"while ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
+
+\comment{Anything that can result in a value}
+<expression>:<assignment>;<invocation>;<field>;<var id>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"this";"null".
+
+\comment{Assignment -- putting one thing in another}
+<assignment>:<expression>,<assign op>,<expression>.
+<assign op>:":=";"+=";"-=";"*=";"/=";"\%=";"$\hat{}=$".
+
+\comment{Member / data access}
+<invocation>:<expression>," . ",<var id>,<args>;<var id>,<args>.
+<field>:<expression>," . ",<var id>.
+<deref>:<expression>," [ ",<expression>," ]".
+
+\comment{Basic arithmetic can and will be done!}
+<arithmetic>:<expression>,<bin op>,<expression>;<unary op>,<expression>.
+<bin op>:"+";"-";"*";"/";"\%";"$\hat{}$".
+<unary op>:"-".
+
+\comment{Common boolean predicates}
+<test>:<expression>,<bin pred>,<expression>;<unary pred>,<expression>;"refinable ( ",<var id>," )".
+<bin pred>:"and";"or";"xor";"nand";"nor";"$<$";"$<=$";"=";"$<>$";"=/=";"$>=$";"$>$".
+<unary pred>:"not".
+
+\comment{Making something}
+<instantiate>:"new ",<type>,<args>,<optional refinements>.
+<optional refinements>:"$\epsilon$";"\{ ",<refine>,"{\small *} \}".
+
+\comment{Refinement takes a specialization and notes the required return type}
+<refine expr>:"refine ",<var id>,<args>," to ",<type>.
+
+\comment{Literally necessary}
+<literal>:<int lit>;<bool lit>;<float lit>;<string lit>.
+<float lit>:<digit>,"{\small +} . ",<digit>,"{\small +}".
+<int lit>:<digits>,"{\small +}".
+<bool lit>:"true";"false".
+<string lit>:"``",<string escape seq>,"''".
+
+\comment{Params and args are as expected}
+<params>:"( )";"( ",<paramlist>," )".
+<paramlist>:<var decl>;<paramlist>," , ",<var decl>.
+<args>:"( )";"( ",<arglist>, " )".
+<arglist>:<expression>;<arglist>," , ",<expression>.
+
+\comment{All the basic stuff we've been saving up until now}
+<var decl>:<type>,<var id>.
+<return type>:"void";<type>.
+<type>:<class id>;<type>,"[]".
+<class id>:<upper>,<ualphanum>,"{\small *}".
+<var id>:<lower>,<ualphanum>,"{\small *}".
+
+\end{grammar}
