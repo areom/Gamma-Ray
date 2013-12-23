@@ -4,13 +4,17 @@ Bool
 String
 
 Binop
+
+arith
 Add   addInt.gamma addFloat.gamma addMix.gamma addMix.gamma_err
 Sub   subMix.gamma
 Prod  prodMix.gamma
 Div   divMix.gamma
-Mod
+Mod   mod.gamma
 Neg
 Pow  powMix.gamma
+
+numtest
 Eq
 Neq
 Less
@@ -35,11 +39,19 @@ Field        ANY
 Invoc        ANY
 Unop
 
+refinement
 Refine        refine_refinable.gamma  refine_unrefinable.gamma
-Refinable     refinable.gamma
-Decl
+Refinable     refinable.gamma refinable.gamma_err
+
+Decl	      addInt.gamma
 If
 While
 Expr
 Return
 Super
+
+private
+public
+protect
+main        
+extends     refinement testcase

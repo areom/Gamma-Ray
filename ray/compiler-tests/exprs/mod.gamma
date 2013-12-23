@@ -1,13 +1,22 @@
-class AddTest:
+class IOTest:
   public:
     Integer a
     Integer b
+    Integer c
 
     init():
       super()
+      a := 1
+      b := 2
+      c := 3
 
-    Integer add():
-      a := 10 % 2
-      b := 5 % 2
-      return 0
+    Integer overview():
+      Integer success := a%b
+      return success 
 
+  main(System system, String[] args):
+    IOTest ab := new IOTest()
+    Printer p := system.out
+    p.printString(" 1 % 2 = ")
+    p.printInteger(ab.overview())
+    p.printString("\n")
