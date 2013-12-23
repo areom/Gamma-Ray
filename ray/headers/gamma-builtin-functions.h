@@ -2,6 +2,7 @@
 /* GLOBAL DATA */
 struct t_System global_system;
 int object_counter;
+int global_argc;
 
 /* Prototypes */
 struct t_Object *allocate_for(size_t, ClassInfo *);
@@ -25,6 +26,7 @@ struct t_String *scanner_scan_string(struct t_Scanner *);
 void printer_print_float(struct t_Printer *, struct t_Float *);
 void printer_print_integer(struct t_Printer *, struct t_Integer *);
 void printer_print_string(struct t_Printer *, struct t_String *);
+struct t_String **get_gamma_args(char **argv, int argc);
 
 /* Functions! */
 
@@ -48,6 +50,7 @@ void *array_allocator(size_t size, int n) {
         fprintf(stderr, "Failure allocating for array.  Exiting.\n");
         exit(1);
     }
+    memset(mem, 0, size * n);
     return mem;
 }
 
@@ -124,14 +127,17 @@ struct t_System *system_init(struct t_System *this)
     this->System.v_err = MAKE_NEW(Printer);
     this->System.v_in = MAKE_NEW(Scanner);
     this->System.v_out = MAKE_NEW(Printer);
+    this->System.v_argc = MAKE_NEW(Integer);
 
     this->System.v_err->Printer.target = stderr;
     this->System.v_in->Scanner.source = stdin;
     this->System.v_out->Printer.target = stdout;
+    this->System.v_argc->Integer.value = global_argc;
     this->Object.v_system =
         this->System.v_err->Object.v_system =
         this->System.v_in->Object.v_system =
-        this->System.v_out->Object.v_system = this;
+        this->System.v_out->Object.v_system =
+        this->System.v_argc->Object.v_system = this;
     return this;
 };
 
@@ -202,4 +208,18 @@ void printer_print_string(struct t_Printer *this, struct t_String *v_arg)
 
 void system_exit(struct t_System *this, struct t_Integer *v_code) {
     exit(INTEGER_OF(v_code));
+}
+
+
+struct t_String **get_gamma_args(char **argv, int argc) {
+    struct t_String **args = NULL;
+    int i = 0;
+
+    if (!argc) return NULL;
+    args = ONE_DIM_ALLOC(struct t_String *, argc);
+    for (i = 0; i < argc; ++i)
+        args[i] = string_value(argv[i]);
+    args[i] = NULL;
+
+    return args;
 }

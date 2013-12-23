@@ -106,5 +106,6 @@ struct t_System {
 		struct t_Printer *v_err;
 		struct t_Scanner *v_in;
 		struct t_Printer *v_out;
+		struct t_Integer *v_argc;
 	} System;
 };
