@@ -1,4 +1,4 @@
-class AddTest:
+class Test:
   public:
     Integer a
     Float   b
@@ -11,3 +11,4 @@ class AddTest:
       b := 6.0 * 0.5 * (-2.0)
       return 0
 
+  main(System sys, String[] args):
