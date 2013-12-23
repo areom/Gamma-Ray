@@ -50,7 +50,7 @@ class Daughter extends Parent:
       return -5
 
 
-class Family:
+class Test:
   protected:
     init():
       super()
