@@ -1,0 +1,44 @@
+\pagebreak
+\subsection*{Project Timeline}
+
+The following gantt charts show the intended project timeline broken down by weeks of the four months of this semester. The loose units were intended to make our schedules more workable.
+
+  \hfill
+  \begin{gantt}{6}{8}
+    \begin{ganttitle}
+      \titleelement{Sep}{4}
+      \titleelement{Oct}{4}
+    \end{ganttitle}
+    
+    \begin{ganttitle}
+      \numtitle{1}{1}{4}{1}
+      \numtitle{1}{1}{4}{1}
+    \end{ganttitle}
+    \ganttbar[color=white]{Proposal}{2}{1}  %1
+    \ganttbar[color=green]{LRM}{6}{2}       %2
+    \ganttbar[color=red]{Parser}{4}{3}      %3
+    \ganttbar[color=blue]{Lexer}{4}{3}      %4
+  \end{gantt}
+  
+  
+  \hfill
+  \begin{gantt}{11}{8}
+    \begin{ganttitle}
+      \titleelement{Nov}{4}
+      \titleelement{Dec}{4}
+    \end{ganttitle}
+    
+    \begin{ganttitle}
+      \numtitle{1}{1}{4}{1}
+      \numtitle{1}{1}{4}{1}
+    \end{ganttitle}
+    \ganttbar[color=red]{Basic C Generation}{0}{2}     %5
+    \ganttbar[color=blue]{Class Semantic Structuring}{0}{2} %6
+    \ganttbar[color=green]{Semantic Checking}{0}{2}      %7
+    \ganttbar[color=yellow]{Test Gamma Code}{0}{2}        %8
+    \ganttbar[color=red]{Advanced C Generation}{2}{2}   %9
+    \ganttbar[color=blue]{AST to C}{2}{2}   %10
+    \ganttbar[color=yellow]{Completeness Testing}{4}{1}   %11
+    \ganttbar{Final Report}{4}{2}
+    \ganttbar{Final Presentation}{5}{1}
+  \end{gantt}
