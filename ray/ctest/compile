@@ -1,2 +1,2 @@
-gcc -g -I ../headers -o a.out test.c
+gcc -g -I ../headers -lm -o a.out test.c
 

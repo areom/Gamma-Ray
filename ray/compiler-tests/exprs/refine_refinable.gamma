@@ -1,4 +1,4 @@
-class Test:
+class Parent:
   public:
     Integer a
     Integer b
@@ -14,7 +14,7 @@ class Test:
       Integer success := refine toExtra(a,b) to Integer
       return success 
 
-class DTest extends Test:
+class Child extends Parent:
   refinement:
     Integer overview.toExtra(Integer a, Integer b):
       Integer success :=  a + b
@@ -33,13 +33,14 @@ class DTest extends Test:
       a1 := 1
       b1 := 2
       c1 := 0
-class Main:
+
+class Test:
   public:
     init():
       super()
 
   main(System system, String[] args):
-    Test ab := new DTest()
+    Parent ab := new Child()
     Printer p := system.out
     p.printString("Sum of integer = ")
     p.printInteger(ab.overview())

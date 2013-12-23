@@ -1,4 +1,4 @@
-class NewArr:
+class Test:
   private:
     void print(Integer i):
       Printer p := system.out
@@ -25,7 +25,7 @@ class NewArr:
         i += 1
 
   main(System system, String[] args):
-    NewArr f
-    f := new NewArr()
+    Test f
+    f := new Test()
     f.print()
 
