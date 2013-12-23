@@ -25,6 +25,10 @@ let get_data ast =
         | Left(data) -> data
         | Right(issue) -> Printf.fprintf stderr "%s\n" (KlassData.errstr issue); exit 1
 
+let do_deanon klass_data sast = match Unanonymous.deanonymize klass_data sast with
+    | Left(result) -> result
+    | Right(issue) -> Printf.fprintf stderr "Error Deanonymizing:\n%s\n" (KlassData.errstr issue); exit 1
+
 let source_cast _ =
     output_string " * Reading Tokens...";
     let tokens = with_file Inspector.from_channel Sys.argv.(1) in
@@ -35,11 +39,11 @@ let source_cast _ =
     output_string " * Building Semantic AST...";
     let sast = BuildSast.ast_to_sast klass_data in
     output_string " * Deanonymizing Anonymous Classes.";
-    match Unanonymous.deanonymize klass_data sast with
-        | Left((klass_data, sast)) ->
-            output_string " * Generating C AST...";
-            GenCast.sast_to_cast klass_data sast
-        | Right(issue) -> Printf.fprintf stderr "Error Deanonymizing:\n%s\n" (KlassData.errstr issue); exit 1
+    let (klass_data, sast) = do_deanon klass_data sast in
+    output_string " * Rebinding refinements.";
+    let sast = BuildSast.update_refinements klass_data sast in
+    output_string " * Generating C AST...";
+    GenCast.sast_to_cast klass_data sast
 
 let main _ =
     Printexc.record_backtrace true;
