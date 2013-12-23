@@ -63,8 +63,8 @@
 
 #define CTEST_AND_BOOL_BOOL(l, r)   BBINOP(&&, l, r)
 #define CTEST_OR_BOOL_BOOL(l, r)    BBINOP(||, l, r)
-#define CTEST_NAND_BOOL_BOOL(l, r)  PROMOTE_BOOL((!CTEST_AND_BOOL_BOOL(l,r)))
-#define CTEST_NOR_BOOL_BOOL(l, r)   PROMOTE_BOOL((!CTEST_OR_BOOL_BOOL(l,r)))
+#define CTEST_NAND_BOOL_BOOL(l, r)  PROMOTE_BOOL(( !(BOOL_OF(l) && BOOL_OF(r)) ))
+#define CTEST_NOR_BOOL_BOOL(l, r)   PROMOTE_BOOL(( !(BOOL_OF(l) || BOOL_OF(r)) ))
 #define CTEST_XOR_BOOL_BOOL(l, r)   PROMOTE_BOOL((!BOOL_OF(l) != !BOOL_OF(r)))
 
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
