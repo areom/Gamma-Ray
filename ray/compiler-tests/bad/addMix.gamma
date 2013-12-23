@@ -1,4 +1,4 @@
-class IOTest:
+class Test:
   public:
     Float a
     Float b
@@ -15,7 +15,7 @@ class IOTest:
       return success 
 
   main(System system, String[] args):
-    IOTest ab := new IOTest()
+    Test ab := new Test()
     Printer p := system.out
     p.printString("Sum of integer = ")
     p.printFloat(ab.overview())

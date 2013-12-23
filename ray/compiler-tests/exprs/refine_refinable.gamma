@@ -1,4 +1,4 @@
-class IOTest:
+class Test:
   public:
     Integer a
     Integer b
@@ -14,7 +14,7 @@ class IOTest:
       Integer success := refine toExtra(a,b) to Integer
       return success 
 
-class DIOTest extends IOTest:
+class DTest extends Test:
   refinement:
     Integer overview.toExtra(Integer a, Integer b):
       Integer success :=  a + b
@@ -39,7 +39,7 @@ class Main:
       super()
 
   main(System system, String[] args):
-    IOTest ab := new DIOTest()
+    Test ab := new DTest()
     Printer p := system.out
     p.printString("Sum of integer = ")
     p.printInteger(ab.overview())

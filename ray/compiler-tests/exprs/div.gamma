@@ -1,4 +1,4 @@
-class AddTest:
+class Test:
   public:
     Integer a
     Float   b

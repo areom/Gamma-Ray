@@ -85,7 +85,7 @@ and exprdetail_to_cstr castexpr_detail =
         Format.sprintf "(%s)->%s.%s" (expr_to_cstr obj) (GenCast.from_tname exptype) field in
 
     let generate_invocation recvr fname args =
-        let this = expr_to_cstr recvr in
+        let this = Format.sprintf "((struct %s*)(%s))" (fst recvr) (expr_to_cstr recvr) in
         let vals = List.map expr_to_cstr args in
         Format.sprintf "%s(%s)" fname (String.concat ", " (this::vals)) in
 
@@ -218,8 +218,9 @@ let generate_refinesw (klass, ret, args, dispatchuid, cases) =
 
 let generate_arrayalloc (arrtype, fname, args) =
     let params = List.mapi (fun i _ -> Format.sprintf "struct %s*v_dim%d" (GenCast.get_tname "Integer") i) args in
-    Format.sprintf "struct %s*%s(%s) {\n\treturn NULL;\n}\n" arrtype fname (String.concat ", " params)
-
+    match List.length params with
+        | 1 -> Format.sprintf "struct %s*%s(%s) {\n\treturn ONE_DIM_ALLOC(struct %s, INTEGER_OF(v_dim0));\n}\n" arrtype fname (String.concat ", " params) arrtype
+        | _ -> raise(Failure("Only one dimensional arrays currently supported."))
 
 (**
     Take a list of cast_stmts and return a body of c statements

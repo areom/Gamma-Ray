@@ -40,10 +40,11 @@
 #define NEG_FLOAT(f)              PROMOTE_FLOAT(-FLOAT_OF(f))
 #define NOT_BOOLEAN(b)            PROMOTE_BOOL(!BOOL_OF(b))
 
-#define BINOP(type, op, l, r)     PROMOTE_BOOL( VAL_OF(type, l) op VAL_OF(type, r) )
-#define IBINOP(op, l, r)          BINOP(Integer, op, l, r)
-#define FBINOP(op, l, r)          BINOP(Float, op, l, r)
-#define BBINOP(op, l, r)          BINOP(Boolean, op, l, r)
+#define BINOP(type, op, l, r)     ( VAL_OF(type, l) op VAL_OF(type, r) )
+#define PBINOP(type, op, l, r)    PROMOTE_BOOL(BINOP(type, op, l, r))
+#define IBINOP(op, l, r)          PBINOP(Integer, op, l, r)
+#define FBINOP(op, l, r)          PBINOP(Float, op, l, r)
+#define BBINOP(op, l, r)          PBINOP(Boolean, op, l, r)
 
 #define NTEST_EQ_INT_INT(l, r)    IBINOP(==, l, r)
 #define NTEST_NEQ_INT_INT(l, r)   IBINOP(!=, l, r)
@@ -58,6 +59,12 @@
 #define NTEST_GRTR_FLOAT_FLOAT(l, r)  FBINOP(>, l, r)
 #define NTEST_LEQ_FLOAT_FLOAT(l, r)   FBINOP(<=, l, r)
 #define NTEST_GEQ_FLOAT_FLOAT(l, r)   FBINOP(>=, l, r)
+
+#define CTEST_AND_BOOL_BOOL(l, r)   BBINOP(&&, l, r)
+#define CTEST_OR_BOOL_BOOL(l, r)    BBINOP(||, l, r)
+#define CTEST_NAND_BOOL_BOOL(l, r)  PROMOTE_BOOL(!(BINOP(&&, l, r))
+#define CTEST_NOR_BOOL_BOOL(l, r)   PROMOTE_BOOL(!(BINOP(||, l, r))
+#define CTEST_XOR_BOOL_BOOL(l, r)   PROMOTE_BOOL(!BOOL_OF(l) != !BOOL_OF(r))
 
 #define IS_CLASS(obj, kname) ( strcmp((obj)->meta->ancestors[obj->meta->generation], (kname)) == 0 )
 
@@ -80,3 +87,6 @@ exit(1);
 #define REFINE_FAIL(parent) \
     fprintf(stderr, "Refinement fail: " parent "\n"); \
     exit(1);
+
+
+#define ONE_DIM_ALLOC(type, len) ((type *) array_allocator(sizeof(type), (len)))
