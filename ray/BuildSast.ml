@@ -199,7 +199,7 @@ let rec eval klass_data kname mname isstatic env exp =
         | Ast.Deref(e1, e2) -> get_deref e1 e2
         | Ast.Refinable(s1) -> get_refinable s1
         | Ast.Unop(op, expr) -> get_unop op expr
-        | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, args, body)) (* Delay evaluation *)
+        | Ast.Anonymous(atype, args, body) -> (atype, Sast.Anonymous(atype, eval_exprlist args, body)) (* Delay evaluation *)
 
 (**
     Given a class_data record, the name of the current class, a list of AST statements,

@@ -57,7 +57,7 @@ _tools:
 _ray:
 	#Make ray
 	mkdir -p bin
-	ocamlc -g -o bin/ray UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo str.cma BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo BuildSast.cmo GenCast.cmo GenC.cmo ray.cmo
+	ocamlc -g -o bin/ray UID.cmo scanner.cmo parser.cmo Inspector.cmo WhiteSpace.cmo Util.cmo StringModules.cmo str.cma BuiltIns.cmo Klass.cmo KlassData.cmo Debug.cmo Variables.cmo BuildSast.cmo Unanonymous.cmo GenCast.cmo GenC.cmo ray.cmo
 
 nodoc: compile _tools _ray
 

@@ -597,8 +597,12 @@ let append_leaf_test_inherited aklass data =
         | funcs -> match List.filter (conflicting_signatures meth) funcs with
             | [] -> collisions
             | cols -> cols in
+    let skipinit (func : Ast.func_def) = match func.name with
+        | "init" -> false
+        | _ -> true in
     let functions = List.flatten (List.map snd (klass_to_methods aklass)) in
-    match List.fold_left folder [] functions with
+    let noninits = List.filter skipinit functions in
+    match List.fold_left folder [] noninits with
         | [] -> Left(data)
         | collisions -> Right(ConflictingInherited([build_collisions aklass.klass collisions false]))
 let append_leaf_instantiable aklass data =
