@@ -28,6 +28,9 @@ void printer_print_integer(struct t_Printer *, struct t_Integer *);
 void printer_print_string(struct t_Printer *, struct t_String *);
 struct t_String **get_gamma_args(char **argv, int argc);
 
+
+char *stack_overflow_getline(FILE *);
+
 /* Functions! */
 
 /* Magic allocator. DO NOT INVOKE THIS, USE MAKE_NEW(TYPE)
@@ -162,10 +165,20 @@ struct t_Float *integer_to_f(struct t_Integer *this){
     return float_value((double)(this->Integer.value));
 }
 
+void toendl(FILE *in) {
+    int c = 0;
+    while (1) {
+      c = fgetc(in);
+      if (c == '\n' || c == '\r' || c == EOF) break;
+    }
+}
+
 struct t_Float *scanner_scan_float(struct t_Scanner *this)
 {
     double dval;
     fscanf(this->Scanner.source, "%lf", &dval);
+    toendl(this->Scanner.source);
+
     return float_value(dval);
 }
 
@@ -173,21 +186,19 @@ struct t_Integer *scanner_scan_integer(struct t_Scanner *this)
 {
     int ival;
     fscanf(this->Scanner.source, "%d", &ival);
+    toendl(this->Scanner.source);
     return integer_value(ival);
 }
 
 struct t_String *scanner_scan_string(struct t_Scanner *this)
 {
-    int ret = -1;
     char *inpstr = NULL;
     struct t_String *astring = NULL;
-    ret = getline(&inpstr, 0, this->Scanner.source);
-    if(ret == -1) {
-        fprintf(stderr, "Error in string input\n");
-        exit(0);
-    }
+
+    inpstr = stack_overflow_getline(this->Scanner.source);
     astring = string_value(inpstr);
-    free(astring);
+
+    free(inpstr);
     return astring;
 }
 
@@ -222,4 +233,38 @@ struct t_String **get_gamma_args(char **argv, int argc) {
     args[i] = NULL;
 
     return args;
+}
+
+
+
+char *stack_overflow_getline(FILE *in) {
+    char * line = malloc(100), * linep = line;
+    size_t lenmax = 100, len = lenmax;
+    int c;
+
+    if(line == NULL)
+        return NULL;
+
+    for(;;) {
+        c = fgetc(in);
+        if(c == EOF)
+            break;
+
+        if(--len == 0) {
+            len = lenmax;
+            char * linen = realloc(linep, lenmax *= 2);
+
+            if(linen == NULL) {
+                free(linep);
+                return NULL;
+            }
+            line = linen + (line - linep);
+            linep = linen;
+        }
+
+        if((*line++ = c) == '\n')
+            break;
+    }
+    *line = '\0';
+    return linep;
 }
