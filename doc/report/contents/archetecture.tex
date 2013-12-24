@@ -1,4 +1,4 @@
-\section{Archetectural Design}
+\section{Architectural Design}
 \subsection{Block Diagrams}
 \subsubsection{Structure by Module}
 \begin{center}
@@ -78,7 +78,7 @@
 \subsection{Component Connective Interfaces}
 \lstinputlisting[numbers=none,caption=The Main Ray Compiler Ocaml (Trimmed),linerange=19-67]{../../ray/ray.ml}
 
-The primary functionality of the compiler is collected into convenient ocaml modules. From the lexer to the C-AST to C conversion, the connections are the passing of data representations of the current step to the main function of the following module. We utilize as data representations three ASTs (basic, semantic, and C-oriented), a more searchable tabulation of class data, and, of course, a source string and a list of tokens. The presence of Anonymous classes complicates the building of the array of class data and the sast as can be seen by the functor \verb!do_deanom!. Our testing experiences also lead to a more verbose form of AST generation for experimental features, hence \verb!get_data!. In all other case, the result of the previous step is simply stored in a variable by \verb!let! and passed to the next step. The output of ray is a C file. The user must manually do the final step of compiling this file to bytecode using GCC.
+The primary functionality of the compiler is collected into convenient ocaml modules. From the lexer to the C-AST to C conversion, the connections are the passing of data representations of the current step to the main function of the following module. We utilize as data representations three ASTs (basic, semantic, and C-oriented), a more searchable tabulation of class data, and, of course, a source string and a list of tokens. The presence of Anonymous classes complicates the building of the array of class data and the sast as can be seen by the functor \verb!do_deanom!. Our testing experiences also lead to a more verbose form of AST generation for experimental features, hence \verb!get_data!. In all other cases, the result of the previous step is simply stored in a variable by \verb!let! and passed to the next step. The output of ray is a C file. The user must manually do the final step of compiling this file to bytecode using GCC.
 
 \subsection{Component Authorship}
 Each component was a combined effort. This is expressed somewhat in the project role section. However, for clarity, it will be reexpressed in terms of the module archetecture above:
