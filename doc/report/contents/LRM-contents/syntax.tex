@@ -230,7 +230,7 @@ while(test_expr): while_body
 
 \subsubsection{Refinements}
 \paragraph{The Refine Invocation}
-A refine invocation will eventually evaluate to an expression as long as the appropriate refinement is implemented. It is formed by using the keyword \verb!refine!, the identifier for the refinement, the keyword \verb!to!, and the type for the desired expression. Note that a method can only invoke its own refinements, not others -- but refinements defined \emph{within} a class can be called. This is done in addition to normal invocation. Also note that all overloaded methods of the same name share the same refinements.
+A refine invocation will eventually evaluate to an expression as long as the appropriate refinement is implemented. It is formed by using the keyword \verb!refine!, the identifier for the refinement, the keyword \verb!to!, and the type for the desired expression. Note that a method can only invoke its own refinements, not others -- but refinements defined \emph{within} a class can be called [-- this feature was planned but not implemented --]. This is done in addition to normal invocation. Also note that all overloaded methods of the same name share the same refinements.
 
 \begin{lstlisting}
 refine refine_identifier to refine_type

@@ -45,7 +45,7 @@ The grammar follows:\\
 <init>:"init ",<params>," : ",<statement>,"{\small *}".
 
 \comment{Main is special -- not instance data, starts execution}
-<main>:"main (System system, String[] ",<var id>," ) : ",<statement>,"{\small *}".
+<main>:"main (System <var id>, String[] ",<var id>," ) : ",<statement>,"{\small *}".
 
 \comment{Finally, the meat and potatoes}
 <statement>:<var decl>;<var decl>," := ",<expression>;<super>;<return>;<conditional>;<loop>;<expression>.
