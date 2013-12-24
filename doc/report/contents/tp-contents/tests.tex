@@ -1,0 +1,144 @@
+\setcounter{lstlisting}{0}
+
+\renewcommand{\lstlistingname}{Test Source}
+\renewcommand{\lstlistlistingname}{Source Files}
+
+\pagebreak
+\subsection{Test Suites}
+All tests suites involved Gamma source code that was compiled through ray and GCC to check for desired functionality. This was done as a communal effort towards the end of the project.
+
+\subsubsection{Desired Failure Testing}
+This suite of tests made sure that bad code did not compile.
+
+\lstinputlisting[caption="Superclass Typed to Subclass"]{"../../ray/compiler-tests/bad/super-assign.gamma"}
+
+While a subclass can be stored in a variable typed to its parent, the reverse should not be possible.
+
+\lstinputlisting[caption="Improper Variable Declaration/Assignment"]{"../../ray/compiler-tests/bad/decl.gamma"}
+
+A Float should never be allowed to be stored in an Integer variable.
+
+\lstinputlisting[caption="Binary Operations Between Incompatible Types"]{"../../ray/compiler-tests/bad/addMix.gamma"}
+
+A Float should not be allowed to be added to an Integer.
+
+\lstinputlisting[caption="Return Variable of the Wrong Type"]{"../../ray/compiler-tests/bad/return1.gamma"}
+
+It is not allowed for a function to return a variable of a different type than its declared return type.
+
+\lstinputlisting[caption="Empty Return Statement"]{"../../ray/compiler-tests/bad/return2.gamma"}
+
+A return statement should return something.
+
+\lstinputlisting[caption="Return Statement in a Void Method"]{"../../ray/compiler-tests/bad/return3.gamma"}
+
+A method with a return type of void should have no return statement.
+
+\lstinputlisting[caption="Improper Literal Assignment"]{"../../ray/compiler-tests/bad/assign.gamma"}
+
+A literal object cannot be assigned to a variable of the wrong type.
+
+\lstinputlisting[caption="Static Method Calls"]{"../../ray/compiler-tests/bad/static.gamma"}
+
+A method must be called on an object.
+
+\lstinputlisting[caption="Unimplemented Refinement"]{"../../ray/compiler-tests/bad/refine_refinable.gamma"}
+
+A method that has a refinement must be called from a subclass of the original class that implements the refinement.
+
+\lstinputlisting[caption="unimplemented Refinement with Refinable"]{"../../ray/compiler-tests/bad/refinable.gamma"}
+
+This case uses refinable to avoid paths with unimplemented refinements. It should function.
+
+\subsubsection{Statement Testing}
+This suite of test case makes sure that basic statements do compile.
+
+\lstinputlisting[caption="Conditioned While Statements"]{"../../ray/compiler-tests/stmts/while_condn.gamma"}
+
+This test makes sure while loops function.
+
+\lstinputlisting[caption="Infinite While Statement"]{"../../ray/compiler-tests/stmts/while.gamma"}
+
+This test makes sure that while loops can continue within the bounds of memory.
+
+\lstinputlisting[caption="If Statements"]{"../../ray/compiler-tests/stmts/if.gamma"}
+
+This test makes sure if statements function.
+
+\subsubsection{Expression Testing}
+This suite of test case makes sure that basic expressions do compile.
+
+\lstinputlisting[caption="Add Integers"]{"../../ray/compiler-tests/exprs/addInt.gamma"}
+
+\lstinputlisting[caption="Add Floats"]{"../../ray/compiler-tests/exprs/addFloat.gamma"}
+
+These tests add numeric literal objects together.
+
+\lstinputlisting[caption="Multiplication"]{"../../ray/compiler-tests/exprs/prod.gamma"}
+
+
+\lstinputlisting[caption="Divition"]{"../../ray/compiler-tests/exprs/div.gamma"}
+
+These tests form products/quotions of Floats/Integers.
+
+\lstinputlisting[caption="Modulus"]{"../../ray/compiler-tests/exprs/mod.gamma"}
+
+This test forms the modulus of Integers.
+
+\lstinputlisting[caption="Literal Casting and Addition"]{"../../ray/compiler-tests/exprs/addMix.gamma"}
+
+\lstinputlisting[caption="Literal Casting and Subtraction"]{"../../ray/compiler-tests/exprs/subMix.gamma"}
+
+\lstinputlisting[caption="Literal Casting and Multiplication"]{"../../ray/compiler-tests/exprs/prodMix.gamma"}
+
+\lstinputlisting[caption="Literal Casting and Divition"]{"../../ray/compiler-tests/exprs/divMix.gamma"}
+
+\lstinputlisting[caption="Literal Casting and Exponentiation"]{"../../ray/compiler-tests/exprs/powMix.gamma"}
+
+These tests check that numerical literal objects can be cast to allow mathematic operations.
+
+\lstinputlisting[caption="Superclass Typing"]{"../../ray/compiler-tests/exprs/super-assign.gamma"}
+
+This test assigns a subclass to a variable typed to its parent.
+
+\lstinputlisting[caption="Boolean Comparison"]{"../../ray/compiler-tests/exprs/ifeq.gamma"}
+
+This test performs boolean comparisons between numeric literal objects.
+
+\lstinputlisting[caption="Anonymous objects"]{"../../ray/compiler-tests/exprs/anonymous.gamma"}
+
+This tests forms anonymous objects.
+
+\lstinputlisting[caption="Arrays"]{"../../ray/compiler-tests/exprs/newarr.gamma"}
+
+This test forms an array.
+
+\lstinputlisting[caption="Refinement"]{"../../ray/compiler-tests/exprs/refine_refinable.gamma"}
+
+This test checks that basic refinement works.
+
+\lstinputlisting[caption="Refinable"]{"../../ray/compiler-tests/exprs/refinable.gamma"}
+
+This test checks that the refinable keyword works.
+
+\lstinputlisting[caption="Refinements"]{"../../ray/compiler-tests/exprs/simple-refine.gamma"}
+
+This test makes multiple trivial refinements.
+
+\subsubsection{Structure Testing}
+
+\lstinputlisting[caption="Main Method"]{"../../ray/compiler-tests/structure/main.gamma"}
+
+This test forms a main method
+
+\lstinputlisting[caption="Empty Bodies"]{"../../ray/compiler-tests/structure/no-bodies.gamma"}
+
+This test presents minimalistic bodies for a variety of methods.
+
+\lstinputlisting[caption="Functions"]{"../../ray/compiler-tests/structure/func.gamma"}
+
+This test probes function scope.
+
+\subsubsection{A Complex Test}
+\lstinputlisting[caption="Complex Scanning"]{"../../ray/compiler-tests/mix.gamma"}
+This test does a series of more advanced tasks in Gamma.
