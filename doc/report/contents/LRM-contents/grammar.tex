@@ -27,28 +27,28 @@ The grammar follows:\\
       [(nonterminal){$\langle$}{$\rangle$}]
 
 \comment{Classs may extend another class or default to extending Object}
-<class>:"class ",<class id>,<extend>," \{ ",<class section>,"{\small *} \}".
+<class>:"class ",<class id>,<extend>," : ",<class section>,"{\small *} ".
 <extend>:"$\epsilon$";"extends ",<class id>.
 
 \comment{Sections -- private protected public refinements and main}
 <class section>:<refinement>;<access group>;<main>.
 
 \comment{Refinements are named method dot refinement}
-<refinement>:"refinement \{ ",<refine>,"{\small *} \}".
-<refine>:<return type>,<var id>,".",<var id>,<params>," \{ ",<statement>,"{\small *} \}".
+<refinement>:"refinement ",<refine>,"{\small *}".
+<refine>:<return type>,<var id>,".",<var id>,<params>," : ",<statement>,"{\small *}".
 
 \comment{Access groups contain all the members of a class}
-<access group>:<access type>," \{ ",<member>,"{\small *} \}".
+<access group>:<access type>," : ",<member>,"{\small *}".
 <access type>:"private";"protected";"public".
 <member>:<var decl>;<method>;<init>.
-<method>:<return type>,<var id>,<params>," \{ ",<statement>,"{\small *} \}".
-<init>:"init ",<params>," \{ ",<statement>,"{\small *} \}".
+<method>:<return type>,<var id>,<params>," : ",<statement>,"{\small *}".
+<init>:"init ",<params>," : ",<statement>,"{\small *}".
 
 \comment{Main is special -- not instance data, starts execution}
-<main>:"main ( String[] ",<var id>," ) \{ ",<statement>,"{\small *} \}".
+<main>:"main (System system, String[] ",<var id>," ) : ",<statement>,"{\small *}".
 
 \comment{Finally, the meat and potatoes}
-<statement>:<var decl>," ;";<var decl>," := ",<expression>," ;";<super>," ;";<return>," ;";<conditional>;<loop>;<expression>," ;".
+<statement>:<var decl>;<var decl>," := ",<expression>;<super>;<return>;<conditional>;<loop>;<expression>.
 
 \comment{Super invocation is so we can do constructor chaining}
 <super>:"super ",<args>.
@@ -57,10 +57,10 @@ The grammar follows:\\
 <return>:"return";"return ",<expression>.
 
 \comment{Basic control structures}
-<conditional>:"if ( ",<expression>," ) \{ ",<statement>,"{\small *} \} ",<else>.
-<else>:"$\epsilon$";<elseif>," else \{ ",<statement>,"{\small *} \}".
-<elseif>:"$\epsilon$";<elseif>," elsif ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
-<loop>:"while ( ",<expression>," ) \{ ",<statement>,"{\small *} \}".
+<conditional>:"if ( ",<expression>," ) :  ",<statement>,"{\small *} ",<else>.
+<else>:"$\epsilon$";<elseif>," else : ",<statement>,"{\small *}".
+<elseif>:"$\epsilon$";<elseif>," elsif ( ",<expression>," ) : ",<statement>,"{\small *}".
+<loop>:"while ( ",<expression>," ) : ",<statement>,"{\small *}".
 
 \comment{Anything that can result in a value}
 <expression>:<assignment>;<invocation>;<field>;<var id>;<deref>;<arithmetic>;<test>;<instantiate>;<refine expr>;<literal>;"( ",<expression>, ")";"this".
