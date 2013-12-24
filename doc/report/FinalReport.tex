@@ -1,8 +1,17 @@
 \documentclass[10pt]{article}
-\usepackage{fullpage,listings}
-\usepackage{color,xcolor}
+\usepackage{fullpage}
+\usepackage{bnf}
+\usepackage{graphicx}
+\usepackage{listings,color,xcolor}
 \usepackage{caption}
-
+\usepackage{listings}
+\usepackage{chronology}
+\usepackage{gantt}
+\usepackage{tikz}
+\usepackage{longtable}
+\usepackage[bookmarks]{hyperref}
+\usepackage{url}
+\usetikzlibrary{arrows}
 
 \newcommand{\Lang}{GAMMA}
 \newcommand{\Compiler}{ray}
@@ -11,6 +20,41 @@
 \renewcommand{\lstlistlistingname}{Examples}
 
 \setlength{\parskip}{4pt}
+
+\definecolor{tintedgray}{rgb}{0.96,0.96,0.96}
+\definecolor{tintedorange}{rgb}{1,0.96,0.9}
+
+\lstdefinestyle{example_style}{ %
+  aboveskip=8pt,
+  abovecaptionskip=8pt,
+  backgroundcolor=\color{tintedgray},
+  basicstyle=\footnotesize,
+  belowskip=0pt,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{orange},
+  frame=single,
+  framesep=8pt,
+  float,
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  morekeywords={and,class,else,elsif,extends,false,
+  	if,init,main,nand,new,nor,not,null,or,private,
+  	protected,public,refinable,refine,refinement,
+  	return,super,this,to,true,void,while,xor},           
+  numbers=left,
+  numbersep=14pt,
+  numberstyle=\tiny\color{gray},
+  rulecolor=\color{black},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stepnumber=1,
+  tabsize=4,
+  title=\lstname
+}
+\lstset{style=example_style}
 
 \title{\Lang{}: A Strict yet Fair Programming Language}
 \author{
@@ -22,6 +66,8 @@
 \date{}
 
 \begin{document}
+\noindent\includegraphics[width=\textwidth]{logo.png}
+\pagebreak
 
 %Title area
 \maketitle
@@ -33,5 +79,21 @@ A Project for Programming Languages and Translators,
 
 %Introduction
 \include{contents/intro}
+
+\pagebreak
+
+\tableofcontents
+
+\include{contents/tutorial}
+
+\include{contents/LRM}
+
+\include{contents/project-planning}
+
+\include{contents/archetecture}
+
+\include{contents/lessons}
+
+%\include{contents/appendix}
 
 \end{document}
