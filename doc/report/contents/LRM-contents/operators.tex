@@ -7,8 +7,6 @@ If two Integer instances have the same value, \verb!=! returns \verb!true!. If t
 If two Float instances have an absolute difference of less than or equal to an epsilon of $2^{-24}$, \verb!=! returns \verb!true!. If the absolute difference is greater than that epsilon, it returns \verb!false!.
 \paragraph{Boolean}
 If two Boolean instances have the same keyword, either \verb!true! or \verb!false!, \verb!=! returns \verb!true!. If their keyword differs, it returns \verb!false!.
-\paragraph{String}
-If two String instances have the same sequence of characters, \verb!=! returns \verb!true!. If their sequence of characters differs, it returns \verb!false!.
 
 \subsubsection{The Operators {\tt =/=} and {\tt <>}}
 \paragraph{Integer}
@@ -17,39 +15,26 @@ If two Integer instances have a different value, \verb!=/=! and \verb!<>! return
 If two Float instances have an absolute difference of greater than than an epsilon of $2^{-24}$, \verb!=! returns \verb!true!. If the absolute difference is less than or equal to that epsilon, it returns \verb!false!.
 \paragraph{Boolean}
 If two Boolean instances have different keywords, \verb!=/=! and \verb!<>! return \verb!true!. If their keywords are the same, they return \verb!false!.
-\paragraph{String}
-If two String instances have the different sequences of characters, \verb!=/=! and \verb!<>! return \verb!true!. If their sequence of characters is the same, they return \verb!false!.
 
 \subsubsection{The Operator {\tt <}}
 \paragraph{Integer and float}
 If the left operand is less than the right operand, \verb!<! returns \verb!true!. If the right operand is less than or equal to the left operand, it returns \verb!false!.
-\paragraph{String}
-If the left operand comes before the right operand in dictionary order, \verb!<! returns \verb!true!. If the left operand comes after the right operand in dictionary order , it returns \verb!false!. If the two operands have the same sequence of characters, it returns \verb!false!.
 
 \subsubsection{The Operator {\tt >}}
 \paragraph{Integer and float}
 If the left operand is greater than the right operand, \verb!>! returns \verb!true!. If the right operand is greater than or equal to the left operand, it returns \verb!false!.
-\paragraph{String}
-If the left operand comes after the right operand in dictionary order, \verb!<! returns \verb!true!. If the left operand comes before the right operand in dictionary order , it returns \verb!false!. If the two operands have the same sequence of characters, it returns \verb!false!.
 
 \subsubsection{The Operator {\tt <=}}
 \paragraph{Integer and float}
 If the left operand is less than or equal to the right operand, \verb!<! returns \verb!true!. If the right operand is less than the left operand, it returns \verb!false!.
-\paragraph{String}
-If the left operand comes before the right operand in dictionary order, \verb!<! returns \verb!true!. If the left operand comes after the right operand in dictionary order , it returns \verb!false!. If the two operands have the same sequence of characters, it returns \verb!true!.
 
 \subsubsection{The Operator {\tt >=}}
 \paragraph{Integer and float}
 If the left operand is greater than or equal to the right operand, \verb!>! returns \verb!true!. If the right operand is greater than the left operand, it returns \verb!false!.
-\paragraph{String}
-If the left operand comes after the right operand in dictionary order, \verb!<! returns \verb!true!. If the left operand comes before the right operand in dictionary order , it returns \verb!false!. If the two operands have the same sequence of characters, it returns \verb!true!.
-<<<<<<< HEAD
 
 \subsubsection{The Operator {\tt +}}
 \paragraph{Integer and Float}
 \verb!+! returns the sum of the two operands.
-\paragraph{String}
-\verb!+! returns the concatenation of the right operand onto the end of the left operand.
 
 \subsubsection{The Operator {\tt -}}
 \paragraph{Integer and Float}
@@ -72,11 +57,11 @@ If the left operand comes after the right operand in dictionary order, \verb!<! 
 \verb!^! returns the left operand raised to the power of the right operand.
 
 \subsubsection{The Operator {\tt :=}}
-\paragraph{Integer, Float, Boolean, and String}
+\paragraph{Integer, Float, and Boolean}
 \verb!:=! assigns the right operand to the left operand and returns the value of the the right operand. This is the sole right precedence operator.
 
 \subsubsection{The Operators {\tt +=, -=, *=, /= \%=, and \textasciicircum=}}
-\paragraph{Integer, Float, Boolean, and String}
+\paragraph{Integer, Float, and Boolean}
 This set of operators first applies the operator indicated by the first character of each operator as normal on the operands. It then assigns this value to its left operand.
 
 \subsubsection{The Operator {\tt and}}
