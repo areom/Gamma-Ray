@@ -1,26 +1,22 @@
 \subsection{Syntax}
 The syntaxic structures presented in this section may have optional elements. If an element is optional, it will be wrapped in the lexemes \verb!<<! and \verb!>>!. This grouping may nest. On rare occasions, a feature of the syntax will allow for truly alternate elements. The elements are presented in the lexemes \verb!{{! and \verb!}}!, each feature is seperated by the lexeme \verb!|!. If an optional element may be repeated without limit, it will finish with the lexeme \verb!...!.
 \subsubsection{Statement Grouping via Bodies}
-A body of statements is a series of statements bounded by curly braces.
+A body of statements is a series of statements at the same level of indentaiton.
 
 \begin{lstlisting}
-{
 	<<stmt1_statement>>
 	<<stmt2_statement>>
 	<<...>>
-}
 \end{lstlisting}
 
 This is pattern is elementry to write.
 
 \begin{lstlisting}[caption=Statement Grouping of a Typical Interface Simulator,backgroundcolor=\color{tintedorange}]
-{
-	Mouse mouse = new Mouse();
-	mouse.click();
-	mouse.click_fast();
-	mouse.click("Screen won't respond");
-	mouse.defenestrate();
-}
+	Mouse mouse = new Mouse()
+	mouse.click()
+	mouse.click_fast()
+	mouse.click("Screen won't respond")
+	mouse.defenestrate()
 \end{lstlisting}
 
 \subsubsection{Variables}
@@ -28,46 +24,46 @@ This is pattern is elementry to write.
 Assigning an instance to a variable requires an expression and a variable identifier:
 
 \begin{lstlisting}
-var_identifier := val_expr;
+var_identifier := val_expr
 \end{lstlisting}
 
 If we wanted to assign instances of Integer for our pythagorean theorem, we'd do it like so:
 
 \begin{lstlisting}[caption=Variable Assignment for the Pythagorean Theorem,backgroundcolor=\color{tintedorange}]
-a := 3;
-b := 4;
+a := 3
+b := 4
 \end{lstlisting}
 
 \paragraph{Variable Declaration}
 Declaring a variable requires a type and a list of identifiers deliminated by commas. Each identifier may be followed by the assignment operator and an expression so as to combine assignment and declaration.
 
 \begin{lstlisting}
-var_type var1_identifier << := val1_expr >> << , var2_identifier << := val2_expr >> >> <<...>>;
+var_type var1_identifier << := val1_expr >> << , var2_identifier << := val2_expr >> >> <<...>>
 \end{lstlisting}
 
 If we wanted to declare variables for the pythagorean theorem, we would do it like so:
 
 \begin{lstlisting}[caption=Variable Initialization for the Pythagorean Theorem,backgroundcolor=\color{tintedorange}]
-Float a, b, c;
+Float a, b, c
 \end{lstlisting}
 
 \paragraph{Array Declaration}
-Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type. Remember that an array is a type as well, and so the source type can very well be an array of arrays of a certain type before you make declaration. And note that not all dimensions need be given (and for you may want to later make non-rectangular multi dimensional arrays).
+Declaring an array is almost the same as declaring a normal variable, simply add square brackets after the type. Note that the dimension need be given.
 
 \begin{lstlisting}
-element_type[]...[] array_identifier << := new element_type[](dim1_expr,...,dimN_expr) >>;
+element_type[]...[] array_identifier << := new element_type[](dim1_expr,...,dimN_expr) >>
 \end{lstlisting}
 
 If we wanted a set of triangles to operate on, for instance:
 
 \begin{lstlisting}[caption=Array Declaration and Instantiation of Many Triangles, backgroundcolor=\color{tintedorange}]
-Triangle[] triangles := new Triangle[](42);
+Triangle[] triangles := new Triangle[](42)
 \end{lstlisting}
 
 Or perhaps, we want to index them by their short sides and initialize them later:
 
 \begin{lstlisting}[caption=Array Declaration of a 2-Degree Triangle Array,backgroundcolor=\color{tintedorange}]
-Triangle[][] triangles;
+Triangle[][] triangles
 \end{lstlisting}
 
 \paragraph{Array Dereferencing}
@@ -80,7 +76,7 @@ var_identifier[dim1_index]...[dimN_index]
 Perhaps we care about the fifth triangle in our array from before for some reason.
 
 \begin{lstlisting}[caption=Array Dereferencing a Triangle, backgroundcolor=\color{tintedorange}]
-Triangle my_triangle := triangles[4];
+Triangle my_triangle := triangles[4]
 \end{lstlisting}
 
 
@@ -95,7 +91,7 @@ Invoking a method requires at least an identifier for the method of the current 
 Finishing our pythagorean example, we use method invocations and assignment to calculate the length of our third side, c.
 
 \begin{lstlisting}[backgroundcolor=\color{tintedorange},caption=Method Invocation for the Pythagorean Theorem Using Methods]
-c := ((a.power(2)).plus(b.power(2))).power(0.5);
+c := ((a.power(2)).plus(b.power(2))).power(0.5)
 \end{lstlisting}
 
 \paragraph{Method Invocation Using Operators}
@@ -108,7 +104,7 @@ op1_expr operator op2_expr
 Using operators has advantages in clarity and succinctness even if the end result is the same.
 
 \begin{lstlisting}[backgroundcolor=\color{tintedorange},label=Method Invocation,caption=Method Invocation for the Pythagorean Theorem Using Operators]
-c := ( a^2 + b^2 )^0.5;
+c := ( a^2 + b^2 )^0.5
 \end{lstlisting}
 
 \paragraph{Operator Precedence}
@@ -131,73 +127,65 @@ not & \verb!^! &&&&&\\
 \end{table}
 
 \paragraph{Method Declaration \& Definition}
-A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. The identifier for the function is followed by a pair of parentheses that may enclose the parameter declarations. There is one type and one identifier for each parameter; and they are delimited by commas. Following the parentheses are a pair of braces around the body of the method. There can be zero or more statements in the body. Additionally, refinements may be placed throughout the statements.
+A method definition begins with the return type -- either a type (possibly an n-dimensional array) or void. There is one type and one identifier for each parameter; and they are delimited by commas. Following the parentheses is a colon before the body of the method at an increased level of indentaiton. There can be zero or more statements in the body. Additionally, refinements may be placed throughout the statements.
  
 \begin{lstlisting}
-{{return_type | Void}} method_identifier (<<arg1_type arg1_identifier>> <<, arg2_type arg2_identifier>> <<...>>) method_body
+{{return_type | Void}} method_identifier (<<arg1_type arg1_identifier>> <<, arg2_type arg2_identifier>> <<...>>): method_body
 \end{lstlisting}
 
 Finally, we may define a method to do our pythagorean theorem calculation.
 
 \begin{lstlisting}[backgroundcolor=\color{tintedorange},caption=Method Definition for the Pythagorean Theorem]
-Float pythagorean_theorem(Float a, Float b){
-    Float c;
-    c := ( a^2 + b^2 )^0.5;
-    return c;
-}
+Float pythagorean_theorem(Float a, Float b):
+    Float c
+    c := ( a^2 + b^2 )^0.5
+    return c
 \end{lstlisting}
 
 \subsubsection{Classes}
 
 \paragraph{Section Definition}
-Every class always has at least one section that denotes members in a certain access level. A section resembles a body, it has the lexemes \verb!{! and \verb!}! surrounding a set of variable and method declarations, including \verb!init! methods.
+Every class always has at least one section that denotes members in a certain access level. A section resembles a body, it has a unified level of indentation throughout a set of variable and method declarations, including \verb!init! methods.
 
 \begin{lstlisting}
-{
 	<<{{method1_decl | var1_decl | init1_decl}}>>
 	<<{{method2_decl | var2_decl | init2_decl}}>>
 	<<...>>
-}
 \end{lstlisting}
 
 \paragraph{Class Declaration \& Definition}
-A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body enclosed in braces: an optional \verb!main! method, the three access-level member sections, and refinements. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to generate instances).
+A class definition always starts with the keyword \verb!class! followed by a type (i.e. capitalized) identifier. There can be no brackets at the end of the identifier, and so this is a case where the type must be purely alphanumeric mixed with underscores. It optionally has the keyword \verb!extends! followed by the identifier of the superclass. What follows is the class body at consistent indentation: an optional \verb!main! method, the three access-level member sections, and refinements. There may be \verb!init! methods in any of the three sections, and there must be (semantically enforced, not syntactically) an \verb!init! method either in the protected or public section (for otherwise there would be no way to generate instances).
 
 While the grammar allows multiple main methods to be defined in a class, any more than one will result in an error during compilation.
 
 \begin{lstlisting}
-class class_identifier <<extends superclass_identifier>> {
+class class_identifier <<extends superclass_identifier>>:
     <<main_method>>
     <<{{private | protected | public | refinement}} section1>>
     <<{{private | protected | public | refinement}} section1>>
     <<...>>
-}
 \end{lstlisting}
 
 Let's make a basic geometric shape class in anticipation of later examples. We have private members, two access-level sections and an init method. No extends is specified, so it is assumed to inherit from Object.
 
 
 \begin{lstlisting}[backgroundcolor=\color{tintedorange},label=Method Invocation,caption=Class Declaration for a Geometric Shape class]
-class Geometric_Shape {
-    private {
-        String name;
-        Float area;
-        Float circumfrence;
-    }
-    public {
-        init (String name) {
-            this.name = name;
-            if (refinable(improve_name)) {
-              this.name += refine improve_name() to String;
-            }
-            return;
-        }
-        Float get_area() {
-            Float area;
-            area := refine custom_area() to Float;
-        }
-    }
-}
+class Geometric_Shape:
+    private:
+        String name
+        Float area
+        Float circumfrence
+    public:
+        init (String name):
+            this.name = name
+            if (refinable(improve_name)):
+              this.name += refine improve_name() to String
+            
+            return
+            
+        Float get_area():
+            Float area
+            area := refine custom_area() to Float
 \end{lstlisting}
 
 \paragraph{Class Instantiation}
@@ -210,24 +198,23 @@ new class_identifier(<<arg1_expr>> <<,arg2_expr>> <<...>>)
 For instance:
 
 \begin{lstlisting}[backgroundcolor=\color{tintedorange},label=Method Invocation,caption=Class Instantiation for a Geometric Shape class]
-Geometric_Shape = new Geometric_Shape("circle");
+Geometric_Shape = new Geometric_Shape("circle")
 \end{lstlisting}
 
 \paragraph{Anonymous Classes}
 An anonymous class definition is used in the instantiation of the class and can only provide refinements, no additional public, protected, or private members. Additionally no init or main can be given.
 
 \begin{lstlisting}
-new superclass_identifier(<<arg1_expr>> <<,arg2_expr>> <<...>>) {
+new superclass_identifier(<<arg1_expr>> <<,arg2_expr>> <<...>>):
     <<refinements>>
-}
 \end{lstlisting}
 
 \subsubsection{Conditional Structures}
 \paragraph{If Statements}
-The fundamental unit of an if statement is a keyword, followed by an expression between parentheses to test, and then a body of statements between curly braces. The first keyword is always \verb!if!, each additional condition to be tested in sequence has the keyword \verb!elsif! and a final body of statements may optionally come after the keyword \verb!else!.
+The fundamental unit of an if statement is a keyword, followed by an expression between parentheses to test, and then a body of statements at an increased level of indentaiton. The first keyword is always \verb!if!, each additional condition to be tested in sequence has the keyword \verb!elsif! and a final body of statements may optionally come after the keyword \verb!else!.
 
 \begin{lstlisting}
-if (test1_expr) if1_body
+if (test1_expr): if1_body
 <<elsif (test2_expr) if2_body>>
 <<elsif(test3_expr) if3_body>>
 <<...>>
@@ -238,7 +225,7 @@ if (test1_expr) if1_body
 A while statement consists of only the \verb!while! keyword, a test expression and a body.
 
 \begin{lstlisting}
-while(test_expr) while_body
+while(test_expr): while_body
 \end{lstlisting}
 
 \subsubsection{Refinements}
